@@ -1,0 +1,12 @@
+main:
+  steps:
+      - generate_recipe_image:
+          call: http.post
+          args:
+              url: 'https://us-central1-aiplatform.googleapis.com/v1/projects/sascha-playground-doit/locations/us-central1/publishers/google/models/imagegeneration@006:predict'
+              auth:
+                type: OAuth2
+              body:
+                instances:
+                  - prompt: "generate a hotdog"
+          result: generate_image

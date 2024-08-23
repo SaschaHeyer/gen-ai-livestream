@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= recipe.recipe_title %></title>
+    <link href="/css/tailwind.output.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mx-auto p-4">
+        <a href="/" class="text-blue-500">&larr; Back to Recipes</a>
+        <div class="bg-white shadow-md rounded-lg overflow-hidden mt-4">
+            <img src="<%= recipe.imageUrl %>" alt="<%= recipe.recipe_title %>" class="w-full h-96 object-cover">
+            <div class="p-4">
+                <h1 class="text-3xl font-semibold"><%= recipe.recipe_title %></h1>
+                <p class="text-gray-600 mt-2"><%= recipe.recipe_description %></p>
+                <h2 class="text-2xl font-semibold mt-4">Ingredients</h2>
+                <ul class="list-disc list-inside mt-2">
+                    <% recipe.ingredients.forEach(ingredient => { %>
+                        <li><%= ingredient.quantity %> <%= ingredient.unit %> <%= ingredient.name %></li>
+                    <% }) %>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
