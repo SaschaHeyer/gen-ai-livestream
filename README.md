@@ -1,4 +1,7 @@
 # Generative AI Orchestration
+
+![](images/livestream.gif)
+
 This repository is part of a live streaming series. 
 Every Friday we build live and this repoistory contains all the code from the livestreams. 
 
@@ -8,7 +11,7 @@ Join me every Friday* from 10 - 11:30 AM CET / 8 - 10:30 UTC for the Coding GenA
 ## Watch the recordings
 If you want to follow along you can watch the recordings. 
 
-### #1 #2 Generative AI Orchestration
+### #1 + #2 Generative AI Orchestration
 * https://youtu.be/d9lQ9mSZQwA
 * https://youtu.be/G4TKtnWhThY
 * https://medium.com/google-cloud/orchestrate-generative-ai-applications-fd8b7d4436a6
