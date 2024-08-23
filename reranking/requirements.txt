@@ -1,0 +1,5 @@
+packaging
+grpcio
+sqlite_vec
+google-cloud-discoveryengine
+matplotlib
