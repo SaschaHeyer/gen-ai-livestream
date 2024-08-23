@@ -1,4 +1,4 @@
-# Generative AI Orchestration
+# Generative AI Livestream
 
 ![](images/livestream.gif)
 
