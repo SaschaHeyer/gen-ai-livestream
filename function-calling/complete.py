@@ -26,21 +26,15 @@ user_prompt_content = Content(
     ],
 )
 
-# Define the function declarations
-get_order_status_func = FunctionDeclaration(
-    name="get_order_status",
-    description="Retrieve the current status of an order by its order ID.",
-    parameters={
-        "type": "object",
-        "properties": {
-            "order_id": {
-                "type": "string",
-                "description": "The unique identifier of the order."
-            }
-        },
-        "required": ["order_id"]
-    },
-)
+# Define the functions to be used by the model
+def get_order_status(order_id: str):
+    # Simulated response
+    return {
+        "order_id": order_id,
+        "expected_delivery": "Tomorrow"
+    }
+    
+get_order_status_func = FunctionDeclaration.from_func(get_order_status)
 
 initiate_return_func = FunctionDeclaration(
     name="initiate_return",
