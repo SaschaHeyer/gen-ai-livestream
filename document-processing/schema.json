@@ -1,0 +1,48 @@
+_RESPONSE_SCHEMA_STRUCT = {
+    "type": "object",
+    "properties": {
+        "invoice_number": {"type": "string"},
+        "invoice_date": {"type": "string"},
+        "payable_to": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "address": {"type": "string"}
+            },
+            "required": ["name", "address"]
+        },
+        "bank_details": {
+            "type": "object",
+            "properties": {
+                "bank_name": {"type": "string"},
+                "account_number": {"type": "string"}
+            },
+            "required": ["bank_name", "account_number"]
+        },
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "description": {"type": "string"},
+                    "quantity": {"type": "string"},
+                    "price": {"type": "string"},
+                    "total": {"type": "string"}
+                },
+                "required": ["description", "quantity", "price", "total"]
+            }
+        },
+        "sub_total": {"type": "string"},
+        "tax": {
+            "type": "object",
+            "properties": {
+                "percentage": {"type": "string"},
+                "amount": {"type": "string"}
+            },
+            "required": ["percentage", "amount"]
+        },
+        "grand_total": {"type": "string"},
+        "notes": {"type": "string"}
+    },
+    "required": ["invoice_number", "invoice_date", "payable_to", "bank_details", "items", "sub_total", "tax", "grand_total"]
+}

@@ -1,0 +1,30 @@
+{
+    "invoice_number": "null",
+    "items": [
+        {
+            "description": "lamp",
+            "quantity": "1",
+            "total": "155"
+        },
+        {
+            "description": "Mobile phone",
+            "quantity": "2",
+            "total": "152"
+        },
+        {
+            "description": "table",
+            "quantity": "1",
+            "total": "523"
+        },
+        {
+            "description": "car",
+            "quantity": "1",
+            "total": "12167"
+        },
+        {
+            "description": "dryer",
+            "quantity": "1",
+            "total": "342"
+        }
+    ]
+}
