@@ -11,7 +11,7 @@ Given a document, your task is to extract the text value of entities.
 """
 
 # Load local PDF
-with open("sample-documents/split.pdf", "rb") as pdf_file:
+with open("sample-documents/4.pdf", "rb") as pdf_file:
     pdf = pdf_file.read()
 
 document = Part.from_data(data=pdf, mime_type="application/pdf")
@@ -22,16 +22,15 @@ document = Part.from_data(data=pdf, mime_type="application/pdf")
 #    
 #document = Part.from_data(data=png, mime_type="image/png")
 
-# Load document from Cloud Stogage
+# Load document from Cloud Storage
 #document = Part.from_uri(
 #    mime_type="application/pdf",
-#    uri="gs://cloud-samples-data/generative-ai/pdf/earnings_statement.pdf"
+#    uri="gs://doit-llm/generative-ai/pdf/4.pdf"
 #)
 
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
-        "invoice_number": {"type": "string"},
         "items": {
             "type": "array",
             "items": {
@@ -41,13 +40,13 @@ RESPONSE_SCHEMA = {
                     "quantity": {"type": "string"},
                     "total": {"type": "string"}
                 },
-                "required": ["description", "quantity", "price", "total"]
+                "required": ["description", "quantity", "price", "total", "invoice_number"]
             }
         }
     }
 }
 
-model = GenerativeModel("gemini-1.5-pro-001")
+model = GenerativeModel("gemini-1.5-flash-001")
 
 generation_config = GenerationConfig(
         max_output_tokens=8192,
