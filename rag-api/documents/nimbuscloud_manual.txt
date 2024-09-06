@@ -1,0 +1,30 @@
+
+NimbusCloud™ Personal Weather Station
+
+Product Overview:
+The NimbusCloud™ Personal Weather Station is a smart, compact device designed to provide real-time, hyperlocal weather data for your home. It monitors temperature, humidity, wind speed, and air quality, syncing effortlessly with your smartphone.
+
+What's Included:
+- NimbusCloud™ Weather Station
+- Solar-Powered Wind Sensor
+- Temperature & Humidity Sensor
+- USB Charging Cable
+- Mounting Kit
+- Quick Start Guide
+
+Installation Instructions:
+1. Unbox and Prepare: Remove all components from the packaging. Ensure you have a flat surface or mountable location for installation.
+2. Set Up the Wind Sensor: Attach the solar-powered wind sensor to the mounting kit. Position the sensor in a location with clear exposure to the wind (e.g., on a rooftop or balcony).
+3. Connect the Temperature & Humidity Sensor: Place the temperature and humidity sensor in a shaded area. Ensure it is not exposed to direct sunlight or rain.
+4. Power On the NimbusCloud™ Station: Use the USB charging cable to power on the main unit. If you prefer a solar-powered option, follow the setup instructions for the optional solar panel kit.
+5. Sync with the NimbusCloud™ App: Download the NimbusCloud™ app from the App Store or Google Play. Follow the on-screen instructions to pair the weather station with your smartphone via Bluetooth or Wi-Fi.
+
+Using NimbusCloud™:
+- Access Weather Data: Once connected, your NimbusCloud™ Weather Station will send live weather updates to the app, including temperature, humidity, wind speed, and air quality levels.
+- Custom Alerts: Set up alerts for extreme weather conditions such as heatwaves, heavy rainfall, or high wind speeds.
+- Historical Data: Track past weather trends in your area with NimbusCloud™’s historical weather data feature.
+
+Maintenance Tips:
+- Clean the wind sensor regularly to prevent dust buildup that could affect accuracy.
+- Recharge or replace the solar-powered battery annually for optimal performance.
+- Store the temperature sensor indoors during harsh weather conditions to avoid damage.

@@ -1,0 +1,34 @@
+
+AuraGlow™ Smart LED Lighting System
+
+Product Overview:
+The AuraGlow™ Smart LED Lighting System is a customizable, app-controlled lighting solution for homes and offices. With a full range of colors and brightness settings, AuraGlow™ allows you to create the perfect ambiance in any space. Control your lights remotely using the AuraGlow™ mobile app or with voice commands via Alexa or Google Assistant.
+
+What's Included:
+- AuraGlow™ Smart LED Light Strip (10 feet)
+- Wi-Fi Control Hub
+- Remote Control
+- Adhesive Mounting Tape
+- USB Power Adapter
+- Quick Start Guide
+
+Installation Instructions:
+1. Unpack the Components: Lay out the LED light strip, control hub, and power adapter. Ensure that the surface where the lights will be mounted is clean and dry.
+2. Mount the Light Strip: Peel the adhesive backing off the LED strip and attach it to the desired surface (e.g., under cabinets, behind a TV, or along a ceiling).
+3. Connect to Power: Plug the USB power adapter into the control hub and then into a power outlet. The light strip will illuminate once powered on.
+4. Sync with Wi-Fi: Download the AuraGlow™ app from the App Store or Google Play. Follow the in-app instructions to connect the Wi-Fi control hub to your home network.
+
+Operating Instructions:
+- Remote Control: Use the included remote control to turn the lights on/off, change colors, and adjust brightness.
+- App Control: Open the AuraGlow™ app to customize color presets, set schedules, and adjust lighting based on your preferences.
+- Voice Commands: Pair AuraGlow™ with Alexa or Google Assistant to control the lights using voice commands (e.g., “Alexa, turn the lights blue”).
+
+Customization Options:
+- Color Modes: Choose from over 16 million colors and several lighting effects (e.g., strobe, fade, pulse).
+- Dimming: Adjust brightness from 0% to 100% via the app or remote.
+- Scheduling: Set timers for when lights should automatically turn on/off.
+
+Maintenance and Troubleshooting:
+- Cleaning the Lights: Wipe the LED strip with a dry cloth to remove dust.
+- Wi-Fi Connection Issues: Ensure the control hub is within range of your Wi-Fi router. Restart the hub if needed.
+- Light Strip Not Responding: Check power connections and ensure the app is up to date.
