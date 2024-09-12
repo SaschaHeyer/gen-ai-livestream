@@ -28,10 +28,10 @@ rag_file = rag.upload_file(
    path="./documents/nimbuscloud_manual.txt",
 )
 
-rag_file = rag.upload_file(
-   corpus_name=corpus_name,
-   path="./documents/purebrew_manual.txt",
-)
+#rag_file = rag.upload_file(
+#   corpus_name=corpus_name,
+#   path="./documents/purebrew_manual.txt",
+#)
 
 #print(rag_file)
 
