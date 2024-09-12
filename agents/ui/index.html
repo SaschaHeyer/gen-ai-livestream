@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #2E2E2E; /* Dark background as in the screenshot */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        df-messenger {
+            z-index: 999;
+            position: fixed;
+            --df-messenger-font-color: #000;
+            --df-messenger-font-family: Google Sans;
+            --df-messenger-chat-background: #f3f6fc;
+            --df-messenger-message-user-background: #d3e3fd;
+            --df-messenger-message-bot-background: #fff;
+            bottom: 16px;
+            right: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vertex AI Agent Demo. Open the agent in the bottom right corner.</h1></br>
+ 
+    
+    <df-messenger
+      location="us"
+      project-id="sascha-playground-doit"
+      agent-id="559f1b16-ab18-4492-a4ca-9c4b148555f3"
+      language-code="en"
+      max-query-length="-1">
+      <df-messenger-chat-bubble
+       chat-title="book-agent">
+      </df-messenger-chat-bubble>
+    </df-messenger>
+</body>
+</html>
