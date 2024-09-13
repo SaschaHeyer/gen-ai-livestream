@@ -3,7 +3,7 @@ import vertexai
 from vertexai.preview import rag
 from vertexai.preview.generative_models import GenerativeModel, Tool
 
-rag_corpus_id = "projects/234439745674/locations/us-central1/ragCorpora/6622543252048314368"
+rag_corpus_id = "projects/234439745674/locations/us-central1/ragCorpora/569705352862367744"
 
 vertexai.init(project="sascha-playground-doit", location="us-central1")
 

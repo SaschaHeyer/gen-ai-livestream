@@ -16,7 +16,7 @@ if not os.path.exists(documents_dir):
 st.title("Document Management & Question Answering with RAG")
 
 # Full RAG Corpus ID (including project and location)
-rag_corpus_id = st.text_input("RAG Corpus ID", value="projects/sascha-playground-doit/locations/us-central1/ragCorpora/6622543252048314368")
+rag_corpus_id = st.text_input("RAG Corpus ID", value="projects/sascha-playground-doit/locations/us-central1/ragCorpora/569705352862367744")
 
 # Initialize session state for file upload tracking
 if "uploaded_files" not in st.session_state:
