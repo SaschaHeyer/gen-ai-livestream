@@ -17,28 +17,30 @@ print(corpus)
 corpus_name = corpus.name
 print(corpus_name)
 
-#import_files = rag.import_files(corpus_name=corpus_name, 
-#                            paths=["./documents/company-policy.txt"], 
-#                            chunk_size=50)
-#print(import_files)
+
+
+import_files = rag.import_files(corpus_name=corpus_name, 
+                            paths=["gs://doit-llm/manuals"], 
+                            chunk_size=500)
+print(import_files)
 
 # add document to the corpus
-rag_file = rag.upload_file(
-   corpus_name=corpus_name,
-   path="./documents/auraglow_manual.txt",
-)
+#rag_file = rag.upload_file(
+#   corpus_name=corpus_name,
+#   path="./documents/auraglow_manual.txt",
+#)
 
-rag_file = rag.upload_file(
-   corpus_name=corpus_name,
-   path="./documents/nimbuscloud_manual.txt",
-)
+#rag_file = rag.upload_file(
+#   corpus_name=corpus_name,
+#   path="./documents/nimbuscloud_manual.txt",
+#)
 
-rag_file = rag.upload_file(
-   corpus_name=corpus_name,
-   path="./documents/purebrew_manual.txt",
-)
+#rag_file = rag.upload_file(
+#   corpus_name=corpus_name,
+#   path="./documents/purebrew_manual.txt",
+#)
 
-print(rag_file)
+#print(rag_file)
 
 # get the corpus
 corpus = rag.get_corpus(name=corpus_name)
