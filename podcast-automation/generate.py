@@ -33,11 +33,11 @@ speaker_voice_map = {
 }
 
 # ElevenLabs API config
-elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/your_api_key"
+elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/ERL3svWBAQ18ByCZTr4k" # your voice ID
 elevenlabs_headers = {
     "Accept": "audio/mpeg",
     "Content-Type": "application/json",
-    "xi-api-key": "sk_f016cbed6e89e21384e2733ba2558feda9ae1adb04b124f4"  # Replace with your actual API key
+    "xi-api-key": "your_api_key"  # Replace with your actual API key
 }
 
 
