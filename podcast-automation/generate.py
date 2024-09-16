@@ -33,7 +33,7 @@ speaker_voice_map = {
 }
 
 # ElevenLabs API config
-elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/ERL3svWBAQ18ByCZTr4k"
+elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/your_api_key"
 elevenlabs_headers = {
     "Accept": "audio/mpeg",
     "Content-Type": "application/json",
