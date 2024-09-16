@@ -1,0 +1,323 @@
+
+Search
+Write
+
+Sascha Heyer
+Vertex AI Function Calling
+LLMs are turning into reasoning engines using capabilities like web search and calling external APIs.
+Sascha Heyer
+Google Cloud - Community
+Sascha Heyer
+
+Published in
+Google Cloud - Community
+
+·
+8 min read
+·
+Aug 31, 2024
+51
+
+
+
+
+
+
+LLMs are stuck in time. They know everything about the past. They lack access to information after their training date, leading to inaccurate responses. Additionally, LLMs do not have a way of interacting with the world. They cannot take action on behalf of your users.
+
+This has changed, and LLMs have become more and more capable.
+
+1️⃣ It started with RAG feeding information that is retrieved in real-time into the LLMs context window.
+
+2️⃣ Now, we are seeing multimodal capabilities allowing our models to process large videos, images, audio, and text of up to 2 million tokens. This allows us to process larger documents without the need for a RAG. However, retrieving documents using an RAG approach is still useful if you want to have a low-latency application.
+
+3️⃣ In addition, LLMs turn into reasoning engines with function calling, also called tooling. This allows us to integrate web search and call external APIs into our LLMs.
+
+Let’s see how we can call external APIs using Gemini with Function Calling.
+
+This article is part #5 of my Friday’s livestream series. You can watch all the previous recordings. Join me every Friday from 10–11:30 AM CET / 8–10:30 UTC.
+
+What is Function Calling?
+Function calling is a feature that allows large language models to interact with external tools, APIs, and databases.
+
+Function calling enables dynamic data retrieval instead of solely relying on the static knowledge baked into the model during training. This means that the LLM can delegate tasks like fetching weather data, querying databases, or executing custom functions and then use the results to craft a more accurate and relevant response.
+
+
+Use Case
+Imagine a customer reaching out to your support and asking, “What’s the status of my order ID #12345?” Instead of giving a generic or outdated response, the model connects with Function Calling with your order management system, retrieves the real-time status of the order, and responds with something like, “Your order #12345 is on its way and is expected to arrive tomorrow.”
+
+But that’s not all. The customer then decides they want to initiate a return. Now fully connected to your external systems, the model can instantly process the return request. It confirms with the customer, “Your return for order #12345 has been initiated. You’ll receive a return label shortly.”
+
+This example shows how Google Cloud’s Gemini Function Calling enables LLMs to retrieve real-time information and interact with external systems.
+
+Want some more ideas?
+Smart Home Integration
+Use the LLM to control your smart home devices. For instance, you can ask, “Turn on the living room lights” or “What’s the temperature in the kitchen?” The model connects with your home automation system, retrieves the temperature data, or toggles the lights, and responds accordingly.
+Appointment Scheduling
+A customer could ask, “Can you book a doctor's appointment for me next Tuesday at 3 PM?” The model interacts with the scheduling system to find available slots, book appointments, and confirm them with the user.
+All starts with a Function Declaration
+Before anything, let us focus on a function declaration. A function declaration describes what the function can do and its parameters. The Gemini model uses this information to decide which function to select and how to pass the parameters. Therefore it is extremely important to include as much detail as possible.
+
+from vertexai.generative_models import FunctionDeclaration
+
+get_order_status_func = FunctionDeclaration(
+    name="get_order_status",
+    description="Retrieve the current status of an order by its order ID.",
+    parameters={
+        "type": "object",
+        "properties": {
+            "order_id": {
+                "type": "string",
+                "description": "The unique identifier of the order."
+            }
+        },
+        "required": ["order_id"]
+    },
+)
+As an alternative, you can define a FunctionDeclaration directly from a function.
+
+def get_order_status(order_id: str):
+    # Simulated response
+    return {
+        "order_id": order_id,
+        "expected_delivery": "Tomorrow"
+    }
+
+get_order_status_func = FunctionDeclaration.from_func(get_order_status)
+Depending on your prompt to the model, it identifies whether a function must be called or the model can directly answer. If that’s the case, the model returns the functions that are a good fit with the parameter.
+
+Combine it with Gemini as a Generative Model
+Let’s do a full example and dig deeper into the model's response. Functions are provided as tools to Gemini. Tools can consist of multiple function declarations and pass multiple tools to the Gemini API.
+
+from vertexai.generative_models import (
+    FunctionDeclaration,
+    GenerationConfig,
+    GenerativeModel,
+    Tool
+)
+
+get_order_status_func = FunctionDeclaration(
+    name="get_order_status",
+    description="Retrieve the current status of an order by its order ID.",
+    parameters={
+        "type": "object",
+        "properties": {
+            "order_id": {
+                "type": "string",
+                "description": "The unique identifier of the order."
+            }
+        },
+        "required": ["order_id"]
+    },
+)
+
+order_tool = Tool(
+    function_declarations=[
+        get_order_status_func,
+    ],
+)
+    
+model = GenerativeModel(
+    "gemini-1.5-flash-001",
+    generation_config=GenerationConfig(temperature=0),
+    tools=[order_tool],
+)
+chat = model.start_chat()
+
+prompt = "Can you check where my order with ID 12345 is?"
+
+response = chat.send_message(prompt)
+print(response.candidates[0].content)
+
+# only get the matching functions
+function_calls = response.candidates[0].function_calls
+print(function_calls)
+Below is the model's response. As you can see, we just get the function that fits the prompt. As I said, the model is not calling the function for you. It is reasoning, deciding which function to call with what parameters, like the order ID that was extracted from our prompt: Can you check where my order with ID 12345 is?
+
+role: "model"
+parts {
+  function_call {
+    name: "get_order_status"
+    args {
+      fields {
+        key: "order_id"
+        value {
+          string_value: "12345"
+        }
+      }
+    }
+  }
+}
+If I ask the model about the capital of Berlin and my order in one prompt, we get both as a response as separate parts. Gemini 1.5 also allows for parallel function calling. If there are multiple functions that match, you get that as a response.
+
+parts {
+  text: "The capital of Berlin is Berlin. \n\n"
+}
+parts {
+  function_call {
+    name: "get_order_status"
+    args {
+      fields {
+        key: "order_id"
+        value {
+          string_value: "12345"
+        }
+      }
+    }
+  }
+}
+I think this usage is brilliant, and that makes it incredibly flexible for us.
+
+Calling the Function
+The model is not calling the function, so we need to handle that ourselves. We will discuss automatic function calling at the end of the article.
+Stay with me.
+
+First, we iterate through the function_calls array returned by the model. The model only returns functions that match our query. Each function call includes the function's name and the arguments extracted from the prompt. We check the function name to determine which action to take.
+
+function_calls = response.candidates[0].function_calls
+
+for function_call in response.candidates[0].function_calls:
+    print(function_call)
+    if function_call.name == "get_order_status":
+      # call external API to get the order status
+      api_response = {...}
+    elif function_call.name == "initiate_return":
+      # call external API to initiate the return
+      api_response = {...}
+Using the Response
+Gemini Function Calling’s flexibility lies in its ability to identify and delegate tasks, but it relies on our code to complete the task.
+
+Once we receive the function calls from the model, we execute these functions ourselves, retrieve the necessary data, and then pass this information back to the model.
+
+After generating the API response, we pass this data back to the Gemini model, which generates a natural language response that is ready to be presented to the user. This could be something like, “Your order #12345 is on its way and is expected to arrive tomorrow.”
+
+for function_call in response.candidates[0].function_calls:
+
+    if function_call.name == "get_order_status":
+        order_id = function_call.args["order_id"]
+
+        # dummy data
+        api_response = {
+            "order_id": order_id,
+            "expected_delivery": "Tomorrow"
+        }
+
+    elif function_call.name == "initiate_return":
+        order_id = function_call.args["order_id"]
+        reason = function_call.args.get("reason", "No reason provided")
+
+        # dummy data
+        api_response = {
+            "order_id": order_id,
+            "return_status": "Return initiated successfully.",
+            "return_label": "You will receive a return label shortly."
+        }
+
+    # Return the dummy API response to Gemini so it can generate a model response or request another function call
+    response = model.generate_content(
+        [
+            user_prompt_content,  # User prompt
+            response.candidates[0].content,  # Function call response
+            Content(
+                parts=[
+                    Part.from_function_response(
+                        name=function_call.name,
+                        response={"content": api_response},  # Return the dummy API response to Gemini
+                    ),
+                ],
+            ),
+        ],
+        tools=[support_tool],
+    )
+
+    # Get the model response and print it
+    print(response.text)
+    # response: Your order #12345 is expected to be delivered tomorrow. 
+I’ve used if and elif only for demonstration purposes. If you have many more functions, it makes sense to use a dictionary with dynamic function execution.
+
+function_handlers = {
+    "get_order_status": get_order_status,
+    "initiate_return": initiate_return,
+}
+
+for function_call in response.candidates[0].function_calls:
+    print(function_call)
+    function_name = function_call.name
+    args = {key: value for key, value in function_call.args.items()}
+    
+    if function_name in function_handlers:
+        function_response = function_handlers[function_name](args)
+Security for API invocations
+If you use a function that calls your model in the end, your model's users interact with your system. You must ensure the same security standards as any other user-facing product. Make sure the data sent to your APIs is not malicious.
+
+Google AI vs Vertex AI
+As of August 2024, the SDKs of Vertex AI and Google AI differ. Google AI SDK supports automatic function calling and a few other features, such as tool control. The Vertex AI SDK does not support automatic function calling. I hope Google will add this feature to Vertex AI as well.
+
+If you stumble over the following code, you use Google AI, not Vertex AI.
+
+model.start_chat(enable_automatic_function_calling=True)
+I found this in the Vertex AI SDK, which indicates upcoming support for automatic function calling but hasn’t yet been released in Vertex AI 1.64.0. In the next sections, you can see how we can call the functions.
+
+python-aiplatform/vertexai/generative_models/_generative_models.py at…
+A Python SDK for Vertex AI, a fully managed, end-to-end platform for data science and machine learning. …
+github.com
+
+This is probably how it will work using AutomaticFunctionCalling. I will update the article as soon as I have it tested properly.
+
+import vertexai
+from vertexai.generative_models import (
+    Content,
+    FunctionDeclaration,
+    GenerationConfig,
+    GenerativeModel,
+    Tool,
+    Part
+    AutomaticFunctionCallingResponder,
+)
+
+# Initialize Vertex AI
+project_id = "sascha-playground-doit"
+vertexai.init(project=project_id, location="us-central1")
+
+# ... functions here
+
+# Infer function schema from the defined functions
+get_order_status_func = FunctionDeclaration.from_func(get_order_status)
+initiate_return_func = FunctionDeclaration.from_func(initiate_return)
+
+# Tool is a collection of related functions
+order_tool = Tool(
+    function_declarations=[get_order_status_func, initiate_return_func],
+)
+
+# Initialize the model with the tool and set up automatic function calling
+model = GenerativeModel(
+    model_name="gemini-1.5-flash-001",
+    system_instruction="You are a store support API assistant to help with online orders.",
+    tools=[order_tool],
+)
+
+#Activate automatic function calling
+afc_responder = AutomaticFunctionCallingResponder(
+    max_automatic_function_calls=5,
+)
+
+# Start a chat with the responder
+chat = model.start_chat(responder=afc_responder)
+
+response = chat.send_message("What's the status of my order ID #12345?")
+print(response.text)
+Limitations and Best Practices
+Parallel function calling is supported with Gemini 1.5
+The maximum number of function declarations is 128
+Google recommends using a lower temperature, and I can confirm this drastically improves the function calling reasoning.
+Focus on clearly describing your function declarations, including the parameters.
+Combine the function calling with a good system prompt.
+The full code for this article is available on GitHub
+gen-ai-livestream/function-calling at main · SaschaHeyer/gen-ai-livestream
+Contribute to SaschaHeyer/gen-ai-livestream development by creating an account on GitHub.
+github.com
+
+Thanks for reading and watching
+I appreciate your feedback and questions. You can find me on LinkedIn. Even better, subscribe to my YouTube channel ❤️.
+
