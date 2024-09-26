@@ -68,11 +68,10 @@ for idx, page in enumerate(pages):
     
     # Save the GCS path
     gcs_path = f"gs://{bucket_name}/confluence/{file_name}"
-    file_paths.append(gcs_path)
     print(f"Uploaded {file_name} to {gcs_path}")
 
 # Now import those files into the RAG corpus
-import_files_response = rag.import_files(corpus_name=corpus_name, paths=file_paths, chunk_size=500)
+import_files_response = rag.import_files(corpus_name=corpus_name,  paths=["gs://doit-llm/confluence"], chunk_size=500)
 print(f"Imported files to corpus: {import_files_response}")
 
 # Retrieve the corpus to ensure files are added
