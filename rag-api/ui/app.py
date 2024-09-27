@@ -53,7 +53,9 @@ if rag_corpus_id:
 
     # Initialize RAG generative model
     rag_model = GenerativeModel(
-        model_name="gemini-1.5-flash-001", tools=[rag_retrieval_tool]
+        system_instruction="answer questions based on given context. alwayse include the source as url",
+        model_name="gemini-1.5-flash-002", 
+        tools=[rag_retrieval_tool]
     )
 
     # Section 1: File Upload
