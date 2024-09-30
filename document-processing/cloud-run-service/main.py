@@ -12,10 +12,8 @@ Given a document, your task is to extract the text value of entities.
 - Generate null for missing entities.
 """
 
-def generate(pdf_bytes):
-    vertexai.init(project="sascha-playground-doit", location="us-central1")
-
-    RESPONSE_SCHEMA = {
+# Default response schema
+DEFAULT_RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
         "invoice_number": {"type": "string"},
@@ -28,17 +26,24 @@ def generate(pdf_bytes):
                     "quantity": {"type": "string"},
                     "total": {"type": "string"}
                 },
-                "required": ["description", "quantity", "price", "total"]
+                "required": ["description", "quantity", "total"]
             }
         }
     }
 }
+
+def generate(pdf_bytes, response_schema=None):
+    vertexai.init(project="sascha-playground-doit", location="us-central1")
+
+    # Use the provided response schema, or fall back to the default
+    RESPONSE_SCHEMA = response_schema if response_schema else DEFAULT_RESPONSE_SCHEMA
+
     # Initialize the model with the controlled JSON output configuration
     model = GenerativeModel("gemini-1.5-pro-001")
 
     generation_config = GenerationConfig(
         max_output_tokens=8192,
-        temperature=0,
+        temperature=1,
         top_p=0.95,
         response_mime_type="application/json",
         response_schema=RESPONSE_SCHEMA
@@ -76,9 +81,17 @@ def process_pdf():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
+    # Check for optional custom response schema in the request
+    response_schema = None
+    if 'response_schema' in request.form:
+        try:
+            response_schema = json.loads(request.form['response_schema'])
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid response schema"}), 400
+
     if file and file.filename.endswith('.pdf'):
         pdf_bytes = file.read()  # Read the file content into memory
-        json_output = generate(pdf_bytes)
+        json_output = generate(pdf_bytes, response_schema)
         return jsonify(json.loads(json_output)), 200
     
     return jsonify({"error": "Invalid file type"}), 400

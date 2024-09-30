@@ -30,7 +30,9 @@ document = Part.from_data(data=pdf, mime_type="application/pdf")
 
 RESPONSE_SCHEMA = {
     "type": "object",
+    
     "properties": {
+        "invoice_number":{"type": "string"},
         "items": {
             "type": "array",
             "items": {
@@ -40,7 +42,7 @@ RESPONSE_SCHEMA = {
                     "quantity": {"type": "string"},
                     "total": {"type": "string"}
                 },
-                "required": ["description", "quantity", "price", "total", "invoice_number"]
+                "required": ["description", "quantity", "total"]
             }
         }
     }
@@ -53,7 +55,7 @@ generation_config = GenerationConfig(
         temperature=0,
         top_p=0.95,
         response_mime_type="application/json",
-        response_schema=RESPONSE_SCHEMA
+        #response_schema=RESPONSE_SCHEMA
 )
     
 responses = model.generate_content(
