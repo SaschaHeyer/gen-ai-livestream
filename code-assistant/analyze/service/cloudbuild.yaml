@@ -4,6 +4,6 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/sascha-playground-doit/code-analyze']
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['run', 'deploy', 'code-analyze', '--image', 'gcr.io/sascha-playground-doit/code-analyze', '--region', 'us-central1','--allow-unauthenticated', '--platform', 'managed', '--memory', '500Mi', '--max-instances', '5', '--update-env-vars', 'API=']
+  args: ['run', 'deploy', 'code-analyze', '--image', 'gcr.io/sascha-playground-doit/code-analyze', '--region', 'us-central1','--allow-unauthenticated', '--platform', 'managed', '--memory', '2Gi', '--max-instances', '5', '--update-env-vars', 'API=']
 images:
 - gcr.io/sascha-playground-doit/code-analyze

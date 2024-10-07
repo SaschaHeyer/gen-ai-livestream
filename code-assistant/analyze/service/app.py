@@ -69,6 +69,7 @@ if st.button("Analyze"):
 
         # The location to clone the repo (use a temporary directory)
         repo_dir = tempfile.mkdtemp()
+        print(repo_dir)
 
         # Clone the repo
         with st.spinner("Cloning repository..."):
@@ -134,9 +135,11 @@ Answer:
             st.subheader(question)
             prompt = get_code_prompt(question)
             contents = [prompt]
+            print(prompt)
             with st.spinner("Generating response..."):
                 try:
                     response = model.generate_content(contents)
+                    print(response)
                     st.markdown(response.text)
                 except Exception as e:
                     st.error(f"Error generating response: {e}")
