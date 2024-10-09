@@ -16,18 +16,24 @@ from vertexai.generative_models import (
     Tool,
 )
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Set up the Streamlit app with widescreen layout
 st.set_page_config(layout="wide")
 st.title("Codebase Analyzer with Vertex AI Gemini 1.5")
 
 # Input for Google Cloud Project ID
-PROJECT_ID = "sascha-playground-doit"
+PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION = "us-central1"
 
+st.info("If you want to change the repository or use your own code please deploy the app to your own GCP environemnt by running `gcloud builds submit`. Repo see: https://github.com/SaschaHeyer/gen-ai-livestream/tree/main/code-assistant/analyze/service")
 # Input for GitHub URL
 repo_url = st.text_input(
     "Enter the GitHub repository URL",
-    value="https://github.com/SaschaHeyer/gen-ai-livestream",
+    disabled=True,
+    value="https://github.com/SaschaHeyer/image-similarity-search",
 )
 
 # Model selection dropdown
@@ -74,6 +80,8 @@ if st.button("Analyze"):
         # Clone the repo
         with st.spinner("Cloning repository..."):
             try:
+                #disable this to have it changable
+                repo_url="https://github.com/SaschaHeyer/image-similarity-search"
                 git.Repo.clone_from(repo_url, repo_dir)
                 st.success("Repository cloned successfully.")
             except Exception as e:

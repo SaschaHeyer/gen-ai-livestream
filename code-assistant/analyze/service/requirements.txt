@@ -1,3 +1,4 @@
 magika==0.5.1
 streamlit==1.38.0
 vertexai==1.68.0
+python-dotenv==1.0.1
