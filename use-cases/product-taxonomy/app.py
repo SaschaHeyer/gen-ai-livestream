@@ -3,7 +3,20 @@ import base64
 import vertexai
 import requests
 import time  # Import to measure response time
-from vertexai.generative_models import GenerativeModel, Part, SafetySetting
+from vertexai.generative_models import GenerativeModel, Part, SafetySetting, GenerationConfig
+
+RESPONSE_SCHEMA = {
+  "type": "object",
+  "properties": {
+    "taxonomy_hierarchy": {
+      "type": "string",
+      "description": "The full hierarchical taxonomy classification for the product."
+    }
+  },
+  "required": ["taxonomy_hierarchy"]
+}
+
+
 
 # Initialize the Vertex AI client
 def initialize_vertex_ai():
@@ -20,7 +33,12 @@ def generate_content(model_name, text_input, system_instruction):
     start_time = time.time()  # Start the timer to measure response time
     responses = model.generate_content(
         [text_input],
-        generation_config=generation_config,
+        generation_config=GenerationConfig(
+            temperature=1.0,
+            max_output_tokens=8192,
+            response_mime_type="application/json",
+            response_schema=RESPONSE_SCHEMA
+        ),
         safety_settings=safety_settings,
         stream=False,
     )
@@ -50,7 +68,7 @@ def calculate_cost(prompt_token_count, candidates_token_count):
 st.set_page_config(layout="wide")
 
 # Streamlit UI components
-st.title("DoiT Product Taxonomy Classifier")
+st.title("Product Taxonomy Classifier")
 
 st.markdown("""
     Application by [Sascha Heyer](https://www.linkedin.com/in/saschaheyer/)
@@ -108,7 +126,7 @@ safety_settings = [
 ]
 
 # Model selection (assuming the user might want to choose different versions)
-model_name = st.selectbox("Choose Model", options=["gemini-1.5-flash-002", "gemini-1.5", "gemini-2"])
+model_name = st.selectbox("Choose Model", options=["gemini-1.5-flash-002"])
 
 # Button to trigger generation
 if st.button("Classify product"):
