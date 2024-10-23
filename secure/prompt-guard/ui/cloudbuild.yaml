@@ -1,0 +1,9 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/sascha-playground-doit/prompt-guard-ui', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/sascha-playground-doit/prompt-guard-ui']
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['run', 'deploy', 'prompt-guard-ui', '--image', 'gcr.io/sascha-playground-doit/prompt-guard-ui', '--region', 'us-central1','--allow-unauthenticated', '--platform', 'managed', '--memory', '500Mi', '--max-instances', '5', '--update-env-vars', 'API=']
+images:
+- gcr.io/sascha-playground-doit/prompt-guard-ui
