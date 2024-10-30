@@ -15,8 +15,7 @@ load_dotenv()
 
 # Streamlit configuration
 st.set_page_config(page_title="Podcast Generator", layout="wide")
-st.title("🎙️ Podcast Generator - The Machine Learning Engineer")
-st.write("Generate a conversation between Sascha and Marina from an article text and synthesize it as audio.")
+st.title("🎙️ Podcast Generator")
 
 # System prompt for Vertex AI
 system_prompt = """you are an experienced podcast host...
