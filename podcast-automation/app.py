@@ -1,25 +1,26 @@
-import base64
-import json
-import vertexai
+import streamlit as st
 import os
+import json
+import shutil
 import re
 import requests
-import shutil
 from google.cloud import texttospeech
 from pydub import AudioSegment
 from vertexai.generative_models import GenerativeModel, GenerationConfig
+import vertexai
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Google TTS Client
-client = texttospeech.TextToSpeechClient()
+# Streamlit configuration
+st.set_page_config(page_title="Podcast Generator", layout="wide")
+st.title("🎙️ Podcast Generator - The Machine Learning Engineer")
+st.write("Generate a conversation between Sascha and Marina from an article text and synthesize it as audio.")
 
-# System prompt
+# System prompt for Vertex AI
 system_prompt = """you are an experienced podcast host...
-
-- based on text like an article you can create an engaging conversation between two people. 
+- based on text like an article you can create an engaging conversation between two people.
 - make the conversation at least 30000 characters long with a lot of emotion.
 - in the response for me to identify use Sascha and Marina.
 - Sascha is writing the articles and Marina is the second speaker that is asking all the good questions.
@@ -31,23 +32,21 @@ system_prompt = """you are an experienced podcast host...
 - Include filler words like äh to make the conversation more natural.
 """
 
-# Map speakers to specific voices
+# Google TTS Client
+client = texttospeech.TextToSpeechClient()
 speaker_voice_map = {
-    "Sascha": "ElevenLabs",  # We'll handle Sascha with the ElevenLabs API
-    "Marina": "en-US-Journey-O"  # Marina uses the Google API
+    "Sascha": "ElevenLabs",
+    "Marina": "en-US-Journey-O"
 }
 
+# Retrieve ElevenLabs API key from environment
 elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
-
-# ElevenLabs API config
-elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/ERL3svWBAQ18ByCZTr4k" # your voice ID
+elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/ERL3svWBAQ18ByCZTr4k"
 elevenlabs_headers = {
     "Accept": "audio/mpeg",
     "Content-Type": "application/json",
     "xi-api-key": elevenlabs_api_key
 }
-
-
 
 # Google TTS function
 def synthesize_speech_google(text, speaker, index):
@@ -65,7 +64,6 @@ def synthesize_speech_google(text, speaker, index):
     filename = f"audio-files/{index}_{speaker}.mp3"
     with open(filename, "wb") as out:
         out.write(response.audio_content)
-    print(f'Audio content written to file "{filename}"')
 
 # ElevenLabs TTS function
 def synthesize_speech_elevenlabs(text, speaker, index):
@@ -83,7 +81,6 @@ def synthesize_speech_elevenlabs(text, speaker, index):
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:
                 out.write(chunk)
-    print(f'Audio content written to file "{filename}"')
 
 # Function to synthesize speech based on the speaker
 def synthesize_speech(text, speaker, index):
@@ -105,11 +102,9 @@ def merge_audios(audio_folder, output_file):
     )
     for filename in audio_files:
         audio_path = os.path.join(audio_folder, filename)
-        print(f"Processing: {audio_path}")
         audio = AudioSegment.from_file(audio_path)
         combined += audio
     combined.export(output_file, format="mp3")
-    print(f"Merged audio saved as {output_file}")
 
 # Vertex AI configuration to generate the conversation
 generation_config = GenerationConfig(
@@ -127,57 +122,47 @@ def calculate_cost(prompt_token_count, candidates_token_count):
     total_cost = (total_chars / 1000) * cost_per_1k_chars
     return total_cost
 
-def generate_conversation():
+# Function to generate the conversation using Vertex AI
+def generate_conversation(article):
     vertexai.init(project="sascha-playground-doit", location="us-central1")
-    model = GenerativeModel(
-        "gemini-1.5-flash-002",
-        system_instruction=[system_prompt]
-    )
-    responses = model.generate_content(
-        [article],
-        generation_config=generation_config,
-        stream=False,
-    )
-    
-    # Extract metadata
-    prompt_token_count = responses.usage_metadata.prompt_token_count
-    candidates_token_count = responses.usage_metadata.candidates_token_count
-    total_token_count = responses.usage_metadata.total_token_count
-
-    # Calculate cost
-    total_cost = calculate_cost(prompt_token_count, candidates_token_count)
-    print(f"Total token count: {total_token_count}")
-    print(f"Cost for Gemini API usage: ${total_cost:.6f}")
+    model = GenerativeModel("gemini-1.5-flash-002", system_instruction=[system_prompt])
+    responses = model.generate_content([article], generation_config=generation_config, stream=False)
     
     json_response = responses.candidates[0].content.parts[0].text
     json_data = json.loads(json_response)
-    
-    total_chars = sum(len(part["text"]) for part in json_data)
-    print(f"Total character count in conversation: {total_chars}")
-    
-    formatted_json = json.dumps(json_data, indent=4)
-    print(formatted_json)
     return json_data
 
-# Function to generate the podcast audio
+# Function to generate the podcast audio from conversation data
 def generate_audio(conversation):
-    
     if os.path.exists('audio-files'):
         shutil.rmtree('audio-files')
-    
     os.makedirs('audio-files', exist_ok=True)
+    
     for index, part in enumerate(conversation):
         speaker = part['speaker']
         text = part['text']
         synthesize_speech(text, speaker, index)
-    audio_folder = "./audio-files"
+    
     output_file = "podcast.mp3"
-    merge_audios(audio_folder, output_file)
+    merge_audios("audio-files", output_file)
+    return output_file
 
-# Read the article from the file
-with open('retail.txt', 'r') as file:
-    article = file.read()
-
-# Generate conversation and audio
-conversation = generate_conversation()
-generate_audio(conversation)
+# Streamlit inputs and outputs
+article = st.text_area("Article Content", "Paste the article text here", height=300)
+if st.button("Generate Podcast"):
+    if not article:
+        st.error("Please enter article content to generate a podcast.")
+    else:
+        with st.spinner("Generating conversation..."):
+            conversation = generate_conversation(article)
+        
+        st.success("Conversation generated successfully!")
+        st.json(conversation)
+        
+        # Generate audio files
+        with st.spinner("Synthesizing audio..."):
+            podcast_file = generate_audio(conversation)
+        
+        st.success("Audio synthesis complete!")
+        st.audio(podcast_file, format="audio/mp3")
+        st.download_button("Download Podcast", data=open(podcast_file, "rb"), file_name="podcast.mp3", mime="audio/mp3")
