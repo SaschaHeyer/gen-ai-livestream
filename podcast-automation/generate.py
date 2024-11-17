@@ -5,7 +5,8 @@ import os
 import re
 import requests
 import shutil
-from google.cloud import texttospeech
+import argparse
+from google.cloud import texttospeech, texttospeech_v1beta1
 from pydub import AudioSegment
 from vertexai.generative_models import GenerativeModel, GenerationConfig
 from dotenv import load_dotenv
@@ -13,11 +14,18 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Google TTS Client
-client = texttospeech.TextToSpeechClient()
+# Initialize argument parser
+parser = argparse.ArgumentParser(description='Generate podcast audio with different synthesis modes')
+parser.add_argument('--synthesis_mode', choices=['default', 'multispeaker'], 
+                    default='default', help='Choose synthesis mode: default (ElevenLabs+Google) or multispeaker (Google)')
+args = parser.parse_args()
 
-# System prompt
+# Clients
+tts_client = texttospeech.TextToSpeechClient()
+tts_beta_client = texttospeech_v1beta1.TextToSpeechClient()
+
 system_prompt = """you are an experienced podcast host...
+
 
 - based on text like an article you can create an engaging conversation between two people. 
 - make the conversation at least 30000 characters long with a lot of emotion.
@@ -31,35 +39,36 @@ system_prompt = """you are an experienced podcast host...
 - Include filler words like äh to make the conversation more natural.
 """
 
-# Map speakers to specific voices
-speaker_voice_map = {
-    "Sascha": "ElevenLabs",  # We'll handle Sascha with the ElevenLabs API
-    "Marina": "en-US-Journey-O"  # Marina uses the Google API
+# Speaker configurations
+DEFAULT_SPEAKER_CONFIG = {
+    "Sascha": "ElevenLabs",  # ElevenLabs API
+    "Marina": "en-US-Journey-O"  # Google API
 }
 
-elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
+MULTISPEAKER_CONFIG = {
+    "Sascha": "T",  # Using T for a male voice
+    "Marina": "R"   # Using S for a female voice
+}
 
-# ElevenLabs API config
-elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/ERL3svWBAQ18ByCZTr4k" # your voice ID
+# ElevenLabs configuration
+elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
+elevenlabs_url = "https://api.elevenlabs.io/v1/text-to-speech/ERL3svWBAQ18ByCZTr4k"
 elevenlabs_headers = {
     "Accept": "audio/mpeg",
     "Content-Type": "application/json",
     "xi-api-key": elevenlabs_api_key
 }
 
-
-
-# Google TTS function
 def synthesize_speech_google(text, speaker, index):
     synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
-        name=speaker_voice_map[speaker]
+        name=DEFAULT_SPEAKER_CONFIG[speaker]
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.LINEAR16
     )
-    response = client.synthesize_speech(
+    response = tts_client.synthesize_speech(
         input=synthesis_input, voice=voice, audio_config=audio_config
     )
     filename = f"audio-files/{index}_{speaker}.mp3"
@@ -67,7 +76,6 @@ def synthesize_speech_google(text, speaker, index):
         out.write(response.audio_content)
     print(f'Audio content written to file "{filename}"')
 
-# ElevenLabs TTS function
 def synthesize_speech_elevenlabs(text, speaker, index):
     data = {
         "text": text,
@@ -85,18 +93,101 @@ def synthesize_speech_elevenlabs(text, speaker, index):
                 out.write(chunk)
     print(f'Audio content written to file "{filename}"')
 
-# Function to synthesize speech based on the speaker
-def synthesize_speech(text, speaker, index):
+def chunk_conversation(conversation, max_bytes=1000):  # Reduced to be even safer
+    chunks = []
+    current_chunk = []
+    current_size = 0
+    
+    for turn in conversation:
+        # Calculate byte size of the text
+        text_size = len(turn['text'].encode('utf-8'))
+        
+        if current_size + text_size > max_bytes:
+            # Store current chunk and start a new one
+            if current_chunk:  # Only append if chunk is not empty
+                chunks.append(current_chunk)
+            current_chunk = [turn]
+            current_size = text_size
+        else:
+            current_chunk.append(turn)
+            current_size += text_size
+    
+    # Append the last chunk if it exists
+    if current_chunk:
+        chunks.append(current_chunk)
+    
+    print(f"Split conversation into {len(chunks)} chunks")
+    for i, chunk in enumerate(chunks):
+        print(f"Chunk {i} size: {sum(len(turn['text'].encode('utf-8')) for turn in chunk)} bytes")
+    
+    return chunks
+
+def synthesize_speech_multispeaker(conversation):
+    # Create output directory if it doesn't exist
+    if os.path.exists('audio-files'):
+        shutil.rmtree('audio-files')
+    os.makedirs('audio-files', exist_ok=True)
+    
+    # Split conversation into chunks
+    conversation_chunks = chunk_conversation(conversation)
+    
+    # Process each chunk
+    for chunk_index, chunk in enumerate(conversation_chunks):
+        multi_speaker_markup = texttospeech_v1beta1.MultiSpeakerMarkup()
+        
+        for part in chunk:
+            turn = texttospeech_v1beta1.MultiSpeakerMarkup.Turn()
+            turn.text = part['text']
+            turn.speaker = MULTISPEAKER_CONFIG[part['speaker']]
+            multi_speaker_markup.turns.append(turn)
+        
+        synthesis_input = texttospeech_v1beta1.SynthesisInput(
+            multi_speaker_markup=multi_speaker_markup
+        )
+        
+        voice = texttospeech_v1beta1.VoiceSelectionParams(
+            language_code="en-US",
+            name="en-US-Studio-MultiSpeaker"
+        )
+        
+        audio_config = texttospeech_v1beta1.AudioConfig(
+            audio_encoding=texttospeech_v1beta1.AudioEncoding.MP3
+        )
+        
+        try:
+            response = tts_beta_client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice,
+                audio_config=audio_config
+            )
+            
+            # Save chunk to file
+            chunk_filename = f"audio-files/chunk_{chunk_index}.mp3"
+            with open(chunk_filename, "wb") as out:
+                out.write(response.audio_content)
+            print(f'Audio content written to file "{chunk_filename}"')
+            
+        except Exception as e:
+            print(f"Error processing chunk {chunk_index}:")
+            print(f"Chunk size: {sum(len(turn['text'].encode('utf-8')) for turn in chunk)} bytes")
+            print(f"Number of turns: {len(chunk)}")
+            print(f"Error: {str(e)}")
+            raise e
+    
+    # Merge all chunks
+    audio_folder = "./audio-files"
+    output_file = "podcast.mp3"
+    merge_audios(audio_folder, output_file)
+
+def synthesize_speech_default(text, speaker, index):
     if speaker == "Sascha":
         synthesize_speech_elevenlabs(text, speaker, index)
     else:
         synthesize_speech_google(text, speaker, index)
 
-# Function to sort filenames naturally
 def natural_sort_key(filename):
     return [int(text) if text.isdigit() else text for text in re.split(r'(\d+)', filename)]
 
-# Function to merge audio files
 def merge_audios(audio_folder, output_file):
     combined = AudioSegment.empty()
     audio_files = sorted(
@@ -111,7 +202,7 @@ def merge_audios(audio_folder, output_file):
     combined.export(output_file, format="mp3")
     print(f"Merged audio saved as {output_file}")
 
-# Vertex AI configuration to generate the conversation
+# Vertex AI configuration
 generation_config = GenerationConfig(
     max_output_tokens=8192,
     temperature=1,
@@ -120,7 +211,6 @@ generation_config = GenerationConfig(
     response_schema={"type": "ARRAY", "items": {"type": "OBJECT", "properties": {"speaker": {"type": "STRING"}, "text": {"type": "STRING"}}}},
 )
 
-# Function to calculate costs based on token counts
 def calculate_cost(prompt_token_count, candidates_token_count):
     cost_per_1k_chars = 0.0000046875
     total_chars = prompt_token_count + candidates_token_count
@@ -139,12 +229,10 @@ def generate_conversation():
         stream=False,
     )
     
-    # Extract metadata
     prompt_token_count = responses.usage_metadata.prompt_token_count
     candidates_token_count = responses.usage_metadata.candidates_token_count
     total_token_count = responses.usage_metadata.total_token_count
-
-    # Calculate cost
+    
     total_cost = calculate_cost(prompt_token_count, candidates_token_count)
     print(f"Total token count: {total_token_count}")
     print(f"Cost for Gemini API usage: ${total_cost:.6f}")
@@ -159,25 +247,32 @@ def generate_conversation():
     print(formatted_json)
     return json_data
 
-# Function to generate the podcast audio
 def generate_audio(conversation):
-    
-    if os.path.exists('audio-files'):
-        shutil.rmtree('audio-files')
-    
-    os.makedirs('audio-files', exist_ok=True)
-    for index, part in enumerate(conversation):
-        speaker = part['speaker']
-        text = part['text']
-        synthesize_speech(text, speaker, index)
-    audio_folder = "./audio-files"
-    output_file = "podcast.mp3"
-    merge_audios(audio_folder, output_file)
+    if args.synthesis_mode == 'multispeaker':
+        synthesize_speech_multispeaker(conversation)
+    else:
+        if os.path.exists('audio-files'):
+            shutil.rmtree('audio-files')
+        
+        os.makedirs('audio-files', exist_ok=True)
+        for index, part in enumerate(conversation):
+            speaker = part['speaker']
+            text = part['text']
+            synthesize_speech_default(text, speaker, index)
+        
+        audio_folder = "./audio-files"
+        output_file = "podcast.mp3"
+        merge_audios(audio_folder, output_file)
 
-# Read the article from the file
-with open('retail.txt', 'r') as file:
-    article = file.read()
+def main():
+    # Read the article from the file
+    with open('./articles/context-caching.txt', 'r') as file:
+        global article
+        article = file.read()
+    
+    # Generate conversation and audio
+    conversation = generate_conversation()
+    generate_audio(conversation)
 
-# Generate conversation and audio
-conversation = generate_conversation()
-generate_audio(conversation)
+if __name__ == "__main__":
+    main()
