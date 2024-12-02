@@ -11,43 +11,81 @@ from pydub import AudioSegment
 from vertexai.generative_models import GenerativeModel, GenerationConfig
 from dotenv import load_dotenv
 
+# Additional import for AWS Bedrock
+import boto3
+
+# AWS Bedrock client setup
+session = boto3.Session(region_name='us-west-2')  # Adjust your region
+bedrock = session.client(service_name='bedrock-runtime')
+
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialize argument parser
 parser = argparse.ArgumentParser(description='Generate podcast audio with different synthesis modes')
-parser.add_argument('--synthesis_mode', choices=['default', 'multispeaker'], 
-                    default='default', help='Choose synthesis mode: default (ElevenLabs+Google) or multispeaker (Google)')
+parser.add_argument(
+    '--synthesis_mode', 
+    choices=['default', 'multispeaker', 'polly'], 
+    default='default', 
+    help='Choose synthesis mode: default (ElevenLabs+Google), multispeaker (Google), or polly (AWS Polly)'
+)
+
+# Add command-line argument for using Bedrock
+parser.add_argument('--use_bedrock', action='store_true', help='Use Amazon Bedrock with Anthropic')
+
+
 args = parser.parse_args()
 
 # Clients
 tts_client = texttospeech.TextToSpeechClient()
 tts_beta_client = texttospeech_v1beta1.TextToSpeechClient()
 
-system_prompt = """you are an experienced podcast host...
+re_invent_system_prompt = """you are an experienced podcast host
 
-
-- based on text like an article you can create an engaging conversation between two people. 
-- make the conversation at least 30000 characters long with a lot of emotion.
-- in the response for me to identify use Sascha and Marina.
-- Sascha is writing the articles and Marina is the second speaker that is asking all the good questions.
-- The podcast is called The Machine Learning Engineer.
-- Short sentences that can be easily used with speech synthesis.
-- excitement during the conversation.
-- do not mention last names.
-- Sascha and Marina are doing this podcast together. Avoid sentences like: "Thanks for having me, Marina!"
-- Include filler words like äh to make the conversation more natural.
+Follow these instructions precisely:
+1. based on text like an article you can create an engaging conversation between two people. 
+2. make the conversation at least 30000 characters long with a lot of emotion.
+3. in the response for me to identify use Sascha and Ieva.
+4. Sascha and Ieva are doing this podcast together. 
+5. Ieva is the second speaker that is asking all the good questions.
+6. The podcast covers all topics about AWS re invent 2024 event
+7. the podcast is called AWS insiders podcast sponsored by do it.
+8. Short sentences that can be easily used with speech synthesis.
+9. excitement during the conversation.
+10. Include filler words like äh to make the conversation more natural.
+11. only use the content provided.
 """
+
+system_prompt = """you are an experienced podcast host
+
+Follow these instructions precisely:
+1. based on text like an article you can create an engaging conversation between two people. 
+2. make the conversation at least 30000 characters long with a lot of emotion.
+3. in the response for me to identify use Sascha and Ieva.
+4. Sascha and Ieva are doing this podcast together. 
+5. Ieva is the second speaker that is asking all the good questions.
+6. The podcast covers all topics about AWS
+7. the podcast is called AWS insiders podcast sponsored by do it.
+8. Short sentences that can be easily used with speech synthesis.
+9. excitement during the conversation.
+10. Include filler words like äh to make the conversation more natural.
+11. only use the content provided.
+"""
+
+POLLY_VOICE_CONFIG = {
+    "Sascha": "Stephen",
+    "Ieva": "Danielle"
+}
 
 # Speaker configurations
 DEFAULT_SPEAKER_CONFIG = {
     "Sascha": "ElevenLabs",  # ElevenLabs API
-    "Marina": "en-US-Journey-O"  # Google API
+    "Ieva": "en-US-Journey-O" 
 }
 
 MULTISPEAKER_CONFIG = {
-    "Sascha": "T",  # Using T for a male voice
-    "Marina": "R"   # Using S for a female voice
+    "Sascha": "U",  
+    "Ieva": "R"
 }
 
 # ElevenLabs configuration
@@ -59,7 +97,42 @@ elevenlabs_headers = {
     "xi-api-key": elevenlabs_api_key
 }
 
-def synthesize_speech_google(text, speaker, index):
+# Tool definition for Bedrock
+tool_list = [
+    {
+        "toolSpec": {
+            "name": "generate_podcast",
+            "description": "Generate a podcast conversation between two speakers.",
+            "inputSchema": {
+                "json": {
+                    "type": "object",
+                    "properties": {
+                        "conversation": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "speaker": {
+                                        "type": "string",
+                                        "description": "Name of the speaker."
+                                    },
+                                    "text": {
+                                        "type": "string",
+                                        "description": "Speech text for the speaker."
+                                    }
+                                },
+                                "required": ["speaker", "text"]
+                            }
+                        }
+                    },
+                    "required": ["conversation"]
+                }
+            }
+        }
+    }
+]
+
+def synthesize_speech_g(text, speaker, index):
     synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
         language_code="en-US",
@@ -122,6 +195,26 @@ def chunk_conversation(conversation, max_bytes=1000):  # Reduced to be even safe
     
     return chunks
 
+from boto3 import client
+
+def synthesize_speech_polly(text, speaker, index):
+    polly = client('polly', region_name='us-west-2')  # Adjust region as needed
+    try:
+        response = polly.synthesize_speech(
+            Engine='neural',
+            Text=text,
+            OutputFormat='mp3',
+            VoiceId=POLLY_VOICE_CONFIG[speaker]
+        )
+        stream = response.get('AudioStream')
+        filename = f"audio-files/{index}_{speaker}.mp3"
+        with open(filename, 'wb') as f:
+            f.write(stream.read())
+        print(f'Polly audio content written to file "{filename}"')
+    except Exception as e:
+        print(f"Error generating audio with Polly for speaker '{speaker}': {str(e)}")
+
+
 def synthesize_speech_multispeaker(conversation):
     # Create output directory if it doesn't exist
     if os.path.exists('audio-files'):
@@ -183,7 +276,7 @@ def synthesize_speech_default(text, speaker, index):
     if speaker == "Sascha":
         synthesize_speech_elevenlabs(text, speaker, index)
     else:
-        synthesize_speech_google(text, speaker, index)
+        synthesize_speech_g(text, speaker, index)
 
 def natural_sort_key(filename):
     return [int(text) if text.isdigit() else text for text in re.split(r'(\d+)', filename)]
@@ -202,14 +295,7 @@ def merge_audios(audio_folder, output_file):
     combined.export(output_file, format="mp3")
     print(f"Merged audio saved as {output_file}")
 
-# Vertex AI configuration
-generation_config = GenerationConfig(
-    max_output_tokens=8192,
-    temperature=1,
-    top_p=0.95,
-    response_mime_type="application/json",
-    response_schema={"type": "ARRAY", "items": {"type": "OBJECT", "properties": {"speaker": {"type": "STRING"}, "text": {"type": "STRING"}}}},
-)
+
 
 def calculate_cost(prompt_token_count, candidates_token_count):
     cost_per_1k_chars = 0.0000046875
@@ -217,12 +303,56 @@ def calculate_cost(prompt_token_count, candidates_token_count):
     total_cost = (total_chars / 1000) * cost_per_1k_chars
     return total_cost
 
-def generate_conversation():
+def generate_conversation_bedrock(article):
+    print("Using Amazon Bedrock for conversation generation...")
+    message = {
+        "role": "user",
+        "content": [
+            {"text": f"<content>{article}</content>"},
+            {"text": system_prompt}
+        ],
+    }
+    response = bedrock.converse(
+        modelId="anthropic.claude-3-sonnet-20240229-v1:0",  # Adjust based on model availability
+        messages=[message],
+        inferenceConfig={
+            "maxTokens": 4096,
+            "temperature": 0.7
+        },
+        toolConfig={
+            "tools": tool_list,
+            "toolChoice": {
+                "tool": {
+                    "name": "generate_podcast"
+                }
+            }
+        }
+    )
+    response_message = response['output']['message']
+    response_content_blocks = response_message['content']
+    content_block = next((block for block in response_content_blocks if 'toolUse' in block), None)
+    tool_use_block = content_block['toolUse']
+    conversation_data = tool_use_block['input']['conversation']  # Extract the conversation array
+
+    return conversation_data
+
+
+def generate_conversation(article):
     vertexai.init(project="sascha-playground-doit", location="us-central1")
     model = GenerativeModel(
         "gemini-1.5-flash-002",
         system_instruction=[system_prompt]
     )
+
+    # Vertex AI configuration
+    generation_config = GenerationConfig(
+        max_output_tokens=8192,
+        temperature=0.7,
+        top_p=0.95,
+        response_mime_type="application/json",
+        response_schema={"type": "ARRAY", "items": {"type": "OBJECT", "properties": {"speaker": {"type": "STRING"}, "text": {"type": "STRING"}}}},
+    )
+
     responses = model.generate_content(
         [article],
         generation_config=generation_config,
@@ -242,7 +372,7 @@ def generate_conversation():
     
     total_chars = sum(len(part["text"]) for part in json_data)
     print(f"Total character count in conversation: {total_chars}")
-    
+
     formatted_json = json.dumps(json_data, indent=4)
     print(formatted_json)
     return json_data
@@ -250,28 +380,47 @@ def generate_conversation():
 def generate_audio(conversation):
     if args.synthesis_mode == 'multispeaker':
         synthesize_speech_multispeaker(conversation)
-    else:
+    elif args.synthesis_mode == 'polly':
         if os.path.exists('audio-files'):
             shutil.rmtree('audio-files')
-        
+        os.makedirs('audio-files', exist_ok=True)
+        for index, part in enumerate(conversation):
+            speaker = part['speaker']
+            text = part['text']
+            synthesize_speech_polly(text, speaker, index)
+    else:  # Default synthesis
+        if os.path.exists('audio-files'):
+            shutil.rmtree('audio-files')
         os.makedirs('audio-files', exist_ok=True)
         for index, part in enumerate(conversation):
             speaker = part['speaker']
             text = part['text']
             synthesize_speech_default(text, speaker, index)
-        
-        audio_folder = "./audio-files"
-        output_file = "podcast.mp3"
-        merge_audios(audio_folder, output_file)
+    
+    audio_folder = "./audio-files"
+    output_file = "podcast.mp3"
+    merge_audios(audio_folder, output_file)
+
+def save_conversation(conversation):
+    json_output_path = "./conversation/conversation.json"
+    os.makedirs(os.path.dirname(json_output_path), exist_ok=True)
+    with open(json_output_path, "w") as json_file:
+        json.dump(conversation, json_file, indent=4)
+    print(f"Conversation saved to {json_output_path}")
 
 def main():
     # Read the article from the file
-    with open('./articles/context-caching.txt', 'r') as file:
-        global article
+    with open('./articles/reinvent2024/intro2.txt', 'r') as file:
         article = file.read()
-    
-    # Generate conversation and audio
-    conversation = generate_conversation()
+
+     # Decide which platform to use for generating conversation
+    if args.use_bedrock:
+        conversation = generate_conversation_bedrock(article)
+    else:
+        conversation = generate_conversation(article)
+
+    save_conversation(conversation)
+
     generate_audio(conversation)
 
 if __name__ == "__main__":
