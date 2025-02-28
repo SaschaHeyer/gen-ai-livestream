@@ -1,0 +1,11 @@
+{
+    "outputConfig":
+    {
+      "bigqueryDestination":
+      {
+        "datasetId": "retail",
+          "tableIdPrefix": "export",
+          "tableType": "view"
+      }
+    }
+  }
