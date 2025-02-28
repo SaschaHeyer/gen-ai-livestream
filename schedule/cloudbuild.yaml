@@ -1,0 +1,15 @@
+steps:
+  # Step 1: Build the Docker image and push it to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/domainsheyer/schedule', '.']
+    
+  # Step 2: Push the Docker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/domainsheyer/schedule']
+
+  # Step 3: Deploy the container image to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['run', 'deploy', 'schedule', '--image', 'gcr.io/domainsheyer/schedule', '--platform', 'managed', '--region', 'us-central1', '--allow-unauthenticated']
+
+images:
+  - 'gcr.io/domainsheyer/schedule'

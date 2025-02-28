@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Livestream Schedule</title>
+    
+    <!-- Include Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #fcfcfc; /* Updated background color */
+            color: #333333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #4285F4; /* Google Blue */
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .about-me {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        .schedule-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .schedule-info p {
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+
+        .watch-links {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .watch-links p {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .watch-links a {
+            display: inline-flex;
+            align-items: center;
+            color: #4285F4;
+            text-decoration: none;
+            margin: 0 8px;
+            font-size: 1em;
+        }
+
+        .watch-links a i {
+            margin-right: 5px;
+        }
+
+        .watch-links a:hover {
+            text-decoration: underline;
+        }
+
+        .watch-note {
+            font-size: 1em;
+            color: #555;
+            text-align: center;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            max-width: 1200px;
+        }
+
+        .column {
+            width: 48%;
+            padding: 10px; /* Add padding to columns */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #DDDDDD;
+        }
+
+        th {
+            background-color: #F5F5F5;
+            color: #333;
+        }
+
+        tr:hover {
+            background-color: #F1F1F1;
+        }
+
+        .icon-link {
+            color: #4285F4;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        .icon-link:hover {
+            color: #333;
+        }
+
+        .note {
+            text-align: center;
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .repo-info {
+            text-align: center;
+            font-size: 1em;
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .repo-info a {
+            color: #4285F4;
+            text-decoration: none;
+        }
+
+        .repo-info a:hover {
+            text-decoration: underline;
+        }
+
+        .gif-container {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .gif-container img {
+            width: 80%; /* Adjust the width of the GIF here */
+            max-width: 1400px; /* Optional: Set a max-width to ensure it doesn't get too large */
+            height: auto;
+        }
+
+        /* Media Query for Mobile Devices */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column; /* Stack the columns vertically */
+                align-items: center;
+            }
+
+            .column {
+                width: 100%; /* Make each column full width */
+            }
+
+            .note {
+                text-align: left;
+                margin-left: 15px;
+            }
+        }
+
+        .x-joke {
+            color: #1DA1F2; /* Twitter/X blue color */
+            font-style: italic;
+            margin-top: 10px;
+            font-size: 1em;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="gif-container">
+        <img src="livestream3.gif" alt="Livestream GIF">
+    </div>
+
+    <div class="schedule-info">
+        <p>📅 Every Friday from 10 - 11:30 AM CET / 8 - 9:30 AM UTC</p>
+    </div>
+
+    <div class="watch-links">
+        <p>Where to Watch:</p>
+        <a href="https://www.linkedin.com/in/saschaheyer/" target="_blank">
+            <i class="fab fa-linkedin"></i> LinkedIn
+        </a>
+        <a href="https://www.twitch.tv/saschaheyer" target="_blank">
+            <i class="fab fa-twitch"></i> Twitch
+        </a>
+        <a href="https://www.youtube.com/@ml-engineer" target="_blank">
+            <i class="fab fa-youtube"></i> YouTube
+        </a>
+        <a href="https://kick.com/mlengineer" target="_blank">
+            <i class="fab fa-kickstarter-k"></i> Kick
+        </a>
+    </div>
+
+    <div class="watch-note">
+        <p>To join the livestream, simply visit any of the platforms listed above at the scheduled time. We look forward to seeing you there!</p>
+    </div>
+
+    <div class="container">
+        <div class="column">
+            <h2>Upcoming Livestreams</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Topic</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>November 22, 2024</td>
+                        <td>Vertex AI Controlled Generation</td>
+                    </tr>
+                    <tr>
+                        <td>November 29, 2024</td>
+                        <td>Vertex AI Grounding</td>
+                    </tr>
+                    <tr>
+                        <td>December 6, 2024</td>
+                        <td>Cloud Run GPUs</td>
+                    </tr>
+                    <tr>
+                        <td>December 13, 2024</td>
+                        <td>Vertex AI Batch Generation (Gemini)</td>
+                    </tr>
+                    <tr>
+                        <td>December 20, 2024</td>
+                        <td>no livestream (holiday season)</td>
+                    </tr>
+                    <tr>
+                        <td>December 27, 2024</td>
+                        <td>no livestream (new year season)</td>
+                    </tr>
+                    <tr>
+                        <td>January 3, 2025</td>
+                        <td>Smarter Log Analysis with Gemini<br><small>A two step process from query to insights</small></td>
+                    </tr>
+                    <tr>
+                        <td>January 10, 2025</td>
+                        <td>Flux LoRA for Product Images</small></td>
+                    </tr>
+                    <tr>
+                        <td>January 17, 2024</td>
+                        <td>Tune Text Embeddings</td>
+                    </tr>
+                    <tr>
+                        <td>January 24, 2024</td>
+                        <td>Real Time Multimodal Similarity Search</td>
+                    </tr>
+                    <tr>
+                        <td>January 31, 2024</td>
+                        <td>Automate RFP Process with Gemini and Google Sheets</td>
+                    </tr>
+                  
+                </tbody>
+            </table>
+            <div class="note">
+                <p>Note: Upcoming schedule topics might change.</p>
+            </div>
+        </div>
+
+        <div class="column">
+            <h2>Past Livestreams (10 Episodes)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Topic</th>
+                        <th>Duration</th>
+                        <th>Medium</th>
+                        <th>YouTube</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>November 15, 2024</td>
+                        <td>Meta Prompt Guard</td>
+                        <td>16 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/meta-prompt-guard-9c4d6584e75c" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/IFWzXOWxp6E" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td> 
+                    
+                    </tr>
+                    <tr>
+                        <td>November 1, 2024</td>
+                        <td>Building a Dynamic Podcast Generator Inspired by Google’s NotebookLM and Illuminate</td> 
+                        <td>21 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/building-a-dynamic-podcast-generator-inspired-by-googles-notebooklm-and-illuminate-e585cfcd0af1" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/FT-OyDzjAZo" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td> 
+                    </tr>
+                    <tr>
+                        <td>October 18, 2024</td>
+                        <td>Vertex AI Context Caching</td>
+                        <td>16 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/vertex-ai-context-caching-with-gemini-189117418b67" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/eAUIanQMJJg" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                      
+                    </tr>
+                    <tr>
+                        <td>September 13, 2024</td>
+                        <td>Vertex AI RAG API</td>
+                        <td>22 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/google-cloud-rag-api-c7e3c9931b3e" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/eHNbnQWk4y4" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                     
+                    </tr>
+                    <tr>
+                        <td>September 6, 2024</td>
+                        <td>Document Processing with Multimodal Models <br><small>How to process 10251 documents for just 1$. Built within 15 minutes.</small></td>
+                        <td>18 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/multimodal-document-processing-800adca336c7" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://www.youtube.com/watch?v=TGwHHU9BqOY" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                    
+                    </tr>
+                    <tr>
+                        <td>August 30, 2024</td>
+                        <td>Vertex AI Function Calling</td>
+                        <td>18 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/reranking-3b5f351cb398" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/3Vsusi9wmqY" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                    </tr>
+                    <tr>
+                        <td>August 23, 2024</td>
+                        <td>Reranking</td>
+                        <td>31 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/reranking-3b5f351cb398" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/7wG1e1bPToE" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                    </tr>
+                    <tr>
+                        <td>August 2, 2024</td>
+                        <td>Gemini Code Assist</td>
+                        <td>53 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/gemini-code-assist-051f94c78e86" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/DoRXIlzNshc" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                    </tr>
+                    <tr>
+                        <td>July 19, 2024</td>
+                        <td>Generative AI Orchestration - Episode 2</td>
+                        <td>44 minutes</td>
+                        <td><a href="https://medium.com/google-cloud/orchestrate-generative-ai-applications-fd8b7d4436a6" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/G4TKtnWhThY" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></td>
+                    </tr>
+                    <tr>
+                        <td>July 12, 2024</td>
+                        <td>Generative AI Orchestration - Episode 1</td>
+                        <td>1:37 hours</td>
+                        <td><a href="https://medium.com/google-cloud/orchestrate-generative-ai-applications-fd8b7d4436a6" target="_blank" class="icon-link"><i class="fab fa-medium"></i></a></td>
+                        <td><a href="https://youtu.be/d9lQ9mSZQwA" target="_blank" class="icon-link"><i class="fab fa-youtube"></i></a></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="repo-info">
+                <p>All code for the livestreams can be found on my GitHub: <a href="https://github.com/SaschaHeyer/gen-ai-livestream" target="_blank">github.com/SaschaHeyer/gen-ai-livestream</a></p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
