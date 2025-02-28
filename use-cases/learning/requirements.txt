@@ -1,0 +1,4 @@
+streamlit
+requests
+beautifulsoup4
+google-cloud-storage
