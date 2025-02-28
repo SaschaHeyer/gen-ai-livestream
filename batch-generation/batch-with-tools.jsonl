@@ -1,0 +1,2 @@
+{"id": 1, "request": {"contents": [{"parts": {"text": "Give me a recipe for banana bread."}, "role": "user"}]}}
+{"id": 1, "request": {"contents": [{"parts": {"text": "whats the apple stock price?"}, "role": "user"}], "tools": [{"googleSearchRetrieval": {"dynamicRetrievalConfig": {"mode": "MODE_DYNAMIC", "dynamicThreshold": 0.7}}}]}}

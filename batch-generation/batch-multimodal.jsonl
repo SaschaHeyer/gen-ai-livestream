@@ -1,0 +1,1 @@
+{"id": "invoice-12345", "request": {"contents": [{"role": "USER", "parts": [{"fileData": {"fileUri": "gs://doit-llm/multimodal/invoice.pdf", "mimeType": "application/pdf"}}, {"text": "Extract the following entities: Invoice Number, Total Amount, and Due Date."}]}]}}

@@ -1,0 +1,3 @@
+{"request": {"contents": [{"role": "user", "parts": [{"text": "Transcript the video."}, {"file_data": {"file_uri": "https://youtu.be/mBF71w00IO0", "mime_type": "video/mp4"}}]}]}}
+{"request": {"contents": [{"role": "user", "parts": [{"text": "Transcript the video."}, {"file_data": {"file_uri": "https://youtu.be/XZYS8d2r-q4", "mime_type": "video/mp4"}}]}]}}
+{"request": {"contents": [{"role": "user", "parts": [{"text": "Transcript the video."}, {"file_data": {"file_uri": "https://youtu.be/czbSXaf9f8w", "mime_type": "video/mp4"}}]}]}}
