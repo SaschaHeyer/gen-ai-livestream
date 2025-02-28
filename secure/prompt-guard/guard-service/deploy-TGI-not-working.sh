@@ -1,0 +1,14 @@
+gcloud beta run deploy prompt-guard \
+    --image="us-docker.pkg.dev/deeplearning-platform-release/gcr.io/huggingface-text-generation-inference-cu121.2-2.ubuntu2204.py310" \
+    --args="--model-id=meta-llama/Prompt-Guard-86M,--max-concurrent-requests=64" \
+    --port=8080 \
+    --cpu=4 \
+    --memory=16Gi \
+    --no-cpu-throttling \
+    --gpu=1 \
+    --gpu-type=nvidia-l4 \
+    --max-instances=3 \
+    --concurrency=64 \
+    --region="us-central1" \
+    --set-env-vars="HUGGING_FACE_HUB_TOKEN=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" \
+    --no-allow-unauthenticated
