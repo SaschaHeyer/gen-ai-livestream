@@ -1,0 +1,14 @@
+# Use the official Nginx image as a base
+FROM nginx:alpine
+
+# Copy your website files to the Nginx default directory
+COPY . /usr/share/nginx/html
+
+# Update Nginx configuration to listen on port 8080
+RUN sed -i 's/80/8080/g' /etc/nginx/conf.d/default.conf
+
+# Expose port 8080 to serve the web page
+EXPOSE 8080
+
+# Start Nginx and listen on port 8080
+CMD ["nginx", "-g", "daemon off;"]
