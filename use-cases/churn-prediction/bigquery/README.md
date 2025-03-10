@@ -1,6 +1,6 @@
 # Churn Prediction with BigQuery ML
 
-This project demonstrates how to implement a customer churn prediction model using Google BigQuery ML. The implementation mirrors the scikit-learn approach found in the `../notebook/sklearn.ipynb` file, but leverages BigQuery for scalable data processing and model training.
+This project demonstrates how to implement a customer churn prediction model using Google BigQuery ML. The implementation mirrors the approach found in the `../notebook/basic.ipynb` file, but leverages BigQuery for scalable data processing and model training.
 
 ## Overview
 
