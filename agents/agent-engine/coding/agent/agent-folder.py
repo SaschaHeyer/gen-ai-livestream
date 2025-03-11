@@ -10,7 +10,7 @@ from githubtools import GitHubTools
 
 tools = GitHubTools()
 
-model = "gemini-2.0-pro-exp-02-05"
+#model = "gemini-2.0-pro-exp-02-05"
 model = "gemini-2.0-flash-001"
 
 agent = reasoning_engines.LangchainAgent(
@@ -50,18 +50,23 @@ agent = reasoning_engines.LangchainAgent(
     use the tool `create_github_branch` to create a dedicated branch as preparetion for the fix
     use the tool `update_github_file` to apply the fix in the new branch.
     use the tool  `create_github_pull_request` to create a pull request.
-    Use the tool `post_github_comment` to post a response in markdown format.
+    Always use the tool `post_github_comment` to apost a response in markdown format explaining the code changes and referencing the PR.
 
     The post_github_comment tool should use markdown and an description of the fix provided with the PR.
 
     """,
 )
 
-#remote_agent = reasoning_engines.ReasoningEngine.create(
-    #agent,
-    #requirements="requirements.txt",
-    #extra_packages=["githubtools.py"],
+remote_agent = reasoning_engines.ReasoningEngine.create(
+    agent,
+    requirements="requirements.txt",
+    extra_packages=["githubtools.py"],
+)
+
+#response = remote_agent.query(
+#    input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
 #)
+
 
 # print(remote_agent)
 
@@ -75,19 +80,19 @@ agent = reasoning_engines.LangchainAgent(
         #print(f"❌ {tool.__name__} is not serializable: {e}")
 
 
-owner = "SaschaHeyer"
-issue_number = "1"
-repo = "generative-ai-python-agent-test"
+#owner = "SaschaHeyer"
+#issue_number = "1"
+#repo = "generative-ai-python-agent-test"
 
-print("agenttttt")
-response = agent.query(
-    input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
-)
+#print("agenttttt")
+#response = agent.query(
+    #input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+#)
 
-#print(response)
-print(response["output"])
+##print(response)
+#print(response["output"])
 
-# console.print(f"[green]{response['output']}[/green]")
+## console.print(f"[green]{response['output']}[/green]")
 
 # Example usage
 # issue_analysis = analyze_issue("SaschaHeyer", "coding-agent-sample-repository", 6)
