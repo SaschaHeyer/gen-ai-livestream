@@ -18,7 +18,6 @@ agent = reasoning_engines.LangchainAgent(
     model=model,
     tools=[
         tools.fetch_github_issue,
-        tools.fetch_github_issue,
         tools.fetch_github_directory,
         tools.post_github_comment,
         tools.create_github_branch,
@@ -33,6 +32,7 @@ agent = reasoning_engines.LangchainAgent(
     You receive a GitHub issue and all current comments.
 
     use the tool `fetch_github_directory` to explore GitHub repositories before crafting a comment.
+    The fetch_github_directory tool accepts an optional 'branch' parameter to fetch content from a specific branch.
 
     You participate in the discussion by:
     - helping users find answers to their questions
@@ -47,31 +47,38 @@ agent = reasoning_engines.LangchainAgent(
     - ALWAYS USE A DEDICATED BRANCH. NOT THE MAIN BRANCH
 
     use the tool `fetch_github_pr_changes` to check if a potential suggested PR is already solving the issue
-    - If there is already a PR in the comments (merge or not merged) do not create a new one your work is done.j
-    use the tool `create_github_branch` to create a dedicated branch as preparetion for the fix
+    - If there is already a PR in the comments (merge or not merged) do not create a new one your work is done
+
+    use the tool `create_github_branch` to create a dedicated branch as preparation for the fix
+
     use the tool `update_github_file` to apply the fix in the new branch.
-    use the tool  `create_github_pull_request` to create a pull request.
-    Always use the tool `post_github_comment` to apost a response in markdown format explaining the code changes and referencing the PR.
+    The update_github_file tool can be used to:
+    - Update existing files in a branch by specifying the file path, new content, commit message, and branch
+    - Create new files in a branch by specifying a path to a file that doesn't exist yet
+
+    use the tool `create_github_pull_request` to create a pull request.
+
+    Always use the tool `post_github_comment` to post a response in markdown format explaining the code changes and referencing the PR.
 
     Always post a description of the fix as a comment to the initial issue using the post_github_comment tool.
 
     """,
 )
 
-remote_agent = agent_engines.create(
-    agent,
-    requirements="requirements.txt",
-    extra_packages=["githubtools.py", "github-private-key.pem"],
-)
-
-
-#owner = "SaschaHeyer"
-#issue_number = "34"
-#repo = "coding-agent-sample-repository-2"
-
-#response = agent.query(
-    #input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+#remote_agent = agent_engines.create(
+    #agent,
+    #requirements="requirements.txt",
+    #extra_packages=["githubtools.py", "github-private-key.pem"],
 #)
+
+
+owner = "SaschaHeyer"
+issue_number = "41"
+repo = "coding-agent-sample-repository-2"
+
+response = agent.query(
+    input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+)
 
 
 # print(remote_agent)

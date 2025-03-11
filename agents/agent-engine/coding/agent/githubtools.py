@@ -192,13 +192,22 @@ class GitHubTools:
             return base64.b64decode(content).decode("utf-8")
         return content
 
-    def fetch_github_directory(self, owner: str, repo: str, path: str):
+    def fetch_github_directory(self, owner: str, repo: str, path: str, branch: str = "main"):
         """
         Navigates and fetches content from GitHub repositories.
+        
+        Args:
+            owner (str): GitHub repository owner.
+            repo (str): Repository name.
+            path (str): Path within the repository to fetch.
+            branch (str): The branch to fetch from (defaults to "main").
+
+        Returns:
+            dict: Content of the directory or file.
         """
         console.print("[cyan]USE TOOL FETCH_DIRECTORY[/cyan]")
-        url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
-        print(url)
+        url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}"
+        console.print(f"[cyan]Fetching from {url}[/cyan]")
 
         headers = self._get_auth_headers()
 
@@ -210,8 +219,7 @@ class GitHubTools:
 
         # single file
         if not isinstance(contents, list):
-
-            print("PROCESS SINGLE FILE")
+            console.print("[cyan]Processing single file[/cyan]")
 
             content = {
                 "name": contents["name"],
@@ -219,8 +227,7 @@ class GitHubTools:
                     contents["content"], contents["encoding"]
                 ),
             }
-            print(content)
-
+            
             return content
 
         return response.json()
@@ -273,7 +280,7 @@ class GitHubTools:
     ):
         """
         Updates a file in a GitHub repository by modifying its content and committing the change
-        to a specific branch.
+        to a specific branch. If the file doesn't exist, it will be created.
 
         Args:
             owner (str): GitHub repository owner.
@@ -299,12 +306,6 @@ class GitHubTools:
         file_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}?ref={branch}"
         response = requests.get(file_url, headers=headers)
 
-        if response.status_code != 200:
-            return {"error": f"Failed to fetch file: {response.text}"}
-
-        file_data = response.json()
-        sha = file_data["sha"]  # Required for updating the file
-
         # Encode the new content to Base64
         encoded_content = base64.b64encode(new_content.encode("utf-8")).decode("utf-8")
 
@@ -312,15 +313,23 @@ class GitHubTools:
         payload = {
             "message": commit_message,
             "content": encoded_content,
-            "sha": sha,
             "branch": branch,
         }
 
-        # Send the request to update the file
+        # If the file exists, add its SHA to the payload
+        if response.status_code == 200:
+            file_data = response.json()
+            payload["sha"] = file_data["sha"]  # Required for updating the file
+        elif response.status_code != 404:
+            # If it's not a 404 (file not found), then there's a different error
+            return {"error": f"Failed to fetch file: {response.text}"}
+        # For 404, we're creating a new file so we don't need a SHA
+
+        # Send the request to update or create the file
         update_response = requests.put(file_url, headers=headers, json=payload)
 
         if update_response.status_code not in [200, 201]:
-            return {"error": f"Failed to update file: {update_response.text}"}
+            return {"error": f"Failed to update/create file: {update_response.text}"}
 
         return update_response.json()
 
