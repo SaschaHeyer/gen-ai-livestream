@@ -145,6 +145,15 @@ class GitHubTools:
         console.print(f"[cyan]USE TOOL UPDATE_FILE on branch {branch}[/cyan]")
         # print(f"USE TOOL UPDATE_FILE on branch {branch}")
 
+        # For debugging: Save to a local file
+        debug_file_path = f"debug_{owner}_{repo}_{file_path.replace('/', '_')}"
+        try:
+            with open(debug_file_path, "w") as f:
+                f.write(new_content)
+            console.print(f"[green]DEBUG: Content saved to {debug_file_path}[/green]")
+        except Exception as e:
+            console.print(f"[red]DEBUG: Failed to save debug file: {str(e)}[/red]")
+
         if branch in {"main", "master"}:
             return {
                 "error": f"direct commits to master or main branch are not allowed use a dedicated branch instead"
