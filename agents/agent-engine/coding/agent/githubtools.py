@@ -47,7 +47,7 @@ class GitHubTools:
 
             # Generate JWT token for GitHub App authentication
             self.token = self._get_jwt_token()
-            
+
             # If installation_id is provided, get an installation token
             if installation_id:
                 self.installation_token = self._get_installation_token(installation_id)
@@ -71,7 +71,7 @@ class GitHubTools:
             import os
             abs_key_path = os.path.abspath(self.private_key_path)
             console.print(f"[cyan]Using private key at: {abs_key_path}[/cyan]")
-            
+
             # Read the private key
             with open(abs_key_path, 'r') as key_file:
                 private_key = key_file.read()
@@ -83,7 +83,7 @@ class GitHubTools:
                 "exp": now + (10 * 60),      # JWT expires in 10 minutes
                 "iss": self.app_id           # GitHub App ID
             }
-            
+
             console.print(f"[cyan]Creating JWT with app_id: {self.app_id}[/cyan]")
 
             # Create JWT token
@@ -92,7 +92,7 @@ class GitHubTools:
             # If token is returned as bytes (depends on jwt version), decode to string
             if isinstance(token, bytes):
                 token = token.decode('utf-8')
-                
+
             console.print("[green]JWT token generated successfully[/green]")
             return token
         except Exception as e:
@@ -118,17 +118,17 @@ class GitHubTools:
             # Get the installation token
             url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
             headers = {"Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github.v3+json"}
-            
+
             console.print(f"[cyan]Requesting installation token for installation ID: {installation_id}[/cyan]")
             response = requests.post(url, headers=headers)
-            
+
             if response.status_code != 201:
                 console.print(f"[red]Error getting installation token: {response.status_code} - {response.text}[/red]")
                 return None
-                
+
             token_data = response.json()
             return token_data.get("token")
-            
+
         except Exception as e:
             console.print(f"[red]Error generating installation token: {str(e)}[/red]")
             return None
@@ -144,13 +144,13 @@ class GitHubTools:
             # If we have an installation token, use it (preferred for API operations)
             if self.installation_token:
                 return {"Authorization": f"token {self.installation_token}", "Accept": "application/vnd.github.v3+json"}
-            
+
             # Fall back to JWT token if no installation token
             if not self.token:
                 console.print("[red]Error: JWT token for GitHub App is None[/red]")
                 # Fallback to token auth if JWT token generation failed
                 return {"Authorization": f"Bearer {os.environ.get('GITHUB_TOKEN')}", "Accept": "application/vnd.github.v3+json"}
-            
+
             # GitHub App authentication uses Bearer prefix for JWT
             return {"Authorization": f"Bearer {self.token}", "Accept": "application/vnd.github.v3+json"}
         else:  # token auth is default
@@ -287,16 +287,6 @@ class GitHubTools:
             dict: API response or error message.
         """
         console.print(f"[cyan]USE TOOL UPDATE_FILE on branch {branch}[/cyan]")
-        # print(f"USE TOOL UPDATE_FILE on branch {branch}")
-
-        # For debugging: Save to a local file
-        debug_file_path = f"debug_{owner}_{repo}_{file_path.replace('/', '_')}"
-        try:
-            with open(debug_file_path, "w") as f:
-                f.write(new_content)
-            console.print(f"[green]DEBUG: Content saved to {debug_file_path}[/green]")
-        except Exception as e:
-            console.print(f"[red]DEBUG: Failed to save debug file: {str(e)}[/red]")
 
         if branch in {"main", "master"}:
             return {
