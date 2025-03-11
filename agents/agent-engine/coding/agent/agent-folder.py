@@ -1,4 +1,5 @@
 import vertexai
+from vertexai import agent_engines
 from vertexai.preview import reasoning_engines
 
 STAGING_BUCKET = "gs://doit-llm"
@@ -10,8 +11,8 @@ from githubtools import GitHubTools, AuthMethod
 
 tools = GitHubTools(auth_method=AuthMethod.APP, installation_id="62441133")
 
-#model = "gemini-2.0-pro-exp-02-05"
-model = "gemini-2.0-flash-001"
+model = "gemini-2.0-pro-exp-02-05"
+#model = "gemini-2.0-flash-001"
 
 agent = reasoning_engines.LangchainAgent(
     model=model,
@@ -57,20 +58,20 @@ agent = reasoning_engines.LangchainAgent(
     """,
 )
 
-#remote_agent = reasoning_engines.ReasoningEngine.create(
-    #agent,
-    #requirements="requirements.txt",
-    #extra_packages=["githubtools.py"],
-#)
-
-
-owner = "SaschaHeyer"
-issue_number = "30"
-repo = "coding-agent-sample-repository-2"
-
-response = agent.query(
-    input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+remote_agent = agent_engines.create(
+    agent,
+    requirements="requirements.txt",
+    extra_packages=["githubtools.py", "github-private-key.pem"],
 )
+
+
+#owner = "SaschaHeyer"
+#issue_number = "34"
+#repo = "coding-agent-sample-repository-2"
+
+#response = agent.query(
+    #input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+#)
 
 
 # print(remote_agent)
