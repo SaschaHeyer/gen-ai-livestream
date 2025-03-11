@@ -9,7 +9,7 @@ vertexai.init(project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCK
 
 from githubtools import GitHubTools, AuthMethod
 
-tools = GitHubTools(auth_method=AuthMethod.APP, installation_id="62441133")
+tools = GitHubTools(auth_method=AuthMethod.APP)
 
 model = "gemini-2.0-pro-exp-02-05"
 #model = "gemini-2.0-flash-001"

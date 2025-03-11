@@ -21,17 +21,16 @@ class AuthMethod(enum.Enum):
 
 
 class GitHubTools:
-    def __init__(self, auth_method: AuthMethod = AuthMethod.TOKEN, installation_id: Optional[int] = None):
+    def __init__(self, auth_method: AuthMethod = AuthMethod.TOKEN):
         """
         Initialize GitHub tools with specified authentication method.
 
         Args:
             auth_method (AuthMethod): Authentication method to use.
                                       Options: AuthMethod.TOKEN (Personal Access Token) or AuthMethod.APP (GitHub App)
-            installation_id (Optional[int]): The installation ID for GitHub App installations
         """
         self.auth_method = auth_method
-        self.installation_id = installation_id
+        self.installation_id = None
         self.installation_token = None
 
         if auth_method == AuthMethod.TOKEN:
@@ -41,16 +40,20 @@ class GitHubTools:
         elif auth_method == AuthMethod.APP:
             self.app_id = os.environ.get("GITHUB_APP_ID")
             self.private_key_path = os.environ.get("GITHUB_PRIVATE_KEY_PATH")
+            self.installation_id = os.environ.get("GITHUB_INSTALLATION_ID")
 
             if not self.app_id or not self.private_key_path:
                 console.print("[red]Error: GITHUB_APP_ID or GITHUB_PRIVATE_KEY_PATH environment variable not set[/red]")
+            
+            if not self.installation_id:
+                console.print("[red]Error: GITHUB_INSTALLATION_ID environment variable not set[/red]")
 
             # Generate JWT token for GitHub App authentication
             self.token = self._get_jwt_token()
 
-            # If installation_id is provided, get an installation token
-            if installation_id:
-                self.installation_token = self._get_installation_token(installation_id)
+            # Get an installation token using the ID from environment
+            if self.installation_id:
+                self.installation_token = self._get_installation_token(int(self.installation_id))
                 if self.installation_token:
                     console.print("[green]Installation token generated successfully[/green]")
                 else:
