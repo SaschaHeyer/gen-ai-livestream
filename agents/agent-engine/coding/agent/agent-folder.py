@@ -6,9 +6,9 @@ PROJECT_ID = "sascha-playground-doit"
 LOCATION = "us-central1"
 vertexai.init(project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCKET)
 
-from githubtools import GitHubTools
+from githubtools import GitHubTools, AuthMethod
 
-tools = GitHubTools()
+tools = GitHubTools(auth_method=AuthMethod.APP, installation_id="62441133")
 
 #model = "gemini-2.0-pro-exp-02-05"
 model = "gemini-2.0-flash-001"
@@ -52,20 +52,25 @@ agent = reasoning_engines.LangchainAgent(
     use the tool  `create_github_pull_request` to create a pull request.
     Always use the tool `post_github_comment` to apost a response in markdown format explaining the code changes and referencing the PR.
 
-    The post_github_comment tool should use markdown and an description of the fix provided with the PR.
+    Always post a description of the fix as a comment to the initial issue using the post_github_comment tool.
 
     """,
 )
 
-remote_agent = reasoning_engines.ReasoningEngine.create(
-    agent,
-    requirements="requirements.txt",
-    extra_packages=["githubtools.py"],
-)
-
-#response = remote_agent.query(
-#    input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+#remote_agent = reasoning_engines.ReasoningEngine.create(
+    #agent,
+    #requirements="requirements.txt",
+    #extra_packages=["githubtools.py"],
 #)
+
+
+owner = "SaschaHeyer"
+issue_number = "30"
+repo = "coding-agent-sample-repository-2"
+
+response = agent.query(
+    input=f"Analyze and fix the issue #{issue_number} in {owner}/{repo}"
+)
 
 
 # print(remote_agent)

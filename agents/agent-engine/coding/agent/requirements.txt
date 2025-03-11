@@ -1,2 +1,5 @@
 google-cloud-aiplatform[langchain,reasoningengine]
 rich==13.9.4
+PyJWT==2.8.0
+cryptography>=42.0.0
+python-dotenv>=1.0.0
