@@ -4,7 +4,8 @@ import base64
 import time
 import jwt
 import enum
-from typing import Optional
+from typing import Optional, Dict, Any
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -32,6 +33,8 @@ class GitHubTools:
         self.auth_method = auth_method
         self.installation_id = None
         self.installation_token = None
+        self.installation_token_expires_at = None
+        self.jwt_token_expires_at = None
 
         if auth_method == AuthMethod.TOKEN:
             self.token = os.environ.get("GITHUB_TOKEN")
@@ -44,23 +47,33 @@ class GitHubTools:
 
             if not self.app_id or not self.private_key_path:
                 console.print("[red]Error: GITHUB_APP_ID or GITHUB_PRIVATE_KEY_PATH environment variable not set[/red]")
-            
+
             if not self.installation_id:
                 console.print("[red]Error: GITHUB_INSTALLATION_ID environment variable not set[/red]")
 
             # Generate JWT token for GitHub App authentication
-            self.token = self._get_jwt_token()
+            self._refresh_jwt_token()
 
             # Get an installation token using the ID from environment
             if self.installation_id:
-                self.installation_token = self._get_installation_token(int(self.installation_id))
-                if self.installation_token:
-                    console.print("[green]Installation token generated successfully[/green]")
-                else:
-                    console.print("[red]Failed to get installation token[/red]")
+                self._refresh_installation_token()
         else:
             self.token = os.environ.get("GITHUB_TOKEN")
             console.print(f"[yellow]Warning: Unknown auth method '{auth_method}', defaulting to token[/yellow]")
+
+    def _refresh_jwt_token(self):
+        """
+        Generate and store a new JWT token for GitHub App authentication.
+
+        Sets the token and its expiration time.
+        """
+        self.token = self._get_jwt_token()
+        if self.token:
+            # Set expiration time (9 minutes to be safe, actual expiry is 10 minutes)
+            self.jwt_token_expires_at = datetime.now() + timedelta(minutes=9)
+            console.print("[green]JWT token refreshed successfully[/green]")
+        else:
+            console.print("[red]Failed to refresh JWT token[/red]")
 
     def _get_jwt_token(self):
         """
@@ -102,6 +115,24 @@ class GitHubTools:
             console.print(f"[red]Error generating JWT token: {str(e)}[/red]")
             return None
 
+    def _refresh_installation_token(self):
+        """
+        Generate and store a new installation token.
+
+        Sets the token and its expiration time.
+        """
+        if not self.installation_id:
+            console.print("[red]Error: No installation ID available[/red]")
+            return
+
+        self.installation_token = self._get_installation_token(int(self.installation_id))
+        if self.installation_token:
+            # Set expiration time (50 minutes to be safe, tokens usually expire in 1 hour)
+            self.installation_token_expires_at = datetime.now() + timedelta(minutes=10)
+            console.print("[green]Installation token refreshed successfully[/green]")
+        else:
+            console.print("[red]Failed to refresh installation token[/red]")
+
     def _get_installation_token(self, installation_id: int):
         """
         Generate an installation access token for a GitHub App installation.
@@ -113,7 +144,11 @@ class GitHubTools:
             str: Installation access token or None if failed
         """
         try:
-            # We need a JWT token to request an installation token
+            # Check if JWT token is valid or needs refresh
+            if not self.token or (self.jwt_token_expires_at and datetime.now() >= self.jwt_token_expires_at):
+                console.print("[yellow]JWT token expired or missing, refreshing...[/yellow]")
+                self._refresh_jwt_token()
+
             if not self.token:
                 console.print("[red]Error: JWT token is required to get an installation token[/red]")
                 return None
@@ -130,6 +165,7 @@ class GitHubTools:
                 return None
 
             token_data = response.json()
+            # GitHub documentation indicates when the token expires in token_data["expires_at"]
             return token_data.get("token")
 
         except Exception as e:
@@ -139,14 +175,25 @@ class GitHubTools:
     def _get_auth_headers(self):
         """
         Get authorization headers based on authentication method.
+        Handles token refresh when tokens are expired.
 
         Returns:
             dict: Headers with authorization information
         """
         if self.auth_method == AuthMethod.APP:
+            # Check if installation token is expired and refresh if needed
+            if self.installation_token_expires_at and datetime.now() >= self.installation_token_expires_at:
+                console.print("[yellow]Installation token expired, refreshing...[/yellow]")
+                self._refresh_installation_token()
+
             # If we have an installation token, use it (preferred for API operations)
             if self.installation_token:
                 return {"Authorization": f"token {self.installation_token}", "Accept": "application/vnd.github.v3+json"}
+
+            # Check if JWT token is expired and refresh if needed
+            if self.jwt_token_expires_at and datetime.now() >= self.jwt_token_expires_at:
+                console.print("[yellow]JWT token expired, refreshing...[/yellow]")
+                self._refresh_jwt_token()
 
             # Fall back to JWT token if no installation token
             if not self.token:
@@ -198,7 +245,7 @@ class GitHubTools:
     def fetch_github_directory(self, owner: str, repo: str, path: str, branch: str = "main"):
         """
         Navigates and fetches content from GitHub repositories.
-        
+
         Args:
             owner (str): GitHub repository owner.
             repo (str): Repository name.
@@ -230,7 +277,7 @@ class GitHubTools:
                     contents["content"], contents["encoding"]
                 ),
             }
-            
+
             return content
 
         return response.json()
