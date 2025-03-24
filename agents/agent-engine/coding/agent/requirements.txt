@@ -1,4 +1,5 @@
-google-cloud-aiplatform[langchain,reasoningengine]
+google-cloud-aiplatform[agent_engines,langchain] @ git+https://github.com/googleapis/python-aiplatform.git@main
+cloudpickle==3.1.1
 rich==13.9.4
 PyJWT==2.8.0
 cryptography>=42.0.0
