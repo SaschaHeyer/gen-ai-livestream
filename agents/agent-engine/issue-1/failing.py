@@ -1,6 +1,5 @@
 import vertexai
 from vertexai.preview import reasoning_engines
-import base64
 
 STAGING_BUCKET = "gs://doit-llm"
 PROJECT_ID = "sascha-playground-doit"
@@ -22,10 +21,6 @@ remote_agent = reasoning_engines.ReasoningEngine.create(
 )
 print(remote_agent)
 
-response = remote_agent.query(
-        input=f"Who are you?"
-    )
+response = remote_agent.query(input=f"Who are you?")
 
 print(response)
-
-
