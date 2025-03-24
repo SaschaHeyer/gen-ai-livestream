@@ -51,6 +51,7 @@ def github_webhook():
     event = request.headers.get("X-GitHub-Event", "")
 
     logger.info(f"🔔 Received webhook event: {event}")
+    logger.info(f"🔔 Received webhook: {payload}")
 
     if event == "issues" and payload.get("action") == "opened":
         issue_number = payload["issue"]["number"]
