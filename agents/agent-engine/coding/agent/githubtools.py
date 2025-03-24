@@ -100,7 +100,7 @@ class GitHubTools:
                 "iss": self.app_id           # GitHub App ID
             }
 
-            console.print(f"[cyan]Creating JWT with app_id: {self.app_id}[/cyan]")
+            #console.print(f"[cyan]Creating JWT with app_id: {self.app_id}[/cyan]")
 
             # Create JWT token
             token = jwt.encode(payload, private_key, algorithm="RS256")
@@ -217,11 +217,11 @@ class GitHubTools:
         # Fetch issue details
         issue_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}"
         issue_response = requests.get(issue_url, headers=headers)
-        print(issue_response)
+        #print(issue_response)
         if issue_response.status_code != 200:
             return {"error": f"Failed to fetch issue: {issue_response.text}"}
         issue_data = issue_response.json()
-        print(issue_data)
+        #print(issue_data)
 
         # Fetch issue comments
         comments_url = issue_data.get("comments_url")
