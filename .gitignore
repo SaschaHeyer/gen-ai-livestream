@@ -165,3 +165,4 @@ cython_debug/
 node_modules/
 crawl/
 audio-files/
+*.pem
