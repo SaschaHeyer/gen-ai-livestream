@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Animation</title>
+    <style>
+        body {
+            background-color: white;
+            color: black;
+            font-size: 40px;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .fixed-text {
+            color: black;
+        }
+        .agent {
+            color: #4285F4; /* Default color */
+            border-right: 3px solid black; /* Simulates blinking cursor */
+            padding-right: 5px;
+            animation: blinkCursor 0.8s infinite;
+            display: inline-block;
+            width: 14ch; /* Fixed width for the longest word */
+            overflow: hidden;
+            text-align: left;
+        }
+        @keyframes blinkCursor {
+            50% { border-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <span class="fixed-text">agent_engines.</span>
+        <span class="agent"></span>
+    </div>
+
+    <script>
+        const words = [
+            { text: "LangchainAgent", color: "#4285F4" }, // Blue
+            { text: "LanggraphAgent", color: "#34A853" }, // Green
+            { text: "AG2Agent", color: "#FBBC04" }, // Yellow
+            { text: "Custom", color: "#EA4335" }  // Red
+        ];
+
+        let wordIndex = 0;
+        let charIndex = 0;
+        let deleting = false;
+        const textElement = document.querySelector(".agent");
+
+        function typeEffect() {
+            textElement.style.color = words[wordIndex].color; // Change text color dynamically
+
+            if (!deleting) {
+                // Typing phase
+                textElement.innerHTML = words[wordIndex].text.substring(0, charIndex);
+                charIndex++;
+
+                if (charIndex > words[wordIndex].text.length) {
+                    deleting = true;
+                    setTimeout(typeEffect, 1000); // Pause before deleting
+                    return;
+                }
+            } else {
+                // Deleting phase
+                textElement.innerHTML = words[wordIndex].text.substring(0, charIndex);
+                charIndex--;
+
+                if (charIndex === 0) {
+                    deleting = false;
+                    wordIndex = (wordIndex + 1) % words.length; // Move to the next word
+                }
+            }
+
+            setTimeout(typeEffect, deleting ? 100 : 150); // Adjust speed for typing/deleting
+        }
+
+        typeEffect();
+    </script>
+
+</body>
+</html>
