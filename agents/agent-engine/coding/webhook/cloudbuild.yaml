@@ -19,6 +19,8 @@ steps:
     - '--platform'
     - 'managed'
     - '--allow-unauthenticated'
+    - '--timeout'
+    - '600'
 
 images:
   - 'gcr.io/$PROJECT_ID/github-webhook'
