@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Cloud Next 2025 - Sascha's Resources</title>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #ffffff, #f5f7fa);
+      color: #333;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Google Sans', 'Roboto', sans-serif;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 1rem;
+      padding: 0.25rem 0.75rem;
+      background-color: rgba(66, 133, 244, 0.1);
+      color: #4285f4;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .presenter-card {
+      display: inline-block;
+      margin-bottom: 2rem;
+      padding: 1rem 1.5rem;
+      background-color: #f8f9fa;
+      border: 1px solid #eaeaea;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    .presenter-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.25rem;
+    }
+
+    .presenter-name {
+      font-weight: 500;
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .presenter-title {
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+      color: #202124;
+    }
+
+    @media (min-width: 768px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+    }
+
+    .subtitle {
+      max-width: 36rem;
+      margin: 0 auto;
+      font-size: 1.125rem;
+      color: #5f6368;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    .card-content {
+      padding: 2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #202124;
+    }
+
+    .resources {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .resource-card {
+      display: flex;
+      align-items: center;
+      padding: 1.25rem;
+      border-left: 4px solid transparent;
+      border-radius: 0.5rem;
+      background-color: #f8f9fa;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      opacity: 0;
+      animation: slideUp 0.5s ease-out forwards;
+    }
+
+    .resource-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .resource-card.blue {
+      border-left-color: #4285f4;
+      background-color: rgba(66, 133, 244, 0.05);
+    }
+
+    .resource-card.blue:hover {
+      background-color: rgba(66, 133, 244, 0.1);
+    }
+
+    .resource-card.red {
+      border-left-color: #ea4335;
+      background-color: rgba(234, 67, 53, 0.05);
+    }
+
+    .resource-card.red:hover {
+      background-color: rgba(234, 67, 53, 0.1);
+    }
+
+    .resource-card.green {
+      border-left-color: #34a853;
+      background-color: rgba(52, 168, 83, 0.05);
+    }
+
+    .resource-card.green:hover {
+      background-color: rgba(52, 168, 83, 0.1);
+    }
+
+    .resource-card.yellow {
+      border-left-color: #fbbc04;
+      background-color: rgba(251, 188, 4, 0.05);
+    }
+
+    .resource-card.yellow:hover {
+      background-color: rgba(251, 188, 4, 0.1);
+    }
+
+    .resource-icon {
+      flex-shrink: 0;
+      margin-right: 1rem;
+      width: 24px;
+      height: 24px;
+    }
+
+    .resource-content {
+      flex: 1;
+    }
+
+    .resource-title {
+      font-weight: 500;
+      font-size: 1.125rem;
+      margin-bottom: 0.25rem;
+      color: #202124;
+    }
+
+    .resource-description {
+      font-size: 0.875rem;
+      color: #5f6368;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .delay-1 {
+      animation-delay: 0.1s;
+    }
+
+    .delay-2 {
+      animation-delay: 0.2s;
+    }
+
+    .delay-3 {
+      animation-delay: 0.3s;
+    }
+
+    .delay-4 {
+      animation-delay: 0.4s;
+    }
+
+    .delay-5 {
+      animation-delay: 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="tag">Google Cloud Next 2025 - Sascha Heyer</div>
+
+
+
+      <h1>Agent Engine Talk Ressources</h1>
+      <p class="subtitle">Thank you for attending my session.</p>
+    </header>
+
+    <div class="card">
+      <div class="card-content">
+        <div class="grid">
+          <!-- Resources column -->
+          <div>
+            <h2>Resources</h2>
+
+            <div class="resources">
+              <a href="https://github.com/SaschaHeyer/gen-ai-livestream/tree/main/agents/agent-engine/coding" target="_blank" rel="noopener noreferrer" class="resource-card blue delay-1">
+                <svg class="resource-icon" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                </svg>
+                <div class="resource-content">
+                  <h3 class="resource-title">GitHub Repository</h3>
+                  <p class="resource-description">Explore the source code and implementation details of the agent demonstrated in the presentation.</p>
+                </div>
+              </a>
+
+              <a href="https://medium.com/google-cloud/ai-agents-8eb2b6edea9b" target="_blank" rel="noopener noreferrer" class="resource-card green delay-2">
+                <svg class="resource-icon" viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <div class="resource-content">
+                  <h3 class="resource-title">Medium Article</h3>
+                  <p class="resource-description">Dive deeper into the concepts discussed during the session with this comprehensive write-up.</p>
+                </div>
+              </a>
+<!--
+              <a href="https://www.youtube.com/watch?v=your-video-id" target="_blank" rel="noopener noreferrer" class="resource-card red delay-3">
+                <svg class="resource-icon" viewBox="0 0 24 24" fill="none" stroke="#ea4335" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
+                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+                </svg>
+                <div class="resource-content">
+                  <h3 class="resource-title">YouTube Tutorial</h3>
+                  <p class="resource-description">Watch a step-by-step video guide that expands on the topics covered in the presentation.</p>
+                </div>
+              </a>
+              -->
+            </div>
+          </div>
+
+          <!-- Connect column -->
+          <div>
+            <h2>Connect</h2>
+
+            <div class="resources">
+              <a href="https://www.doit.com/" target="_blank" rel="noopener noreferrer" class="resource-card blue delay-2">
+                <svg class="resource-icon" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <div class="resource-content">
+                  <h3 class="resource-title">DoiT International</h3>
+                  <p class="resource-description">Learn about our company's cloud solutions and how we can help your business succeed.</p>
+                </div>
+              </a>
+
+              <a href="https://www.linkedin.com/in/saschaheyer/" target="_blank" rel="noopener noreferrer" class="resource-card yellow delay-3">
+                <svg class="resource-icon" viewBox="0 0 24 24" fill="none" stroke="#fbbc04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                  <rect x="2" y="9" width="4" height="12"></rect>
+                  <circle cx="4" cy="4" r="2"></circle>
+                </svg>
+                <div class="resource-content">
+                  <h3 class="resource-title">Connect on LinkedIn</h3>
+                  <p class="resource-description">Let's stay connected! Follow me on LinkedIn for more insights and updates.</p>
+                </div>
+              </a>
+
+              <a href="https://calendar.app.google/weenAk7B2SySvXH39" target="_blank" rel="noopener noreferrer" class="resource-card green delay-4">
+                <svg class="resource-icon" viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <div class="resource-content">
+                  <h3 class="resource-title">Schedule a Coffee Chat</h3>
+                  <p class="resource-description">Book a quick 15-minute coffee session with me to discuss your cloud journey.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Animation on scroll effect
+    document.addEventListener('DOMContentLoaded', function() {
+      const handleScroll = function() {
+        const cards = document.querySelectorAll('.resource-card');
+        cards.forEach(function(card) {
+          const cardTop = card.getBoundingClientRect().top;
+          const windowHeight = window.innerHeight;
+          if (cardTop < windowHeight * 0.85) {
+            card.style.opacity = '1';
+          }
+        });
+      };
+
+      window.addEventListener('scroll', handleScroll);
+      // Trigger once on load
+      setTimeout(handleScroll, 100);
+    });
+  </script>
+</body>
+</html>
