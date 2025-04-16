@@ -1,0 +1,54 @@
+{
+  "components": {
+    "comp-batch-predict": {
+      "executorLabel": "exec-batch-predict"
+    }
+  },
+  "defaultPipelineRoot": "gs://doit-vertex-demo/basic-pipeline",
+  "deploymentSpec": {
+    "executors": {
+      "exec-batch-predict": {
+        "container": {
+          "args": [
+            "--executor_input",
+            "{{$}}",
+            "--function_to_execute",
+            "batch_predict"
+          ],
+          "command": [
+            "sh",
+            "-c",
+            "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip || python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'kfp==2.10.1' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-aiplatform' && \"$0\" \"$@\"\n",
+            "sh",
+            "-ec",
+            "program_path=$(mktemp -d)\n\nprintf \"%s\" \"$0\" > \"$program_path/ephemeral_component.py\"\n_KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         \"$program_path/ephemeral_component.py\"                         \"$@\"\n",
+            "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import *\n\ndef batch_predict():\n    from google.cloud import aiplatform\n    model = aiplatform.Model('projects/sascha-playground-doit/locations/us-central1/models/6091379080274378752')\n\n    model.batch_predict(\n    job_display_name=f\"batch_predict_churn\",\n    machine_type=\"n1-standard-4\",\n    starting_replica_count=2,\n\n    instances_format=\"bigquery\",\n    predictions_format=\"bigquery\",\n    bigquery_source='bq://sascha-playground-doit.churn_prediction.preprocessed_data',\n    bigquery_destination_prefix=\"bq://sascha-playground-doit.batch\",\n)\n\n"
+          ],
+          "image": "python:3.9"
+        }
+      }
+    }
+  },
+  "pipelineInfo": {
+    "name": "basic-pipeline"
+  },
+  "root": {
+    "dag": {
+      "tasks": {
+        "batch-predict": {
+          "cachingOptions": {
+            "enableCache": true
+          },
+          "componentRef": {
+            "name": "comp-batch-predict"
+          },
+          "taskInfo": {
+            "name": "batch-predict"
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "2.1.0",
+  "sdkVersion": "kfp-2.10.1"
+}
