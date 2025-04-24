@@ -1,0 +1,11 @@
+gcloud run deploy triton-cloudrun \
+  --image gcr.io/sascha-playground-doit/triton-cloudrun \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --cpu 4 \
+  --memory 16Gi \
+  --gpu 1 \
+  --gpu-type nvidia-l4 \
+  --no-gpu-zonal-redundancy \
+  --no-cpu-throttling
