@@ -1,5 +1,5 @@
 #!pip install --upgrade google-genai
-
+#customer had issue with latencies >1 second this script confirmed there is an issue on the google side with aprox 4% of all embeddings requets are above the mean average of 300ms and reaching peaks of 1.5 seconds. google fixed it within 3 days.
 
 import time
 from google import genai
