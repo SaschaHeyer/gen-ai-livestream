@@ -4,6 +4,7 @@ import pyaudio
 from collections import deque
 
 from google import genai
+from google.genai import types
 
 PROJECT_ID = "sascha-playground-doit"
 LOCATION = "us-central1"
@@ -26,6 +27,13 @@ from google.genai.types import (
 
 CONFIG = LiveConnectConfig(
     response_modalities=["AUDIO"],
+    output_audio_transcription={},
+    input_audio_transcription={},
+    #session_resumption=types.SessionResumptionConfig(
+                # The handle of the session to resume is passed here,
+                # or else None to start a new session.
+                #handle="93f6ae1d-2420-40e9-828c-776cf553b7a6"
+            #),
     speech_config=SpeechConfig(
         voice_config=VoiceConfig(
             prebuilt_voice_config=PrebuiltVoiceConfig(voice_name="Puck")
@@ -140,7 +148,22 @@ async def audio_loop():
         async def receive_and_play():
             while True:
 
+                input_transcriptions = []
+                output_transcriptions = []
+
                 async for response in session.receive():
+
+                    # retrieve continously resumable session ID
+                    if response.session_resumption_update:
+                        update = response.session_resumption_update
+                        if update.resumable and update.new_handle:
+                            # The handle should be retained and linked to the session.
+                            print(f"new SESSION: {update.new_handle}")
+
+                    # Check if the connection will be soon terminated
+                    if response.go_away is not None:
+                        print(response.go_away.time_left)
+
                     server_content = response.server_content
 
                     if (
@@ -157,6 +180,17 @@ async def audio_loop():
 
                     if server_content and server_content.turn_complete:
                         print("✅ Gemini done talking")
+
+                    output_transcription = response.server_content.output_transcription
+                    if output_transcription and output_transcription.text:
+                        output_transcriptions.append(output_transcription.text)
+
+                    input_transcription = response.server_content.input_transcription
+                    if input_transcription and input_transcription.text:
+                        input_transcriptions.append(input_transcription.text)
+
+                print(f"Output transcription: {''.join(output_transcriptions)}")
+                print(f"Input transcription: {''.join(input_transcriptions)}")
 
         # Start all tasks with proper task creation
         tg.create_task(listen_for_audio())
