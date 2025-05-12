@@ -602,7 +602,11 @@
                 };
 
                 audioClient.onInterrupted = () => {
+                    console.log('Interruption detected, stopping audio playback');
                     audioIndicator.classList.add('hidden');
+
+                    // Stop audio playback immediately
+                    audioClient.interrupt();
 
                     // Reset response tracking
                     currentResponseText = '';
