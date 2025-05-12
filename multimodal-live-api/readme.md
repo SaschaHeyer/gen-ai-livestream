@@ -4,6 +4,8 @@ Welcome to the official code repository for the article series on **Exploring Go
 
 Whether you're looking to dive into multimodal interactions or real-time streaming, you'll find practical examples and resources here.
 
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/e627baGHbZ4/0.jpg)](https://www.youtube.com/watch?v=e627baGHbZ4)
+
 ## 🚀 The Article Series
 
 This series aims to provide deep dives and practical guides into various aspects of Google's Multimodal Live API. Follow along to learn how to leverage these powerful tools in your own projects.
