@@ -1,18 +1,28 @@
-# Multimodal Live API Demo with Web Interface
+# Multimodal Live API with Gemini: Two Approaches
 
-This project demonstrates a bidirectional audio conversation with Google's Gemini 2.0 Flash Live API integrated into a web interface. It features a client-side audio handling approach where all audio recording and playback happens in the browser.
+This project demonstrates bidirectional audio conversations with Google's Gemini 2.0 Flash Live API integrated into a web interface. It features a client-side audio handling approach where all audio recording and playback happens in the browser.
+
+The project showcases **two different approaches** to implementing the same functionality:
+
+1. **Google ADK** (Agent Development Kit) - Using the higher-level agent-based framework
+2. **Direct LiveAPI** - Using the lower-level Gemini Live API directly
 
 ## Project Structure
 
-- `server.py` - WebSocket server that connects to Gemini AI
-- `audio-client.js` - JavaScript client for handling audio in the browser
-- `index.html` - Web interface with IKEA-inspired design
-- `requirements.txt` - Python dependencies
+- `server/common.py` - Shared components and utilities used by both implementations
+- `server/server_adk.py` - Server implementation using Google ADK
+- `server/server.py` - Server implementation using Gemini LiveAPI directly
+- `client/audio-client.js` - JavaScript client for handling audio in the browser
+- `client/index.html` - Web interface with IKEA-inspired design
+- `server/requirements.txt` - Python dependencies
 
 ## Key Features
 
+- **Two implementation approaches** for comparison and learning
 - **Audio handled entirely on the client side** - No need for server-side audio libraries
 - **Bidirectional audio conversations** with Gemini Live AI
+- **Function calling** for order status lookup
+- **Interruption detection** (interrupt the AI while it's speaking)
 - **Session persistence** with session ID tracking
 - **Responsive UI**
 - **Real-time transcription** of both input and output speech
@@ -22,29 +32,35 @@ This project demonstrates a bidirectional audio conversation with Google's Gemin
 ### 1. Install Python Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r server/requirements.txt
 ```
 
 No special audio libraries needed! Just standard WebSocket and Gemini dependencies.
 
 ### 2. Start the WebSocket Server
 
+To run with the ADK implementation:
 ```bash
-python server.py
+python server/server_adk.py
+```
+
+To run with the LiveAPI implementation:
+```bash
+python server/server.py
 ```
 
 The server will start and listen for WebSocket connections on port 8765.
 
 ### 3. Open the Web Interface
 
-Open `index.html` in your web browser. You can use any web server, or simply open the file directly:
+Open `client/index.html` in your web browser. You can use any web server, or simply open the file directly:
 
 ```bash
 # Using Python's built-in HTTP server
 python -m http.server 8000
 ```
 
-Then navigate to `http://localhost:8000/index.html` in your browser.
+Then navigate to `http://localhost:8000/client/index.html` in your browser.
 
 ## Using the Application
 
@@ -60,6 +76,7 @@ Then navigate to `http://localhost:8000/index.html` in your browser.
 - **Python**
   - WebSockets for real-time communication
   - Google Generative AI library for Gemini integration
+  - Google ADK for agent-based implementation
 
 - **JavaScript**
   - Web Audio API for capturing and playing audio
@@ -75,4 +92,3 @@ Then navigate to `http://localhost:8000/index.html` in your browser.
 - **Microphone Access**: Ensure your browser has permission to access your microphone
 - **WebSocket Connection**: Check that the server is running and accessible (default: ws://localhost:8765)
 - **Audio Issues**: Verify that your microphone and speakers are working correctly
-- **API Keys**: Ensure your Google API credentials are properly configured in `server.py`
