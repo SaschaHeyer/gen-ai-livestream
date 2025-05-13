@@ -314,11 +314,11 @@ async def audio_loop():
                     if server_content and server_content.turn_complete:
                         print("✅ Gemini done talking")
 
-                    output_transcription = response.server_content.output_transcription
+                    output_transcription = getattr(response.server_content, "output_transcription", None)
                     if output_transcription and output_transcription.text:
                         output_transcriptions.append(output_transcription.text)
 
-                    input_transcription = response.server_content.input_transcription
+                    input_transcription = getattr(response.server_content, "input_transcription", None)
                     if input_transcription and input_transcription.text:
                         input_transcriptions.append(input_transcription.text)
 
