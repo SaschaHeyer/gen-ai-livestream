@@ -166,3 +166,4 @@ node_modules/
 crawl/
 audio-files/
 *.pem
+/multimodal-live-api/deprecated
