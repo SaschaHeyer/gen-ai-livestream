@@ -22,6 +22,14 @@ This series aims to provide deep dives and practical guides into various aspects
     * Learn how to build applications that can stream audio input and receive audio output in real-time.
     * **Companion Code:** [`multimodal-live-api/audio-to-audio.py`](./multimodal-live-api/audio-to-audio.py) - Implements a real-time audio-to-audio streaming solution.
 
+3.  **[Google Multimodal Live API Audio Transcription](https://medium.com/google-cloud/google-multimodal-live-api-audio-transcription-368d4d4e7a7c)**
+    * Add real-time input and output audio transcription to your AI applications.
+    * **Companion Code:** [`multimodal-live-api/audio-to-audio.py`](./multimodal-live-api/audio-to-audio.py) - Demonstrates how to enable and use real-time transcription features.
+
+4.  **[Multimodal Live API Tooling](https://medium.com/google-cloud/multimodal-live-api-tooling-c7f018ff0291)**
+    * Extend your voice assistant with function calling capabilities to interact with external services.
+    * **Companion Code:** [`multimodal-live-api/audio-to-audio.py`](./multimodal-live-api/audio-to-audio.py) - Shows how to implement and use tools/function calling with the Live API.
+
 Stay tuned as more articles and corresponding code examples are added to this series!
 
 ## 📂 Repository Structure
@@ -30,7 +38,7 @@ The code examples are organized into directories that typically correspond to th
 
 * **`/multimodal-live-api/`**: Contains Python scripts demonstrating the capabilities of the Google Multimodal Live API.
     * `introduction.py`: Basic setup and usage for text and audio output. This file corresponds to the first article, "[A Developer's Guide to Google's Multimodal Live API](https://medium.com/google-cloud/a-developers-guide-to-googles-multimodal-live-api-8c80b596e7b3)".
-    * `audio-to-audio.py`: Advanced example for real-time bidirectional audio streaming. This file corresponds to the second article, "[Real-time Audio-to-Audio Streaming with Google's Multimodal Live API](https://medium.com/google-cloud/real-time-audio-to-audio-streaming-with-googles-multimodal-live-api-73b54277b022)".
+    * `audio-to-audio.py`: Advanced example for real-time bidirectional audio streaming. This file corresponds to the second article, "[Real-time Audio-to-Audio Streaming with Google's Multimodal Live API](https://medium.com/google-cloud/real-time-audio-to-audio-streaming-with-googles-multimodal-live-api-73b54277b022)", third article, "[Google Multimodal Live API Audio Transcription](https://medium.com/google-cloud/google-multimodal-live-api-audio-transcription-368d4d4e7a7c)", and fourth article, "[Multimodal Live API Tooling](https://medium.com/google-cloud/multimodal-live-api-tooling-c7f018ff0291)".
 
 ## ✨ What's Next?
 
