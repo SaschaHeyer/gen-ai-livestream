@@ -441,8 +441,8 @@
     <script src="audio-client.js"></script>
 
     <script>
-        // Initialize audio client
-        const audioClient = new AudioClient('ws://localhost:8765');
+        // Initialize audio client with deployed server URL
+        const audioClient = new AudioClient('wss://adk-audio-assistant-234439745674.us-central1.run.app');
         let isRecording = false;
 
         // Script to toggle chatbox visibility
@@ -458,12 +458,12 @@
             closeChatboxButton.addEventListener('click', () => {
                 if (chatbox) chatbox.style.display = 'none';
                 if (openChatButton) openChatButton.style.display = 'flex';
-                
+
                 // Stop recording if active
                 if (isRecording) {
                     stopRecording();
                 }
-                
+
                 // Disconnect the audio client
                 audioClient.close();
 
@@ -484,7 +484,7 @@
             openChatButton.addEventListener('click', () => {
                 if (chatbox) chatbox.style.display = 'flex';
                 if (openChatButton) openChatButton.style.display = 'none';
-                
+
                 // Connect to the server
                 initializeAudioClient();
             });
@@ -498,16 +498,16 @@
                 startRecording();
             }
         });
-        
+
         // End call button handler
         endCallButton.addEventListener('click', () => {
             if (isRecording) {
                 stopRecording();
             }
-            
+
             // Add a message
             addMessage("Call ended. How else can I help you?", "assistant");
-            
+
             // Reconnect the audio client
             audioClient.close();
             initializeAudioClient();
@@ -622,7 +622,7 @@
                 if (success) {
                     isRecording = true;
                     micButton.classList.add('mic-active');
-                    
+
                     // Show user message
                     addMessage("...", "user");
                 }
@@ -636,7 +636,7 @@
             audioClient.stopRecording();
             isRecording = false;
             micButton.classList.remove('mic-active');
-            
+
             // Remove the temporary user message
             const tempMessages = document.querySelectorAll('.user-message');
             if (tempMessages.length > 0) {
@@ -652,9 +652,9 @@
             const messageElement = document.createElement('div');
             messageElement.className = `chat-message ${sender}-message`;
             messageElement.textContent = text;
-            
+
             chatMessages.appendChild(messageElement);
-            
+
             // Scroll to the bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }

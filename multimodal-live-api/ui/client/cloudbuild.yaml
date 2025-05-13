@@ -1,0 +1,29 @@
+steps:
+  # Use an existing repository instead of trying to create a new one
+  # We'll use the same repository as the server
+
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/adk-audio-assistant/audio-client:latest', '.']
+
+  # Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/adk-audio-assistant/audio-client:latest']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'adk-audio-client'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/adk-audio-assistant/audio-client:latest'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--port=80'
+      - '--allow-unauthenticated'
+      - '--min-instances=1'
+      - '--max-instances=5'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/adk-audio-assistant/audio-client:latest'
