@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>adklive Multimodal Stream (Grayscale)</title>
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F0F0; /* Light Gray Background */
+        }
+
+        /* Custom Grayscale Colors */
+        :root {
+            --app-text-primary: #222222; /* Very Dark Gray for headings */
+            --app-text-secondary: #555555; /* Medium Gray for body text */
+            --app-bg-surface: #FFFFFF; /* White for card backgrounds, nav */
+            --app-bg-light: #F0F0F0;   /* Light Gray for general backgrounds */
+            --app-border-color: #CCCCCC; /* Medium Gray for borders */
+            --app-interactive-default: #444444; /* Dark Gray for default buttons */
+            --app-interactive-hover: #555555;   /* Slightly Lighter Gray for hover */
+            --app-interactive-active: #333333;  /* Darker Gray for active states */
+            --app-interactive-disabled: #999999; /* Lighter Gray for disabled */
+            --app-focus-ring: #777777; /* Gray for focus rings */
+            --app-shadow-color: rgba(0, 0, 0, 0.2); /* Black shadow with opacity */
+        }
+
+        .mic-button-base {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .mic-active {
+            background-color: var(--app-interactive-active) !important;
+            box-shadow: 0 0 12px var(--app-shadow-color);
+        }
+        .mic-button-base:not(.mic-active) {
+            background-color: var(--app-interactive-default);
+        }
+        .mic-button-base:not(.mic-active):hover {
+            background-color: var(--app-interactive-hover);
+        }
+        .mic-button-base .mic-icon {
+            transition: color 0.2s ease-in-out;
+            color: white; /* Icon color on dark backgrounds */
+        }
+
+        .video-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem; /* rounded-lg */
+        }
+
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+            margin: 10px 0;
+        }
+
+        .audio-wave span {
+            display: inline-block;
+            width: 4px;
+            height: 100%;
+            margin: 0 2px;
+            background-color: rgba(100, 100, 100, 0.8); /* Medium Gray with opacity */
+            border-radius: 3px;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        .audio-wave span:nth-child(2) { animation-delay: 0.1s; }
+        .audio-wave span:nth-child(3) { animation-delay: 0.2s; }
+        .audio-wave span:nth-child(4) { animation-delay: 0.3s; }
+        .audio-wave span:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 40%, 100% { transform: scaleY(0.4); }
+            20% { transform: scaleY(1); }
+        }
+
+        /* Custom scrollbar for transcript */
+        #transcript-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        #transcript-container::-webkit-scrollbar-track {
+            background: var(--app-bg-light);
+            border-radius: 10px;
+        }
+        #transcript-container::-webkit-scrollbar-thumb {
+            background: #AAAAAA; /* Medium Gray */
+            border-radius: 10px;
+        }
+        #transcript-container::-webkit-scrollbar-thumb:hover {
+            background: #888888; /* Darker Gray */
+        }
+    </style>
+</head>
+<body class="text-[#555555]"> <nav class="bg-white border-b border-[#CCCCCC] shadow-sm"> <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="text-3xl font-bold text-[#222222]">ADK + Live API</div> </div>
+    </nav>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-6xl">
+        <header class="mb-8 sm:hidden">
+            <h1 class="text-2xl font-bold text-[#222222] text-center">ADK + Live API</h1> </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            <div class="bg-white rounded-xl p-5 shadow-lg">
+                <h2 class="text-xl font-semibold text-[#222222] mb-4">Video Feed</h2> <div class="video-container bg-gray-800 w-full h-80 md:h-96 flex items-center justify-center">
+                    <video id="webcam-video" class="w-full h-full object-cover" autoplay playsinline></video>
+                    <div id="webcam-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-5 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <button id="cameraButton" class="w-full sm:w-auto bg-[#333333] text-white px-6 py-2.5 rounded-lg font-medium hover:bg-[#4A4A4A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#777777] transition-colors duration-150">
+                        Start Camera
+                    </button>
+                    <button id="screenButton" class="w-full sm:w-auto bg-[#333333] text-white px-6 py-2.5 rounded-lg font-medium hover:bg-[#4A4A4A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#777777] transition-colors duration-150">
+                        Share Screen
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-5 shadow-lg flex flex-col">
+                <h2 class="text-xl font-semibold text-[#222222] mb-4">Transcript</h2> <div id="transcript-container" class="bg-gray-50 rounded-lg p-4 flex-grow h-80 md:h-96 overflow-y-auto">
+                    <div id="transcript" class="space-y-3">
+                        <div class="text-[#555555] text-center py-10">Start a conversation to see the transcript.</div> </div>
+                </div>
+
+                <div id="audio-indicator" class="px-4 mt-3 flex justify-center items-center h-10 hidden">
+                    <div class="audio-wave">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 lg:mt-8 bg-white rounded-xl p-6 shadow-lg">
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 items-center justify-center">
+                <button id="mic-button" class="mic-button-base">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mic-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                     </svg>
+                </button>
+                <div class="text-center">
+                    <p id="mic-status" class="text-sm font-medium text-[#555555]">Click the icon to start recording</p> </div>
+                <button id="end-button" class="rounded-full bg-gray-700 hover:bg-gray-800 p-3.5 text-white transition-colors duration-150">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="audio-client.js"></script>
+    <script src="multimodal-client.js"></script>
+
+    <script>
+        // Initialize variables
+        const client = new MultimodalClient('wss://adk-audio-assistant-234439745674.us-central1.run.app');
+        client.maxReconnectAttempts = 0;
+        let isRecording = false;
+        let isVideoActive = false;
+        let activeVideoMode = null;
+
+        // DOM elements
+        const micButton = document.getElementById('mic-button');
+        const micStatus = document.getElementById('mic-status');
+        const cameraButton = document.getElementById('cameraButton');
+        const screenButton = document.getElementById('screenButton');
+        const webcamVideo = document.getElementById('webcam-video');
+        const webcamPlaceholder = document.getElementById('webcam-placeholder');
+        const endButton = document.getElementById('end-button');
+        const transcriptContainer = document.getElementById('transcript');
+        const transcriptOuterContainer = document.getElementById('transcript-container');
+        const audioIndicator = document.getElementById('audio-indicator');
+        const sessionIdText = document.getElementById('session-id-text'); // Assuming it might be un-commented later
+        const sessionIdDisplay = document.getElementById('session-id-display'); // Assuming it might be un-commented later
+        const micIcon = micButton.querySelector('.mic-icon');
+
+
+        // Function to add message to transcript
+        function addMessage(text, sender) {
+            const initialPlaceholder = transcriptContainer.querySelector('.text-\\[\\#555555\\].text-center.py-10'); // Adjusted selector for new gray
+            if (initialPlaceholder && (transcriptContainer.children.length === 1 || text !== "...")) {
+                 initialPlaceholder.remove();
+            }
+
+            const messageElement = document.createElement('div');
+            let bgColor, textColor;
+
+            if (sender === 'user') {
+                bgColor = 'bg-gray-200'; // Light gray background for user messages
+                textColor = 'text-gray-800'; // Dark gray text for user messages
+            } else {
+                bgColor = 'bg-gray-100'; // Even lighter gray for assistant messages
+                textColor = 'text-gray-700'; // Slightly lighter dark gray for assistant
+            }
+
+            messageElement.className = `p-3 rounded-lg shadow-sm ${bgColor} ${textColor}`;
+            messageElement.textContent = text;
+
+            if (text === "..." && sender === "user") {
+                messageElement.classList.add('opacity-60', 'italic');
+            }
+
+            transcriptContainer.appendChild(messageElement);
+            transcriptOuterContainer.scrollTop = transcriptOuterContainer.scrollHeight;
+        }
+
+        // Update button states based on video mode
+        function updateVideoButtonStates() {
+            if (!isVideoActive) {
+                cameraButton.textContent = 'Start Camera';
+                cameraButton.disabled = false;
+                screenButton.textContent = 'Share Screen';
+                screenButton.disabled = false;
+                return;
+            }
+
+            if (activeVideoMode === 'webcam') {
+                cameraButton.textContent = 'Stop Camera';
+                screenButton.textContent = 'Share Screen';
+                screenButton.disabled = false; // Can still share screen
+            } else if (activeVideoMode === 'screen') {
+                cameraButton.textContent = 'Start Camera';
+                screenButton.textContent = 'Stop Sharing';
+                cameraButton.disabled = false; // Can still start camera
+            }
+        }
+
+        // Camera control
+        cameraButton.addEventListener('click', async () => {
+            if (isVideoActive && activeVideoMode === 'webcam') {
+                client.stopVideo();
+                webcamVideo.srcObject = null;
+                webcamVideo.classList.add('hidden');
+                webcamPlaceholder.classList.remove('hidden');
+                isVideoActive = false;
+                activeVideoMode = null;
+                updateVideoButtonStates();
+            } else {
+                if (isVideoActive) { // If screen sharing is active, stop it first
+                    client.stopVideo();
+                    webcamVideo.srcObject = null; // Clear previous stream
+                }
+                try {
+                    const success = await client.initializeWebcam(webcamVideo);
+                    if (success) {
+                        webcamVideo.classList.remove('hidden');
+                        webcamPlaceholder.classList.add('hidden');
+                        isVideoActive = true;
+                        activeVideoMode = 'webcam';
+                        updateVideoButtonStates();
+                        if (client.isConnected) {
+                            client.startVideoStream(1);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error accessing webcam:', error);
+                    console.warn('Unable to access webcam. Please check permissions.');
+                    isVideoActive = false; activeVideoMode = null; updateVideoButtonStates();
+                }
+            }
+        });
+
+        // Screen sharing control
+        screenButton.addEventListener('click', async () => {
+            if (isVideoActive && activeVideoMode === 'screen') {
+                client.stopVideo();
+                webcamVideo.srcObject = null;
+                webcamVideo.classList.add('hidden');
+                webcamPlaceholder.classList.remove('hidden');
+                isVideoActive = false;
+                activeVideoMode = null;
+                updateVideoButtonStates();
+            } else {
+                 if (isVideoActive) { // If camera is active, stop it first
+                    client.stopVideo();
+                     webcamVideo.srcObject = null; // Clear previous stream
+                }
+                try {
+                    const success = await client.initializeScreenShare(webcamVideo);
+                    if (success) {
+                        webcamVideo.classList.remove('hidden');
+                        webcamPlaceholder.classList.add('hidden');
+                        isVideoActive = true;
+                        activeVideoMode = 'screen';
+                        updateVideoButtonStates();
+                        if (client.isConnected) {
+                            client.startVideoStream(1);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error accessing screen share:', error);
+                    if (error.name === 'NotAllowedError') {
+                        console.warn('User denied screen sharing permission');
+                    } else {
+                        console.warn('Unable to share screen. ' + error.message);
+                    }
+                    isVideoActive = false; activeVideoMode = null; updateVideoButtonStates();
+                }
+            }
+        });
+
+        // Listen for screen share ended event from browser UI
+        window.addEventListener('screenshare-ended', () => {
+            console.log('Screen sharing ended via browser UI');
+            if (activeVideoMode === 'screen') {
+                webcamVideo.srcObject = null;
+                webcamVideo.classList.add('hidden');
+                webcamPlaceholder.classList.remove('hidden');
+                isVideoActive = false;
+                activeVideoMode = null;
+                updateVideoButtonStates();
+            }
+        });
+
+        // Microphone button handler
+        micButton.addEventListener('click', async () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        });
+
+        // End button handler
+        endButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            }
+            addMessage("Session ended. How else can I help you?", "assistant");
+            client.close();
+            initializeClient(); // Re-initialize for a new session
+        });
+
+        // Start recording
+        async function startRecording() {
+            try {
+                const success = await client.startRecording();
+                if (success) {
+                    isRecording = true;
+                    micButton.classList.add('mic-active');
+                    micStatus.textContent = 'Recording... Speak now';
+                    addMessage("...", "user");
+                    if (isVideoActive && !client.videoSendInterval) {
+                        client.startVideoStream(1);
+                    }
+                }
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                micStatus.textContent = 'Error starting. Try again.';
+            }
+        }
+
+        // Stop recording
+        function stopRecording() {
+            client.stopRecording();
+            isRecording = false;
+            micButton.classList.remove('mic-active');
+            micStatus.textContent = 'Click the icon to start recording';
+
+            const messages = Array.from(transcriptContainer.children);
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage && lastMessage.textContent === '...' && lastMessage.classList.contains('opacity-60')) {
+                lastMessage.remove();
+            }
+        }
+
+        // Initialize multimodal client
+        async function initializeClient() {
+            try {
+                if (sessionIdText && sessionIdDisplay) {
+                    sessionIdText.textContent = 'Connecting...';
+                    // Clear previous styling for session ID if it was active
+                    sessionIdDisplay.classList.remove('border-gray-500', 'text-gray-700', 'border-2', 'font-semibold');
+                    sessionIdDisplay.classList.add('text-[#555555]'); // Reset to default secondary text color
+                }
+
+                await client.connect();
+                let currentResponseText = '';
+                let isFirstChunk = true;
+
+                client.onReady = () => {
+                    console.log('Client ready');
+                    if (isVideoActive) { // If video was already active before a reconnect
+                        client.startVideoStream(1);
+                    }
+                };
+
+                client.onSessionIdReceived = (sessionId) => {
+                    console.log('Session ID received:', sessionId);
+                    if (sessionIdText && sessionIdDisplay) {
+                        sessionIdText.textContent = `Session ID: ${sessionId}`;
+                        sessionIdDisplay.classList.remove('text-[#555555]');
+                        // Apply a subtle active state for session ID (grayscale)
+                        sessionIdDisplay.classList.add('border-2', 'border-gray-400', 'text-gray-700', 'font-semibold');
+                    }
+                };
+
+                client.onAudioReceived = (audioData) => {
+                    audioIndicator.classList.remove('hidden');
+                };
+
+                client.onTextReceived = (text) => {
+                    if (text && text.trim()) {
+                        const userMessages = transcriptContainer.querySelectorAll('.opacity-60.italic');
+                        if (userMessages.length > 0 && userMessages[userMessages.length -1].textContent === '...') {
+                             userMessages[userMessages.length -1].remove();
+                        }
+
+                        if (isFirstChunk) {
+                            currentResponseText = text;
+                            addMessage(text, "assistant");
+                            isFirstChunk = false;
+                        } else {
+                            currentResponseText += ' ' + text.trim();
+                            const messages = Array.from(transcriptContainer.children);
+                            const lastMessage = messages[messages.length - 1];
+                            if (lastMessage && !lastMessage.classList.contains('opacity-60')) { // Ensure updating assistant message
+                                lastMessage.textContent = currentResponseText;
+                            } else {
+                                 addMessage(currentResponseText, "assistant"); // Should not happen if logic is correct
+                            }
+                        }
+                         transcriptOuterContainer.scrollTop = transcriptOuterContainer.scrollHeight;
+                    }
+                };
+
+                client.onTurnComplete = () => {
+                    console.log('Turn complete, preparing for next turn');
+                    audioIndicator.classList.add('hidden');
+                    currentResponseText = '';
+                    isFirstChunk = true;
+                    if (client.ws && client.ws.readyState !== WebSocket.OPEN) {
+                        console.log('WebSocket not open, reconnecting...');
+                        setTimeout(() => { if (!client.isConnected) initializeClient(); }, 1000);
+                    }
+                    const sessionId = client.sessionId;
+                    if (sessionId) {
+                        console.log(`Turn complete with session ID: ${sessionId}`);
+                    }
+                };
+
+                client.onError = (error) => {
+                    console.error('Client error:', error);
+                    addMessage("Sorry, I encountered an error. Please try again.", "assistant");
+                    currentResponseText = ''; isFirstChunk = true;
+                    if (!client.isConnected || (client.ws && client.ws.readyState !== WebSocket.OPEN)) {
+                        console.log('Connection lost due to error, attempting to reconnect...');
+                        setTimeout(() => { if (!client.isConnected) initializeClient(); }, 2000);
+                    }
+                };
+
+                client.onInterrupted = () => {
+                    console.log('Interruption detected, stopping audio playback');
+                    audioIndicator.classList.add('hidden');
+                    client.interrupt();
+                    currentResponseText = ''; isFirstChunk = true;
+                };
+            } catch (error) {
+                console.error('Failed to initialize client:', error);
+                addMessage("Sorry, I'm having trouble connecting. Please try again later.", "assistant");
+                if (sessionIdText) sessionIdText.textContent = 'Connection failed.';
+            }
+        }
+
+        // Initialize on page load
+        let hasInitialized = false;
+        window.addEventListener('load', () => {
+            if (!hasInitialized) {
+                hasInitialized = true;
+                console.log('Initializing client for the first time');
+                initializeClient();
+                updateVideoButtonStates();
+                if (micStatus) micStatus.textContent = 'Click the icon to start recording';
+
+                // Ensure initial placeholder is there if transcript is empty
+                if (transcriptContainer.children.length === 0) {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'text-[#555555] text-center py-10'; // Use new gray
+                    placeholder.textContent = 'Start a conversation to see the transcript.';
+                    transcriptContainer.appendChild(placeholder);
+                }
+            }
+        });
+
+        // Add unload handler
+        window.addEventListener('beforeunload', () => {
+            console.log('Page unloading, closing connection');
+            client.close();
+        });
+    </script>
+</body>
+</html>
