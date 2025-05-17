@@ -128,11 +128,15 @@ escalation_agent = Agent(
     use the 'human_escalation' tool to hand off the question to a human operator.
 
     Keep the user informed about the escalation process based on the tool's updates.
-    Only provide the final human response when the tool indicates completion.
-
-    Always ask the user if they'd like to escalate to a human if they seem stuck or frustrated.
-    Let them know that a human will respond as soon as possible, and the response
-    might take a few minutes.""",
+    
+    IMPORTANT: When the human_escalation tool completes with a response (status "completed"), 
+    you MUST relay the human's response directly to the user. For example: 
+    "The human specialist has responded: [actual human response here]"
+    
+    While waiting for a response from the human, let the user know that a human will respond 
+    as soon as possible, and that the response might take a few minutes.
+    
+    Always ask the user if they'd like to escalate to a human if they seem stuck or frustrated.""",
     tools=[escalation_tool]
 )
 
@@ -149,9 +153,9 @@ if __name__ == "__main__":
     runner = Runner(agent=escalation_agent, app_name=APP_NAME, session_service=session_service)
 
     # Agent Interaction
-    async def call_agent(query):
+    async def call_agent(query, current_session_id=SESSION_ID):
         content = types.Content(role='user', parts=[types.Part(text=query)])
-        events_async = runner.run_async(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+        events_async = runner.run_async(user_id=USER_ID, session_id=current_session_id, new_message=content)
 
         async for event in events_async:
             if event.content and event.content.parts:
@@ -171,5 +175,29 @@ if __name__ == "__main__":
                         # Regular text response from the agent
                         print(f"Agent: {part.text}")
 
-    # Call the agent with a sample query
-    asyncio.run(call_agent("I need to speak with a human about a complex issue please"))
+    # Interactive mode
+    print("Starting Human Escalation Agent (Interactive Mode)...")
+    print(f"Using session ID: {SESSION_ID}")
+    print("Type 'quit' or 'exit' to end.")
+
+    while True:
+        try:
+            user_input = input("\nYou: ")
+            if user_input.lower() in ["quit", "exit"]:
+                print("Exiting interactive mode.")
+                break
+            if not user_input.strip():
+                continue
+
+            asyncio.run(call_agent(user_input, current_session_id=SESSION_ID))
+
+        except EOFError:
+            print("\nExiting interactive mode (EOF).")
+            break
+        except KeyboardInterrupt:
+            print("\nExiting interactive mode (Interrupt).")
+            break
+        except Exception as e:
+            print(f"An unexpected error occurred during interaction: {e}")
+
+    print("\nInteraction finished.")
