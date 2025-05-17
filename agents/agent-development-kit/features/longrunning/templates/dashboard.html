@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Escalation Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+        .status-completed {
+            background-color: #27ae60;
+            color: white;
+        }
+        .question {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+        }
+        .response {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e8f4fd;
+            border-radius: 3px;
+        }
+        .actions {
+            text-align: right;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .no-conversations {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        .refresh {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Human Escalation Dashboard</h1>
+        
+        <div class="refresh">
+            <button class="btn" onclick="window.location.reload()">Refresh</button>
+        </div>
+        
+        {% if conversations %}
+            {% for id, conversation in conversations.items() %}
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Conversation #{{ id[:8] }}</span>
+                        <span class="timestamp">{{ conversation.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        <span class="status status-{{ conversation.status }}">{{ conversation.status }}</span>
+                    </div>
+                    
+                    <div class="question">
+                        <strong>Question:</strong>
+                        <p>{{ conversation.question }}</p>
+                    </div>
+                    
+                    {% if conversation.response %}
+                        <div class="response">
+                            <strong>Response:</strong>
+                            <p>{{ conversation.response }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="actions">
+                        {% if conversation.status == 'pending' %}
+                            <a href="/respond/{{ id }}" class="btn">Respond</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-conversations">
+                <p>No escalated conversations yet</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respond to Escalation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: 16px;
+            min-height: 150px;
+            margin-bottom: 20px;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #7f8c8d;
+        }
+        .btn-secondary:hover {
+            background-color: #6c7a7d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Respond to Escalation</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Conversation #{{ conversation_id[:8] }}</span>
+                <span class="timestamp">{{ conversation.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            </div>
+            
+            <div class="question">
+                <strong>Question:</strong>
+                <p>{{ conversation.question }}</p>
+            </div>
+            
+            <form method="POST" action="/respond/{{ conversation_id }}">
+                <div>
+                    <label for="response"><strong>Your Response:</strong></label>
+                    <textarea name="response" id="response" required></textarea>
+                </div>
+                
+                <div class="actions">
+                    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+                    <button type="submit" class="btn">Submit Response</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
