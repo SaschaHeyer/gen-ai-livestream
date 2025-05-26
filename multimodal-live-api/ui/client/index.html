@@ -1,718 +1,131 @@
+<!-- ui/client/index.html  – Ziggie v1 (Patched) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>hemmafy - Home Furnishings</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa; /* Light gray background for the page */
-        }
-        /* hemmafy (IKEA-inspired) Color Palette - classes remain for styling continuity */
-        .bg-svenska-blue { background-color: #0051BA; } /* Primary Blue */
-        .text-svenska-blue { color: #0051BA; }
-        .border-svenska-blue { border-color: #0051BA; }
-        .hover\:bg-svenska-blue-darker:hover { background-color: #003A8C; } /* Darker shade for hover */
-        .focus\:ring-svenska-blue:focus { --tw-ring-color: #0051BA; }
-        .focus\:border-svenska-blue:focus { border-color: #0051BA; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ziggie – your nutrition assistant</title>
 
-        .bg-svenska-yellow { background-color: #FFDA1A; } /* Primary Yellow */
-        .text-svenska-yellow { color: #FFDA1A; }
-        .border-svenska-yellow { border-color: #FFDA1A; }
-        .hover\:bg-svenska-yellow-darker:hover { background-color: #FBCB0A; } /* Darker shade for hover */
-
-        /* Chatbox specific dark blue */
-        .bg-chatbox-svenska-blue { background-color: #002F6C; } /* A darker variant of the blue for chatbox */
-        .border-chatbox-svenska-accent { border-color: #0051BA; } /* Primary blue for chatbox accents */
-
-
-        .top-bar {
-            background-color: #FFFFFF; /* White top bar */
-            border-bottom: 1px solid #E5E7EB; /* Light gray border */
-        }
-        .nav-link {
-            color: #4B5563; /* Gray text for nav links */
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem; /* rounded-md */
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-        }
-        .nav-link:hover {
-            background-color: #F3F4F6; /* Lighter gray on hover */
-            color: #1F2937; /* Darker gray text on hover */
-        }
-        .icon-btn {
-            color: #4B5563; /* Gray icon color */
-            padding: 0.5rem;
-            border-radius: 0.375rem; /* rounded-md */
-        }
-        .icon-btn:hover {
-            background-color: #F3F4F6; /* Lighter gray on hover */
-        }
-        .cart-section, .summary-section, .recently-viewed-section {
-            background-color: #FFFFFF; /* White background for sections */
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem; /* p-6 */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
-        }
-        .product-card {
-            border: 1px solid #E5E7EB; /* Light gray border */
-            border-radius: 0.5rem; /* rounded-lg */
-            overflow: hidden;
-        }
-        .quantity-selector {
-            display: flex;
-            align-items: center;
-            border: 1px solid #D1D5DB; /* Gray border */
-            border-radius: 0.375rem; /* rounded-md */
-            padding: 0.25rem 0.5rem;
-        }
-        .quantity-selector span {
-            padding: 0 0.5rem;
-        }
-        .checkout-button {
-            /* Uses .bg-svenska-blue and .hover:bg-svenska-blue-darker from above */
-            color: white;
-            font-weight: 600; /* semibold */
-            padding: 0.75rem 1.5rem; /* py-3 px-6 */
-            border-radius: 9999px; /* rounded-full */
-            text-align: center;
-            transition: background-color 0.2s ease-in-out;
-        }
-
-        .chatbox {
-            position: fixed;
-            bottom: 1.5rem; /* 24px */
-            right: 1.5rem; /* 24px */
-            width: 360px;
-            height: 600px;
-            /* Uses .bg-chatbox-svenska-blue */
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
-            display: flex;
-            flex-direction: column;
-            color: white;
-            overflow: hidden;
-        }
-        .chatbox-header {
-            padding: 1rem; /* p-4 */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            /* Uses .border-chatbox-svenska-accent */
-            border-bottom-width: 1px;
-        }
-        .chatbox-header-title {
-            display: flex;
-            align-items: center;
-            font-weight: 500; /* medium */
-        }
-        .chatbox-body {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 1rem; /* p-4 */
-            overflow-y: auto;
-        }
-        .mic-button-bg {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            margin: auto;
-        }
-        .mic-button {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-        .mic-active {
-            background-color: rgba(255, 51, 51, 0.4); /* Semi-transparent red */
-        }
-        .chatbox-footer {
-            padding: 1rem; /* p-4 */
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            /* Uses .border-chatbox-svenska-accent */
-            border-top-width: 1px;
-        }
-        .chat-control-btn {
-            background-color: rgba(255, 255, 255, 0.15);
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .chat-control-btn:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-        }
-        .chat-control-btn.end-call {
-            background-color: #DC2626; /* Red for end call */
-        }
-        .chat-control-btn.end-call:hover {
-            background-color: #EF4444; /* Lighter red on hover */
-        }
-
-        /* Chat message bubbles */
-        .chat-message {
-            max-width: 80%;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            border-radius: 18px;
-            word-wrap: break-word;
-        }
-        .user-message {
-            align-self: flex-end;
-            background-color: #0051BA;
-            margin-left: auto;
-        }
-        .assistant-message {
-            align-self: flex-start;
-            background-color: rgba(255, 255, 255, 0.1);
-            margin-right: auto;
-        }
-
-        /* Audio wave animation */
-        .audio-wave {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 20px;
-            margin: 10px 0;
-        }
-        .audio-wave span {
-            display: inline-block;
-            width: 3px;
-            height: 100%;
-            margin: 0 2px;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 3px;
-            animation: wave 1.2s infinite ease-in-out;
-        }
-        .audio-wave span:nth-child(2) { animation-delay: 0.1s; }
-        .audio-wave span:nth-child(3) { animation-delay: 0.2s; }
-        .audio-wave span:nth-child(4) { animation-delay: 0.3s; }
-        .audio-wave span:nth-child(5) { animation-delay: 0.4s; }
-
-        @keyframes wave {
-            0%, 40%, 100% { transform: scaleY(0.4); }
-            20% { transform: scaleY(1); }
-        }
-
-        /* Custom scrollbar for webkit browsers */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; /* Light gray track */
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #0051BA; /* Primary Blue scrollbar thumb */
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #003A8C; /* Darker Blue on hover */
-        }
-
-    </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* audio wave */
+    .wave span{
+      display:inline-block;width:3px;height:100%;margin:0 2px;
+      background:#4ade80;border-radius:3px;animation:up 1.2s infinite ease-in-out
+    }
+    .wave span:nth-child(2){animation-delay:0.1s}
+    .wave span:nth-child(3){animation-delay:0.2s}
+    .wave span:nth-child(4){animation-delay:0.3s}
+    .wave span:nth-child(5){animation-delay:0.4s}
+    @keyframes up{0%,40%,100%{transform:scaleY(.4)}20%{transform:scaleY(1)}}
+  </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 flex flex-col items-center pt-10 select-none">
 
-    <nav class="top-bar sticky top-0 z-50">
-        <div class="container mx-auto px-4 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-2 md:space-x-4">
-                    <a href="#" class="text-2xl font-bold text-svenska-blue">hemmafy</a>
-                    <a href="#" class="nav-link text-sm font-medium">Products</a>
-                    <a href="#" class="nav-link text-sm font-medium">Rooms</a>
-                    <a href="#" class="nav-link text-sm font-medium">Offers</a>
-                    <a href="#" class="nav-link text-sm font-medium">Customer Service</a>
-                    <a href="#" class="nav-link text-sm font-medium">FAQ</a>
-                </div>
-                <div class="flex items-center space-x-3 md:space-x-4">
-                    <button class="icon-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </button>
-                    <button class="icon-btn relative">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span class="absolute -top-1 -right-1 bg-svenska-yellow text-svenska-blue text-xs w-4 h-4 flex items-center justify-center rounded-full font-semibold">2</span>
-                    </button>
-                    <button class="icon-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+  <!-- Ziggie mascot -->
+  <img src="ask_ziggie.png" alt="Ziggie" class="w-40 h-40 rounded-full shadow-xl" />
 
-    <div class="container mx-auto px-4 lg:px-8 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-                <h1 class="text-2xl font-semibold text-gray-800">Your shopping bag (2)</h1>
+  <!-- mic button -->
+  <div id="micBtn" class="mt-10 w-24 h-24 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-600 cursor-pointer">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/>
+      <path d="M19 11h2a9 9 0 11-18 0h2a7 7 0 1014 0z"/>
+    </svg>
+  </div>
 
-                <div class="cart-section flex flex-col md:flex-row items-start md:items-center gap-6">
-                    <img src="https://placehold.co/150x150/FFDA1A/0051BA?text=BOKHYLLA+Stor" alt="BOKHYLLA Stor Bookcase" class="w-32 h-32 md:w-36 md:h-36 object-cover rounded-lg shadow">
-                    <div class="flex-grow">
-                        <h2 class="text-lg font-semibold text-gray-700">BOKHYLLA Stor</h2>
-                        <p class="text-sm text-gray-500">White, 80x28x106 cm</p>
-                        <p class="text-lg font-bold text-gray-800 mt-1">$49.99/each</p>
-                    </div>
-                    <div class="flex flex-col items-start md:items-end space-y-2">
-                        <label for="quantity1" class="text-sm text-gray-600">Quantity</label>
-                        <div class="quantity-selector">
-                            <button class="px-2 text-gray-600 hover:text-gray-800">-</button>
-                            <input type="text" id="quantity1" value="1" class="w-10 text-center border-0 focus:ring-0" readonly>
-                            <button class="px-2 text-gray-600 hover:text-gray-800">+</button>
-                        </div>
-                    </div>
-                </div>
+  <!-- speaking indicator -->
+  <div id="wave" class="wave h-8 mt-6 hidden">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
 
-                <div class="cart-section flex flex-col md:flex-row items-start md:items-center gap-6">
-                    <img src="https://placehold.co/150x150/FFDA1A/0051BA?text=DOFTLJUS+Vanilj" alt="DOFTLJUS Vanilj Scented Candle" class="w-32 h-32 md:w-36 md:h-36 object-cover rounded-lg shadow">
-                    <div class="flex-grow">
-                        <h2 class="text-lg font-semibold text-gray-700">DOFTLJUS Vanilj</h2>
-                        <p class="text-sm text-gray-500">Natural wax, ~25h burn time</p>
-                        <p class="text-lg font-bold text-gray-800 mt-1">$9.99/each</p>
-                    </div>
-                    <div class="flex flex-col items-start md:items-end space-y-2">
-                        <label for="quantity2" class="text-sm text-gray-600">Quantity</label>
-                        <div class="quantity-selector">
-                            <button class="px-2 text-gray-600 hover:text-gray-800">-</button>
-                            <input type="text" id="quantity2" value="1" class="w-10 text-center border-0 focus:ring-0" readonly>
-                            <button class="px-2 text-gray-600 hover:text-gray-800">+</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <!-- audio client -->
+  <script src="audio-client.js"></script>
+  <script>
+    // Point to your WebSocket server. For local development with server_adk.py or server.py:
+    const client = new AudioClient('ws://localhost:8765');
+    // If deploying to Cloud Run, change this to your wss://your-service-url
 
-            <div class="lg:col-span-1">
-                <div class="summary-section space-y-4 sticky top-24">
-                    <h2 class="text-xl font-semibold text-gray-800">Order summary</h2>
-                    <div class="flex justify-between text-gray-600">
-                        <span>Sub total</span>
-                        <span id="subtotalAmount">$59.98</span> </div>
-                    <div class="flex justify-between text-gray-600">
-                        <span>Delivery</span>
-                        <span>Calculated at next step</span>
-                    </div>
-                    <div class="flex justify-between text-gray-600 border-b pb-4">
-                        <span>Sales Tax</span>
-                        <span id="taxAmount">$4.80</span> </div>
-                    <div class="text-sm text-gray-500">
-                        Do you have a discount code?
-                        <input type="text" placeholder="Enter discount code" class="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-svenska-blue focus:border-svenska-blue">
-                    </div>
-                    <div class="flex justify-between text-xl font-bold text-gray-800 pt-2">
-                        <span>Total</span>
-                        <span id="totalAmount">$64.78</span> </div>
-                    <button class="checkout-button bg-svenska-blue hover:bg-svenska-blue-darker w-full mt-4">Continue to checkout</button>
-                </div>
-            </div>
-        </div>
+    async function boot () {
+      try {
+        await client.connect();
+        // client.onReady will also log, but this confirms the promise resolved.
+        console.log("UI: Attempted to connect to WebSocket server. Check client.onReady log.");
+      } catch (error) {
+        console.error("UI: Failed to connect to WebSocket server during boot:", error);
+        // You might want to display an error message to the user on the page here.
+      }
+    }
 
-        <div class="mt-12">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Recently viewed</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                <div class="product-card bg-white">
-                    <img src="https://placehold.co/200x200/FFDA1A/0051BA?text=FÅTÖLJ+Bekväm" alt="FÅTÖLJ Bekväm Armchair" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-md font-semibold text-gray-700">FÅTÖLJ Bekväm</h3>
-                        <p class="text-sm text-gray-500">$79.00</p>
-                    </div>
-                </div>
-                <div class="product-card bg-white">
-                    <img src="https://placehold.co/200x200/FFDA1A/0051BA?text=HYLLA+Flexibel" alt="HYLLA Flexibel Shelf unit" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-md font-semibold text-gray-700">HYLLA Flexibel</h3>
-                        <p class="text-sm text-gray-500">$34.99</p>
-                    </div>
-                </div>
-                <div class="product-card bg-white">
-                     <img src="https://placehold.co/200x200/FFDA1A/0051BA?text=SIDOBORD+Liten" alt="SIDOBORD Liten Side table" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-md font-semibold text-gray-700">SIDOBORD Liten</h3>
-                        <p class="text-sm text-gray-500">$9.99</p>
-                    </div>
-                </div>
-                 <div class="product-card bg-white">
-                    <img src="https://placehold.co/200x200/FFDA1A/0051BA?text=BÄDDSOFFA+Praktisk" alt="BÄDDSOFFA Praktisk Sofa-bed" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-md font-semibold text-gray-700">BÄDDSOFFA Praktisk</h3>
-                        <p class="text-sm text-gray-500">$499.00</p>
-                    </div>
-                </div>
-                 <div class="product-card bg-white">
-                    <img src="https://placehold.co/200x200/FFDA1A/0051BA?text=ARBETSLAMPA+Ljus" alt="ARBETSLAMPA Ljus Work lamp" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="text-md font-semibold text-gray-700">ARBETSLAMPA Ljus</h3>
-                        <p class="text-sm text-gray-500">$12.99</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    boot();
 
-    <div id="chatbox" class="chatbox bg-chatbox-svenska-blue">
-        <div class="chatbox-header border-chatbox-svenska-accent">
-            <div class="chatbox-header-title">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2 p-1 bg-svenska-yellow text-svenska-blue rounded-full" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-                </svg>
-                <span>Customer Service Agent</span>
-            </div>
-            <button id="closeChatbox" class="p-1 rounded-full hover:bg-svenska-blue-darker">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
+    // Mic toggle
+    const btn   = document.getElementById('micBtn');
+    const wave  = document.getElementById('wave');
+    let uiIsActiveRecording = false; // UI state for recording
 
-        <div id="session-id-display" class="text-xs text-center bg-opacity-80 bg-black p-2 text-gray-400 border-t border-b border-gray-700">
-            <span id="session-id-text" class="font-mono font-bold">Waiting for session...</span>
-        </div>
-
-        <div class="chatbox-body" id="chat-messages">
-            <!-- Chat messages will be added here -->
-            <div class="chat-message assistant-message">
-                Hello! I'm your hemmafy virtual assistant. How can I help you today?
-            </div>
-        </div>
-
-        <div id="audio-indicator" class="px-4 pb-2 flex justify-center items-center h-10 hidden">
-            <div class="audio-wave">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-
-        <div class="chatbox-footer border-chatbox-svenska-accent">
-            <button id="cameraButton" class="chat-control-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-            </button>
-            <div id="mic-button-container" class="mic-button">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-            </div>
-            <button id="endCallButton" class="chat-control-btn end-call">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 002.828 0L19 12M3 12l6.414-6.414a2 2 0 012.828 0L19 12" />
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <button id="openChatButton" class="fixed bottom-6 right-6 bg-svenska-blue text-white p-4 rounded-full shadow-lg hidden hover:bg-svenska-blue-darker" title="Open Chat">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.74 8.74 0 01-4.246-1.122L2.999 17.68a.5.5 0 00-.5-.502L2.57 14.28A7.96 7.96 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd" />
-        </svg>
-    </button>
-
-    <!-- Audio client script -->
-    <script src="audio-client.js"></script>
-
-    <script>
-        // Initialize audio client with deployed server URL
-        const audioClient = new AudioClient('wss://adk-audio-assistant-234439745674.us-central1.run.app');
-        let isRecording = false;
-
-        // Script to toggle chatbox visibility
-        const chatbox = document.getElementById('chatbox');
-        const closeChatboxButton = document.getElementById('closeChatbox');
-        const openChatButton = document.getElementById('openChatButton');
-        const micButton = document.getElementById('mic-button-container');
-        const endCallButton = document.getElementById('endCallButton');
-        const chatMessages = document.getElementById('chat-messages');
-        const audioIndicator = document.getElementById('audio-indicator');
-
-        if (closeChatboxButton) {
-            closeChatboxButton.addEventListener('click', () => {
-                if (chatbox) chatbox.style.display = 'none';
-                if (openChatButton) openChatButton.style.display = 'flex';
-
-                // Stop recording if active
-                if (isRecording) {
-                    stopRecording();
-                }
-
-                // Disconnect the audio client
-                audioClient.close();
-
-                // Reset session ID display
-                const sessionIdText = document.getElementById('session-id-text');
-                const sessionIdDisplay = document.getElementById('session-id-display');
-
-                if (sessionIdText && sessionIdDisplay) {
-                    sessionIdText.textContent = 'Session disconnected';
-                    // Change color back to indicate inactive session
-                    sessionIdDisplay.classList.remove('text-yellow-300');
-                    sessionIdDisplay.classList.add('text-gray-400');
-                }
-            });
+    btn.onclick = async () => {
+      if (!uiIsActiveRecording) {
+        console.log("UI: Attempting to start recording...");
+        try {
+          const recordingStartedSuccessfully = await client.startRecording();
+          if (recordingStartedSuccessfully) {
+            console.log("UI: client.startRecording() successful. UI changing to active recording state.");
+            btn.classList.replace('bg-emerald-500','bg-red-500');
+            btn.classList.replace('hover:bg-emerald-600','hover:bg-red-600');
+            uiIsActiveRecording = true;
+          } else {
+            console.error("UI: client.startRecording() failed. Check console for errors from audio-client.js (e.g., mic permissions).");
+            // Optionally, provide user feedback here (e.g., an alert or message on the page)
+            // Ensure button remains in non-recording state
+            btn.classList.replace('bg-red-500','bg-emerald-500');
+            btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
+            uiIsActiveRecording = false;
+          }
+        } catch (error) {
+            console.error("UI: Error occurred during client.startRecording() call:", error);
+            // Reset UI to non-recording state on error
+            btn.classList.replace('bg-red-500','bg-emerald-500');
+            btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
+            uiIsActiveRecording = false;
         }
+      } else {
+        console.log("UI: Attempting to stop recording...");
+        client.stopRecording(); // stopRecording in audio-client.js doesn't return a promise/value
+        console.log("UI: client.stopRecording() called. UI changing to non-active recording state.");
+        btn.classList.replace('bg-red-500','bg-emerald-500');
+        btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
+        uiIsActiveRecording = false;
+      }
+    };
 
-        if (openChatButton) {
-            openChatButton.addEventListener('click', () => {
-                if (chatbox) chatbox.style.display = 'flex';
-                if (openChatButton) openChatButton.style.display = 'none';
+    /* Show / hide wave while Gemini is talking */
+    client.onAudioReceived = (audioData) => { // audioData is not used here, but good to know it's passed
+        // console.log("UI: Audio received from server, showing wave.");
+        wave.classList.remove('hidden');
+    }
+    client.onTurnComplete = () => {
+        // console.log("UI: Turn complete from server, hiding wave.");
+        wave.classList.add('hidden');
+    }
+    client.onInterrupted = () => {
+        // console.log("UI: Interrupted from server, hiding wave.");
+        wave.classList.add('hidden');
+    }
 
-                // Connect to the server
-                initializeAudioClient();
-            });
+    // Add basic event handlers for debugging client state
+    client.onReady = () => {
+        console.log("UI: AudioClient is ready (WebSocket connected and server sent 'ready' message).");
+    }
+    client.onError = (error) => {
+        console.error("UI: AudioClient reported an error:", error);
+        // Potentially reset UI state if a critical error occurs
+        if (uiIsActiveRecording) {
+            btn.classList.replace('bg-red-500','bg-emerald-500');
+            btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
+            uiIsActiveRecording = false;
         }
-
-        // Microphone button handler
-        micButton.addEventListener('click', () => {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecording();
-            }
-        });
-
-        // End call button handler
-        endCallButton.addEventListener('click', () => {
-            if (isRecording) {
-                stopRecording();
-            }
-
-            // Add a message
-            addMessage("Call ended. How else can I help you?", "assistant");
-
-            // Reconnect the audio client
-            audioClient.close();
-            initializeAudioClient();
-        });
-
-        // Initialize audio client
-        async function initializeAudioClient() {
-            try {
-                // Reset session ID display while connecting
-                const sessionIdText = document.getElementById('session-id-text');
-                const sessionIdDisplay = document.getElementById('session-id-display');
-
-                if (sessionIdText && sessionIdDisplay) {
-                    sessionIdText.textContent = 'Waiting for session...';
-                    // Ensure color is gray for waiting state
-                    sessionIdDisplay.classList.remove('text-yellow-300');
-                    sessionIdDisplay.classList.add('text-gray-400');
-                }
-
-                await audioClient.connect();
-
-                // Variables to track the current response
-                let currentResponseText = '';
-                let currentResponseElement = null;
-
-                // Set up event handlers
-                audioClient.onReady = () => {
-                    console.log('Audio client ready');
-                };
-
-                audioClient.onSessionIdReceived = (sessionId) => {
-                    console.log('Session ID received in callback:', sessionId);
-                    const sessionIdText = document.getElementById('session-id-text');
-                    const sessionIdDisplay = document.getElementById('session-id-display');
-
-                    if (sessionIdText && sessionIdDisplay) {
-                        console.log('Updating session ID text with:', sessionId);
-                        // Update the text and change color to indicate active session
-                        sessionIdText.textContent = `Session ID: ${sessionId}`;
-                        sessionIdDisplay.classList.remove('text-gray-400');
-                        sessionIdDisplay.classList.add('text-yellow-300');
-                    } else {
-                        console.error('Session ID elements not found!');
-                    }
-                };
-
-                audioClient.onAudioReceived = (audioData) => {
-                    // Show audio indicator when receiving audio
-                    audioIndicator.classList.remove('hidden');
-                };
-
-                audioClient.onTextReceived = (text) => {
-                    if (text && text.trim()) {
-                        // If this is the first part of a response
-                        if (!currentResponseElement || !document.body.contains(currentResponseElement)) {
-                            // Create a new message and save reference
-                            currentResponseText = text;
-                            currentResponseElement = document.createElement('div');
-                            currentResponseElement.className = 'chat-message assistant-message';
-                            currentResponseElement.textContent = text;
-                            chatMessages.appendChild(currentResponseElement);
-                        } else {
-                            // Append to the existing response
-                            currentResponseText += ' ' + text.trim();
-                            currentResponseElement.textContent = currentResponseText;
-                        }
-
-                        // Scroll to the bottom
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
-                };
-
-                audioClient.onTurnComplete = () => {
-                    // Hide audio indicator when done speaking
-                    audioIndicator.classList.add('hidden');
-
-                    // Reset for next response
-                    currentResponseText = '';
-                    currentResponseElement = null;
-                };
-
-                audioClient.onError = (error) => {
-                    console.error('Audio client error:', error);
-                    addMessage("Sorry, I encountered an error. Please try again.", "assistant");
-
-                    // Reset response tracking
-                    currentResponseText = '';
-                    currentResponseElement = null;
-                };
-
-                audioClient.onInterrupted = () => {
-                    console.log('Interruption detected, stopping audio playback');
-                    audioIndicator.classList.add('hidden');
-
-                    // Stop audio playback immediately
-                    audioClient.interrupt();
-
-                    // Reset response tracking
-                    currentResponseText = '';
-                    currentResponseElement = null;
-                };
-            } catch (error) {
-                console.error('Failed to initialize audio client:', error);
-                addMessage("Sorry, I'm having trouble connecting. Please try again later.", "assistant");
-            }
-        }
-
-        // Start recording
-        async function startRecording() {
-            try {
-                const success = await audioClient.startRecording();
-                if (success) {
-                    isRecording = true;
-                    micButton.classList.add('mic-active');
-
-                    // Show user message
-                    addMessage("...", "user");
-                }
-            } catch (error) {
-                console.error('Error starting recording:', error);
-            }
-        }
-
-        // Stop recording
-        function stopRecording() {
-            audioClient.stopRecording();
-            isRecording = false;
-            micButton.classList.remove('mic-active');
-
-            // Remove the temporary user message
-            const tempMessages = document.querySelectorAll('.user-message');
-            if (tempMessages.length > 0) {
-                const lastMessage = tempMessages[tempMessages.length - 1];
-                if (lastMessage.textContent === '...') {
-                    lastMessage.remove();
-                }
-            }
-        }
-
-        // Add a message to the chat
-        function addMessage(text, sender) {
-            const messageElement = document.createElement('div');
-            messageElement.className = `chat-message ${sender}-message`;
-            messageElement.textContent = text;
-
-            chatMessages.appendChild(messageElement);
-
-            // Scroll to the bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // Basic quantity adjustment
-        document.querySelectorAll('.quantity-selector').forEach(selector => {
-            const minusButton = selector.querySelector('button:first-child');
-            const plusButton = selector.querySelector('button:last-child');
-            const input = selector.querySelector('input[type="text"]');
-
-            minusButton.addEventListener('click', () => {
-                let value = parseInt(input.value);
-                if (value > 1) {
-                    input.value = value - 1;
-                    // Note: For a real cart, you'd call a function here to update totals
-                }
-            });
-
-            plusButton.addEventListener('click', () => {
-                let value = parseInt(input.value);
-                input.value = value + 1;
-                // Note: For a real cart, you'd call a function here to update totals
-            });
-        });
-
-        // Simple function to update totals (example - would be more complex in a real app)
-        // This is illustrative; in a real app, this would be triggered by quantity changes and promo codes.
-        function updateOrderSummary() {
-            const product1Price = 49.99;
-            const product1Qty = parseInt(document.getElementById('quantity1').value) || 0;
-            const product2Price = 9.99; // Candle price
-            const product2Qty = parseInt(document.getElementById('quantity2').value) || 0;
-
-            const subtotal = (product1Price * product1Qty) + (product2Price * product2Qty);
-            const taxRate = 0.08; // Example 8% tax
-            const tax = subtotal * taxRate;
-            const total = subtotal + tax;
-
-            document.getElementById('subtotalAmount').textContent = `$${subtotal.toFixed(2)}`;
-            document.getElementById('taxAmount').textContent = `$${tax.toFixed(2)}`;
-            document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
-        }
-
-        // Initialize on page load
-        window.addEventListener('load', () => {
-            initializeAudioClient();
-
-            // Initialize order summary with correct values
-            updateOrderSummary();
-
-            // Add event listeners to quantity buttons to update totals
-            document.querySelectorAll('.quantity-selector button').forEach(button => {
-                button.addEventListener('click', () => {
-                    // A brief delay to allow input value to update visually, then recalculate
-                    setTimeout(updateOrderSummary, 50);
-                });
-            });
-        });
-    </script>
+        // You might want to inform the user about the error on the page.
+    }
+  </script>
 </body>
 </html>
