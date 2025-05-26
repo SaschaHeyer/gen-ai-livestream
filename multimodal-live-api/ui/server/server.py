@@ -59,10 +59,12 @@ class LiveAPIWebSocketServer(BaseWebSocketServer):
                 async def handle_websocket_messages():
                     async for message in websocket:
                         try:
+                            logger.info(f"[WS→SRV] raw={message[:120]}...")
                             data = json.loads(message)
                             if data.get("type") == "audio":
                                 # Decode base64 audio data
                                 audio_bytes = base64.b64decode(data.get("data", ""))
+                                logger.info("Got audio")
                                 # Put audio in queue for processing
                                 await audio_queue.put(audio_bytes)
                             elif data.get("type") == "end":

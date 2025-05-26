@@ -2,6 +2,8 @@ import asyncio
 import json
 import base64
 import logging
+import os
+
 import websockets
 import traceback
 from websockets.exceptions import ConnectionClosed
@@ -11,10 +13,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Constants
-PROJECT_ID = "sascha-playground-doit"
-LOCATION = "us-central1"
-MODEL = "gemini-2.0-flash-live-preview-04-09"
-VOICE_NAME = "Puck"
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "sascha-playground-doit")
+LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+MODEL = os.environ.get("MODEL", "gemini-2.0-flash-live-preview-04-09")
+VOICE_NAME = os.environ.get("VOICE_NAME", "Puck")
 
 # Audio sample rates for input/output
 RECEIVE_SAMPLE_RATE = 24000  # Rate of audio received from Gemini
@@ -110,8 +112,8 @@ class BaseWebSocketServer:
         try:
             # Start the audio processing for this client
             await self.process_audio(websocket, client_id)
-        except ConnectionClosed:
-            logger.info(f"Client disconnected: {client_id}")
+        except ConnectionClosed as e:
+            logger.exception(f"Client disconnected: {client_id} due to ", e)
         except Exception as e:
             logger.error(f"Error handling client {client_id}: {e}")
             logger.error(traceback.format_exc())
