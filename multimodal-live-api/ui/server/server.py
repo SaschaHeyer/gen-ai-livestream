@@ -1,184 +1,147 @@
+"""
+Video Ingredient Detection WebSocket Server using LiveAPI
+---------------------------------------------------------
+This server uses the Gemini LiveAPI to handle a continuous stream of
+webcam frames from a browser. It establishes a persistent session with the
+model, feeding it frames until an ingredient list is detected on food
+packaging.
+
+Expected WebSocket message types (JSON):
+- {"type": "frame", "data": "<BASE64 JPEG>"}
+
+Server → Client message types (JSON)
+- {"type": "status", "data": "scanning"}
+- {"type": "found"}
+- {"type": "ingredients", "data": "Sugar, Wheat flour, …"}
+"""
+
+from __future__ import annotations
+
 import asyncio
-import json
 import base64
+import json
 
-# Import Google Generative AI components
+# Google Gemini SDK
 from google import genai
-from google.genai import types
-from google.genai.types import (
-    LiveConnectConfig,
-    SpeechConfig,
-    VoiceConfig,
-    PrebuiltVoiceConfig,
-)
+from google.genai.types import LiveConnectConfig
 
-# Import common components
+# Shared utilities / constants
 from common import (
     BaseWebSocketServer,
     logger,
     PROJECT_ID,
     LOCATION,
     MODEL,
-    VOICE_NAME,
-    SEND_SAMPLE_RATE,
     SYSTEM_INSTRUCTION,
-    get_order_status,
 )
 
 # Initialize Google client
+# A single client instance is reused for all connections.
 client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 
-# LiveAPI Configuration
+# LiveAPI Configuration for Video Input and Text Output
 config = LiveConnectConfig(
-    response_modalities=["AUDIO"],
-    output_audio_transcription={},
-    input_audio_transcription={},
-    speech_config=SpeechConfig(
-        voice_config=VoiceConfig(
-            prebuilt_voice_config=PrebuiltVoiceConfig(voice_name=VOICE_NAME)
-        )
-    ),
-    session_resumption=types.SessionResumptionConfig(handle=None),
+    # Specify that we want text responses from the model.
+    response_modalities=["TEXT"],
+    # Specify that we will be sending video input.
+    # input_video_config={},
+    # Provide the model with instructions on how to behave.
     system_instruction=SYSTEM_INSTRUCTION,
 )
 
-class LiveAPIWebSocketServer(BaseWebSocketServer):
-    """WebSocket server implementation using Gemini LiveAPI directly."""
+
+class LiveVideoWebSocketServer(BaseWebSocketServer):
+    """WebSocket server implementation using Gemini LiveAPI for video."""
 
     async def process_audio(self, websocket, client_id):
-        # Store reference to client
-        self.active_clients[client_id] = websocket
+        """
+        Processes incoming video frames from the client via a WebSocket
+        connection using the Gemini LiveAPI.
 
-        # Connect to Gemini using LiveAPI
+        Note: The method is named process_audio in the base class, but here
+        it is adapted to handle video frames.
+        """
+        self.active_clients[client_id] = websocket
+        ingredients_found = False
+        print("We're here")
+        # Connect to Gemini using the LiveAPI.
         async with client.aio.live.connect(model=MODEL, config=config) as session:
             async with asyncio.TaskGroup() as tg:
-                # Create a queue for audio data from the client
-                audio_queue = asyncio.Queue()
+                frame_queue = asyncio.Queue()
 
-                # Task to process incoming WebSocket messages
+                # Task 1: Handle incoming WebSocket messages from the browser.
                 async def handle_websocket_messages():
                     async for message in websocket:
                         try:
-                            logger.info(f"[WS→SRV] raw={message[:120]}...")
                             data = json.loads(message)
-                            if data.get("type") == "audio":
-                                # Decode base64 audio data
-                                audio_bytes = base64.b64decode(data.get("data", ""))
-                                logger.info("Got audio")
-                                # Put audio in queue for processing
-                                await audio_queue.put(audio_bytes)
-                            elif data.get("type") == "end":
-                                # Client is done sending audio for this turn
-                                logger.info("Received end signal from client")
-                            elif data.get("type") == "text":
-                                # Handle text messages (not implemented in this simple version)
-                                logger.info(f"Received text: {data.get('data')}")
+
+                            if data.get("type") == "frame":
+                                # Decode the base64 image and put it in the queue.
+                                img_bytes = base64.b64decode(data.get("data", ""))
+                                await frame_queue.put(img_bytes)
                         except json.JSONDecodeError:
                             logger.error("Invalid JSON message received")
                         except Exception as e:
                             logger.error(f"Error processing message: {e}")
 
-                # Task to process and send audio to Gemini
-                async def process_and_send_audio():
+                # Task 2: Send video frames from the queue to the Gemini session.
+                async def send_frames_to_gemini():
                     while True:
-                        data = await audio_queue.get()
-
-                        # Send the audio data to Gemini
+                        frame_bytes = await frame_queue.get()
+                        print(f"Sending message to gemini")
+                        # Send the raw image bytes to the LiveAPI session.
                         await session.send_realtime_input(
-                            media={
-                                "data": data,
-                                "mime_type": f"audio/pcm;rate={SEND_SAMPLE_RATE}",
-                            }
+                            media={"data": frame_bytes, "mime_type": "image/jpeg"}
                         )
+                        frame_queue.task_done()
 
-                        audio_queue.task_done()
+                # Task 3: Receive and process text responses from Gemini.
+                async def receive_responses_from_gemini():
+                    nonlocal ingredients_found
+                    await websocket.send(
+                        json.dumps({"type": "status", "data": "scanning"})
+                    )
 
-                # Task to receive and play responses
-                async def receive_and_play():
-                    while True:
-                        input_transcriptions = []
-                        output_transcriptions = []
-
-                        async for response in session.receive():
-                            # Get session resumption update if available
-                            if response.session_resumption_update:
-                                update = response.session_resumption_update
-                                if update.resumable and update.new_handle:
-                                    session_id = update.new_handle
-                                    logger.info(f"New SESSION: {session_id}")
-                                    # Send session ID to client
-                                    session_id_msg = json.dumps({
-                                        "type": "session_id",
-                                        "data": session_id
-                                    })
-                                    await websocket.send(session_id_msg)
-
-                            # Check if connection will be terminated soon
-                            if response.go_away is not None:
-                                logger.info(f"Session will terminate in: {response.go_away.time_left}")
-
-                            server_content = response.server_content
-
-                            # Handle interruption
-                            if (hasattr(server_content, "interrupted") and server_content.interrupted):
-                                logger.info("🤐 INTERRUPTION DETECTED")
-                                # Just notify the client - no need to handle audio on server side
-                                await websocket.send(json.dumps({
-                                    "type": "interrupted",
-                                    "data": "Response interrupted by user input"
-                                }))
-
-                            # Process model response
-                            if server_content and server_content.model_turn:
-                                for part in server_content.model_turn.parts:
-                                    if part.inline_data:
-                                        # Send audio to client only (don't play locally)
-                                        b64_audio = base64.b64encode(part.inline_data.data).decode('utf-8')
+                    async for response in session.receive():
+                        server_content = response.server_content
+                        print(f"Got message from gemini {server_content}")
+                        if server_content and server_content.model_turn:
+                            for part in server_content.model_turn.parts:
+                                if part.text:
+                                    logger.info(f"Gemini response: '{part.text.strip()}'")
+                                    # Check if the model found ingredients.
+                                    if "NO_INGREDIENTS_FOUND" not in part.text.upper():
+                                        if not ingredients_found:
+                                            ingredients_found = True
+                                            # Notify UI that ingredients were found.
+                                            await websocket.send(json.dumps({"type": "found"}))
+                                            # Send the extracted ingredients list.
+                                            await websocket.send(json.dumps({
+                                                "type": "ingredients",
+                                                "data": part.text.strip(),
+                                            }))
+                                    else:
+                                        # Inform UI that we're still looking.
                                         await websocket.send(json.dumps({
-                                            "type": "audio",
-                                            "data": b64_audio
+                                            "type": "status",
+                                            "data": "scanning"
                                         }))
 
-                            # Handle turn completion
-                            if server_content and server_content.turn_complete:
-                                logger.info("✅ Gemini done talking")
-                                await websocket.send(json.dumps({
-                                    "type": "turn_complete"
-                                }))
 
-                            # Handle transcriptions
-                            output_transcription = getattr(response.server_content, "output_transcription", None)
-                            if output_transcription and output_transcription.text:
-                                output_transcriptions.append(output_transcription.text)
-                                # Send text to client
-                                await websocket.send(json.dumps({
-                                    "type": "text",
-                                    "data": output_transcription.text
-                                }))
-
-                            input_transcription = getattr(response.server_content, "input_transcription", None)
-                            if input_transcription and input_transcription.text:
-                                input_transcriptions.append(input_transcription.text)
-
-                        logger.info(f"Output transcription: {''.join(output_transcriptions)}")
-                        logger.info(f"Input transcription: {''.join(input_transcriptions)}")
-
-                # Start all tasks
+                # Start all concurrent tasks.
                 tg.create_task(handle_websocket_messages())
-                tg.create_task(process_and_send_audio())
-                tg.create_task(receive_and_play())
+                tg.create_task(send_frames_to_gemini())
+                tg.create_task(receive_responses_from_gemini())
+
 
 async def main():
-    """Main function to start the server"""
-    server = LiveAPIWebSocketServer()
+    """Main function to start the server."""
+    server = LiveVideoWebSocketServer()
     await server.start()
+
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Exiting application via KeyboardInterrupt...")
-    except Exception as e:
-        logger.error(f"Unhandled exception in main: {e}")
-        import traceback
-        traceback.print_exc()
