@@ -2,7 +2,7 @@ import asyncio
 
 from google import genai
 
-PROJECT_ID = "backend-production-b8633498"
+PROJECT_ID = "backend-producti-b8633498"
 LOCATION = "us-central1"
 # LOCATION = "global"
 
