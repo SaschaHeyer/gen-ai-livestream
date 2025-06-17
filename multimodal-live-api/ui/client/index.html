@@ -25,107 +25,147 @@
   <!-- Ziggie mascot -->
   <img src="ask_ziggie.png" alt="Ziggie" class="w-40 h-40 rounded-full shadow-xl" />
 
-  <!-- mic button -->
-  <div id="micBtn" class="mt-10 w-24 h-24 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-600 cursor-pointer">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2z"/>
-      <path d="M19 11h2a9 9 0 11-18 0h2a7 7 0 1014 0z"/>
-    </svg>
-  </div>
+  <!-- Live webcam preview -->
+  <video id="webcam" autoplay playsinline class="mt-6 rounded-lg shadow-md w-60 h-60 bg-black object-cover"></video>
 
-  <!-- speaking indicator -->
-  <div id="wave" class="wave h-8 mt-6 hidden">
-    <span></span><span></span><span></span><span></span><span></span>
-  </div>
+  <!-- Scan button -->
+  <button id="scanBtn" class="mt-6 px-6 py-3 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">
+    Start scanning
+  </button>
 
-  <!-- audio client -->
-  <script src="audio-client.js"></script>
+  <!-- Status & result -->
+  <div id="status" class="mt-4 text-lg font-medium text-gray-700">Idle</div>
+  <textarea id="ingredientsBox" class="mt-4 w-80 h-40 p-3 rounded-lg border border-gray-300 focus:outline-none" placeholder="Detected ingredients will appear here…" readonly></textarea>
+
   <script>
-    // Point to your WebSocket server. For local development with server_adk.py or server.py:
-    const client = new AudioClient('ws://localhost:8765');
-    // If deploying to Cloud Run, change this to your wss://your-service-url
+    // ------------------------------------------------------------------
+    // Browser – webcam initialisation
+    // ------------------------------------------------------------------
 
-    async function boot () {
+    const videoEl   = document.getElementById('webcam');
+    const scanBtn   = document.getElementById('scanBtn');
+    const statusEl  = document.getElementById('status');
+    const resultEl  = document.getElementById('ingredientsBox');
+
+    // Ask for camera permission & display preview.
+    async function initWebcam () {
       try {
-        await client.connect();
-        // client.onReady will also log, but this confirms the promise resolved.
-        console.log("UI: Attempted to connect to WebSocket server. Check client.onReady log.");
-      } catch (error) {
-        console.error("UI: Failed to connect to WebSocket server during boot:", error);
-        // You might want to display an error message to the user on the page here.
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        videoEl.srcObject = stream;
+      } catch (err) {
+        console.error('Failed to initialise webcam', err);
+        statusEl.textContent = 'Cannot access webcam – please grant permission.';
       }
     }
 
-    boot();
+    // Initialise webcam once the page has loaded.
+    (async () => {
+      await initWebcam();
+    })();
 
-    // Mic toggle
-    const btn   = document.getElementById('micBtn');
-    const wave  = document.getElementById('wave');
-    let uiIsActiveRecording = false; // UI state for recording
+    // ------------------------------------------------------------------
+    // WebSocket – communication with the Python backend
+    // ------------------------------------------------------------------
 
-    btn.onclick = async () => {
-      if (!uiIsActiveRecording) {
-        console.log("UI: Attempting to start recording...");
-        try {
-          const recordingStartedSuccessfully = await client.startRecording();
-          if (recordingStartedSuccessfully) {
-            console.log("UI: client.startRecording() successful. UI changing to active recording state.");
-            btn.classList.replace('bg-emerald-500','bg-red-500');
-            btn.classList.replace('hover:bg-emerald-600','hover:bg-red-600');
-            uiIsActiveRecording = true;
-          } else {
-            console.error("UI: client.startRecording() failed. Check console for errors from audio-client.js (e.g., mic permissions).");
-            // Optionally, provide user feedback here (e.g., an alert or message on the page)
-            // Ensure button remains in non-recording state
-            btn.classList.replace('bg-red-500','bg-emerald-500');
-            btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
-            uiIsActiveRecording = false;
+    const WS_URL = 'ws://localhost:8765';
+    let   ws;
+    let   scanIntervalId = null;
+
+    function connectWebSocket () {
+      return new Promise((resolve, reject) => {
+        ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => resolve();
+        ws.onerror = err => reject(err);
+
+        ws.onmessage = event => {
+          try {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === 'status' && msg.data === 'scanning') {
+              statusEl.textContent = 'Scanning…';
+            }
+
+            if (msg.type === 'found') {
+              statusEl.textContent = 'Found ingredient page';
+              // Stop sending further frames.
+              stopScanning();
+            }
+
+            if (msg.type === 'ingredients') {
+              resultEl.value = msg.data;
+            }
+          } catch (e) {
+            console.error('Failed to parse server message', e);
           }
-        } catch (error) {
-            console.error("UI: Error occurred during client.startRecording() call:", error);
-            // Reset UI to non-recording state on error
-            btn.classList.replace('bg-red-500','bg-emerald-500');
-            btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
-            uiIsActiveRecording = false;
-        }
-      } else {
-        console.log("UI: Attempting to stop recording...");
-        client.stopRecording(); // stopRecording in audio-client.js doesn't return a promise/value
-        console.log("UI: client.stopRecording() called. UI changing to non-active recording state.");
-        btn.classList.replace('bg-red-500','bg-emerald-500');
-        btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
-        uiIsActiveRecording = false;
+        };
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // Frame capture & transmission
+    // ------------------------------------------------------------------
+
+    const canvas    = document.createElement('canvas');
+    const ctx       = canvas.getContext('2d');
+
+    function captureAndSendFrame () {
+      if (!videoEl.videoWidth || !videoEl.videoHeight) return;
+
+      canvas.width  = videoEl.videoWidth;
+      canvas.height = videoEl.videoHeight;
+      ctx.drawImage(videoEl, 0, 0);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      const base64  = dataUrl.split(',')[1]; // Remove data URL prefix
+
+      ws?.send(JSON.stringify({
+        type: 'frame',
+        data: base64
+      }));
+    }
+
+    function startScanning () {
+      if (scanIntervalId) return; // already scanning
+
+      statusEl.textContent = 'Scanning…';
+      resultEl.value = '';
+
+      // Send frames every second.
+      scanIntervalId = setInterval(captureAndSendFrame, 1000);
+      scanBtn.textContent = 'Stop scanning';
+    }
+
+    function stopScanning () {
+      if (scanIntervalId) {
+        clearInterval(scanIntervalId);
+        scanIntervalId = null;
       }
-    };
-
-    /* Show / hide wave while Gemini is talking */
-    client.onAudioReceived = (audioData) => { // audioData is not used here, but good to know it's passed
-        // console.log("UI: Audio received from server, showing wave.");
-        wave.classList.remove('hidden');
-    }
-    client.onTurnComplete = () => {
-        // console.log("UI: Turn complete from server, hiding wave.");
-        wave.classList.add('hidden');
-    }
-    client.onInterrupted = () => {
-        // console.log("UI: Interrupted from server, hiding wave.");
-        wave.classList.add('hidden');
+      scanBtn.textContent = 'Start scanning';
     }
 
-    // Add basic event handlers for debugging client state
-    client.onReady = () => {
-        console.log("UI: AudioClient is ready (WebSocket connected and server sent 'ready' message).");
-    }
-    client.onError = (error) => {
-        console.error("UI: AudioClient reported an error:", error);
-        // Potentially reset UI state if a critical error occurs
-        if (uiIsActiveRecording) {
-            btn.classList.replace('bg-red-500','bg-emerald-500');
-            btn.classList.replace('hover:bg-red-600','hover:bg-emerald-600');
-            uiIsActiveRecording = false;
+    // ------------------------------------------------------------------
+    // Button handler – connect & start/stop
+    // ------------------------------------------------------------------
+
+    scanBtn.addEventListener('click', async () => {
+      if (scanIntervalId) {
+        // Currently scanning → stop
+        stopScanning();
+        statusEl.textContent = 'Idle';
+        return;
+      }
+
+      try {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          await connectWebSocket();
         }
-        // You might want to inform the user about the error on the page.
-    }
+        startScanning();
+      } catch (err) {
+        console.error('Unable to open WebSocket', err);
+        statusEl.textContent = 'Unable to connect to server';
+      }
+    });
   </script>
 </body>
 </html>
