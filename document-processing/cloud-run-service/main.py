@@ -7,7 +7,7 @@ from vertexai.generative_models import GenerativeModel, Part, GenerationConfig
 app = Flask(__name__)
 
 prompt = """
-You are a document entity extraction specialist. 
+You are a document entity extraction specialist.
 Given a document, your task is to extract the text value of entities.
 - Generate null for missing entities.
 """
@@ -39,7 +39,7 @@ def generate(pdf_bytes, response_schema=None):
     RESPONSE_SCHEMA = response_schema if response_schema else DEFAULT_RESPONSE_SCHEMA
 
     # Initialize the model with the controlled JSON output configuration
-    model = GenerativeModel("gemini-1.5-pro-001")
+    model = GenerativeModel("gemini-2.5-flash")
 
     generation_config = GenerationConfig(
         max_output_tokens=8192,
@@ -48,7 +48,7 @@ def generate(pdf_bytes, response_schema=None):
         response_mime_type="application/json",
         response_schema=RESPONSE_SCHEMA
     )
-    
+
     # Create a Part from data (bytes)
     document_part = Part.from_data(data=pdf_bytes, mime_type="application/pdf")
 
@@ -93,7 +93,7 @@ def process_pdf():
         pdf_bytes = file.read()  # Read the file content into memory
         json_output = generate(pdf_bytes, response_schema)
         return jsonify(json.loads(json_output)), 200
-    
+
     return jsonify({"error": "Invalid file type"}), 400
 
 if __name__ == '__main__':
