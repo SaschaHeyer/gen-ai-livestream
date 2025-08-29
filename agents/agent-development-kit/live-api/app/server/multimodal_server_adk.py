@@ -62,7 +62,7 @@ class MultimodalADKServer(BaseWebSocketServer):
         self.active_clients[client_id] = websocket
 
         # Create session for this client
-        session = self.session_service.create_session(
+        session = await self.session_service.create_session(
             app_name="multimodal_assistant",
             user_id=f"user_{client_id}",
             session_id=f"session_{client_id}",
@@ -193,7 +193,7 @@ class MultimodalADKServer(BaseWebSocketServer):
                             logger.info(f"New SESSION: {current_session_id}")
                             # Send session ID to client
                             session_id_msg = json.dumps({
-                                "type": "session_id", 
+                                "type": "session_id",
                                 "data": current_session_id
                             })
                             await websocket.send(session_id_msg)
