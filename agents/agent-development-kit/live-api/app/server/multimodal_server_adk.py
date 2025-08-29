@@ -13,6 +13,9 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
 from dotenv import load_dotenv
 
+from google.adk.tools.retrieval.vertex_ai_rag_retrieval import VertexAiRagRetrieval
+from vertexai.preview import rag
+
 load_dotenv()
 
 # Import common components
@@ -25,6 +28,24 @@ from common import (
     SYSTEM_INSTRUCTION,
     get_order_status,
 )
+
+ask_vertex_retrieval = VertexAiRagRetrieval(
+    name="retrieve_rag_documentation",
+    description=(
+        "Use this tool to retrieve documentation and reference materials for tax related questions,"
+    ),
+    rag_resources=[
+        rag.RagResource(
+            # please fill in your own rag corpus
+            # here is a sample rag corpus for testing purpose
+            # e.g. projects/123/locations/us-central1/ragCorpora/456
+            rag_corpus="projects/sascha-playground-doit/locations/us-central1/ragCorpora/6917529027641081856"
+        )
+    ],
+    similarity_top_k=10,
+    vector_distance_threshold=0.6,
+)
+
 
 # Function tool for order status
 def order_status_tool(order_id: str):
@@ -50,7 +71,10 @@ class MultimodalADKServer(BaseWebSocketServer):
             name="customer_service_agent",
             model=MODEL,
             instruction=SYSTEM_INSTRUCTION,
-            tools=[order_status_tool],
+            # tools=[order_status_tool],
+            tools=[
+                ask_vertex_retrieval,
+            ],
         )
 
         # Create session service
@@ -112,12 +136,13 @@ class MultimodalADKServer(BaseWebSocketServer):
                             # Decode base64 video frame
                             video_bytes = base64.b64decode(data.get("data", ""))
                             # Get video mode metadata if available
-                            video_mode = data.get("mode", "webcam")  # Default to webcam if not specified
+                            video_mode = data.get(
+                                "mode", "webcam"
+                            )  # Default to webcam if not specified
                             # Put video frame in queue for processing with metadata
-                            await video_queue.put({
-                                "data": video_bytes,
-                                "mode": video_mode
-                            })
+                            await video_queue.put(
+                                {"data": video_bytes, "mode": video_mode}
+                            )
                         elif data.get("type") == "end":
                             # Client is done sending audio for this turn
                             logger.info("Received end signal from client")
@@ -186,16 +211,18 @@ class MultimodalADKServer(BaseWebSocketServer):
                     event_str = str(event)
 
                     # If there's a session resumption update, store the session ID
-                    if hasattr(event, 'session_resumption_update') and event.session_resumption_update:
+                    if (
+                        hasattr(event, "session_resumption_update")
+                        and event.session_resumption_update
+                    ):
                         update = event.session_resumption_update
                         if update.resumable and update.new_handle:
                             current_session_id = update.new_handle
                             logger.info(f"New SESSION: {current_session_id}")
                             # Send session ID to client
-                            session_id_msg = json.dumps({
-                                "type": "session_id",
-                                "data": current_session_id
-                            })
+                            session_id_msg = json.dumps(
+                                {"type": "session_id", "data": current_session_id}
+                            )
                             await websocket.send(session_id_msg)
 
                     # Handle content
@@ -203,13 +230,20 @@ class MultimodalADKServer(BaseWebSocketServer):
                         for part in event.content.parts:
                             # Process audio content
                             if hasattr(part, "inline_data") and part.inline_data:
-                                b64_audio = base64.b64encode(part.inline_data.data).decode("utf-8")
-                                await websocket.send(json.dumps({"type": "audio", "data": b64_audio}))
+                                b64_audio = base64.b64encode(
+                                    part.inline_data.data
+                                ).decode("utf-8")
+                                await websocket.send(
+                                    json.dumps({"type": "audio", "data": b64_audio})
+                                )
 
                             # Process text content
                             if hasattr(part, "text") and part.text:
                                 # Check if this is user or model text based on content role
-                                if hasattr(event.content, "role") and event.content.role == "user":
+                                if (
+                                    hasattr(event.content, "role")
+                                    and event.content.role == "user"
+                                ):
                                     # User text shouldn't be sent to the client
                                     input_texts.append(part.text)
                                 else:
@@ -220,17 +254,25 @@ class MultimodalADKServer(BaseWebSocketServer):
                                     # Check in the event string for the partial flag
                                     # Only process messages with "partial=True"
                                     if "partial=True" in event_str:
-                                        await websocket.send(json.dumps({"type": "text", "data": part.text}))
+                                        await websocket.send(
+                                            json.dumps(
+                                                {"type": "text", "data": part.text}
+                                            )
+                                        )
                                         output_texts.append(part.text)
                                     # Skip messages with "partial=None" to avoid duplication
 
                     # Check for interruption
                     if event.interrupted and not interrupted:
                         logger.info("🤐 INTERRUPTION DETECTED")
-                        await websocket.send(json.dumps({
-                            "type": "interrupted",
-                            "data": "Response interrupted by user input"
-                        }))
+                        await websocket.send(
+                            json.dumps(
+                                {
+                                    "type": "interrupted",
+                                    "data": "Response interrupted by user input",
+                                }
+                            )
+                        )
                         interrupted = True
 
                     # Check for turn completion
@@ -238,21 +280,29 @@ class MultimodalADKServer(BaseWebSocketServer):
                         # Only send turn_complete if there was no interruption
                         if not interrupted:
                             logger.info("✅ Gemini done talking")
-                            await websocket.send(json.dumps({
-                                "type": "turn_complete",
-                                "session_id": current_session_id
-                            }))
+                            await websocket.send(
+                                json.dumps(
+                                    {
+                                        "type": "turn_complete",
+                                        "session_id": current_session_id,
+                                    }
+                                )
+                            )
 
                         # Log collected transcriptions for debugging
                         if input_texts:
                             # Get unique texts to prevent duplication
                             unique_texts = list(dict.fromkeys(input_texts))
-                            logger.info(f"Input transcription: {' '.join(unique_texts)}")
+                            logger.info(
+                                f"Input transcription: {' '.join(unique_texts)}"
+                            )
 
                         if output_texts:
                             # Get unique texts to prevent duplication
                             unique_texts = list(dict.fromkeys(output_texts))
-                            logger.info(f"Output transcription: {' '.join(unique_texts)}")
+                            logger.info(
+                                f"Output transcription: {' '.join(unique_texts)}"
+                            )
 
                         # Reset for next turn
                         input_texts = []
@@ -280,4 +330,5 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Unhandled exception in main: {e}")
         import traceback
+
         traceback.print_exc()
