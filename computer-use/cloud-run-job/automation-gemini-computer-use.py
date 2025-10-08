@@ -995,7 +995,7 @@ def run_agent(
         os.getenv("VERTEXAI_LOCATION")
         or os.getenv("GOOGLE_CLOUD_REGION")
         or os.getenv("GOOGLE_CLOUD_LOCATION")
-        or "us-central1"
+        or "global"
     )
 
     requested_use_vertex = os.getenv("USE_VERTEXAI")
