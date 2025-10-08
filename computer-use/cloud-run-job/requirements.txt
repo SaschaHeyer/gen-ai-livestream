@@ -1,0 +1,7 @@
+browser-use
+google-genai>=1.41.0
+playwright==1.52.0
+python-dotenv
+rich>=14.1.0
+termcolor>=3.1.0
+google-cloud-storage>=2.18.0

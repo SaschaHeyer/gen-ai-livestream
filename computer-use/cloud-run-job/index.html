@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Browser Use Automation Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f6fb;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(15, 31, 76, 0.12);
+        width: 360px;
+        padding: 28px 32px;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin-bottom: 14px;
+        color: #1f2937;
+      }
+      label {
+        display: block;
+        margin: 12px 0 6px;
+        font-weight: 600;
+        color: #374151;
+      }
+      input[type='text'],
+      input[type='password'] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 0.95rem;
+      }
+      button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        background-color: #2563eb;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #1d4ed8;
+      }
+      .app {
+        display: none;
+      }
+      .app.show {
+        display: block;
+      }
+      .success {
+        color: #059669;
+        font-weight: 600;
+        margin-top: 14px;
+      }
+      .error {
+        color: #dc2626;
+        margin-top: 14px;
+        font-size: 0.9rem;
+      }
+      textarea {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 10px;
+        min-height: 90px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Automation Portal</h1>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input id="username" type="text" placeholder="Enter username" required />
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Enter password"
+          required
+        />
+
+        <button type="submit" id="login-button">Log in</button>
+        <div id="login-message" class="error" aria-live="polite"></div>
+      </form>
+
+      <section id="app-section" class="app" aria-live="polite">
+        <p class="success" id="login-success">Login successful!</p>
+        <form id="upload-form" enctype="multipart/form-data">
+          <label for="note">Notes</label>
+          <textarea
+            id="note"
+            name="note"
+            placeholder="Type something to attach with your upload"
+          ></textarea>
+
+          <label for="file-upload">Upload PDF</label>
+          <input
+            id="file-upload"
+            name="file"
+            type="file"
+            accept="application/pdf"
+            required
+          />
+
+          <button type="submit" id="upload-button">Upload File</button>
+        </form>
+        <div id="upload-message" class="success"></div>
+      </section>
+    </div>
+
+    <script>
+      const loginForm = document.getElementById('login-form');
+      const appSection = document.getElementById('app-section');
+      const loginMessage = document.getElementById('login-message');
+      const uploadMessage = document.getElementById('upload-message');
+      const uploadForm = document.getElementById('upload-form');
+      const fileUpload = document.getElementById('file-upload');
+
+      loginForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        loginMessage.textContent = '';
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (username === 'test' && password === 'test') {
+          appSection.classList.add('show');
+          loginForm.style.display = 'none';
+        } else {
+          loginMessage.textContent = 'Invalid credentials. Try test/test.';
+        }
+      });
+
+      uploadForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!fileUpload.files.length) {
+          uploadMessage.textContent = 'Please choose a PDF before uploading.';
+          uploadMessage.classList.remove('success');
+          uploadMessage.classList.add('error');
+          return;
+        }
+
+        uploadMessage.textContent = 'Uploading...';
+        uploadMessage.classList.remove('error');
+        uploadMessage.classList.add('success');
+
+        try {
+          const formData = new FormData(uploadForm);
+          const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error(`Upload failed with status ${response.status}`);
+          }
+
+          const payload = await response.json();
+          uploadMessage.textContent = `Uploaded ${payload.filename} successfully.`;
+          uploadMessage.classList.remove('error');
+          uploadMessage.classList.add('success');
+        } catch (error) {
+          uploadMessage.textContent = error.message || 'Upload failed.';
+          uploadMessage.classList.remove('success');
+          uploadMessage.classList.add('error');
+        }
+      });
+    </script>
+  </body>
+</html>

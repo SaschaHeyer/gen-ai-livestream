@@ -1,0 +1,126 @@
+:root {
+  color-scheme: light;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #eef2ff 0%, #ede9fe 100%);
+}
+
+main.container {
+  max-width: 960px;
+  margin: 48px auto;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  padding: 0 24px 48px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 18px 40px rgba(79, 70, 229, 0.12);
+}
+
+.card h1,
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  color: #4b5563;
+  gap: 8px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="file"],
+textarea {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+button {
+  padding: 14px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: #4338ca;
+}
+
+button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.message {
+  margin-top: 16px;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.logs ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.logs li {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.log-time {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.log-file {
+  font-weight: 600;
+  color: #111827;
+}
+
+.log-note {
+  margin-top: 4px;
+  font-style: italic;
+  color: #4b5563;
+}
+
+.empty {
+  color: #6b7280;
+}
