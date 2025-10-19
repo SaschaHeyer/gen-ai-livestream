@@ -1,0 +1,36 @@
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: cloud-run-issue
+  _IMAGE: triage-service
+  _TAG: dev
+  _SERVICE: cloud-run-triage-demo
+  _CONFIG_BUCKET: cloud-run-triage-config-sascha
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    dir: cloud-run-issue
+    args:
+      - build
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:${_TAG}
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:${_TAG}
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --project=${PROJECT_ID}
+      - --region=${_REGION}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${_TAG}
+      - --allow-unauthenticated
+      - --set-env-vars=CONFIG_BUCKET=${_CONFIG_BUCKET}
+      - --quiet
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}:${_TAG}
