@@ -47,6 +47,7 @@ You are running the `/rootcause` custom command. Use this playbook to investigat
 
 8. Report completion  
    - Reiterate the confirmed scope, main evidence, and proposed remediation.  
+   - Present an **Affected Files and Code** summary that lists each impacted repository file or code snippet, including line references where possible.  
    - Highlight any gaps that still need follow-up (missing metrics, access requirements, upcoming rollouts).  
    - Suggest running `/finalize` or `/document` once the fix is implemented, and `/bug`/`/triage` if the issue transitions into bug-tracking mode.
 

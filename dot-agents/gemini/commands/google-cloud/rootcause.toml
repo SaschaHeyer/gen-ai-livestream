@@ -1,0 +1,52 @@
+title = "Diagnose Cloud Incidents"
+description = "Correlate Google Cloud telemetry with repository code to uncover root causes."
+prompt = """
+You are executing the Gemini `/rootcause` command. Apply this incident-response playbook to investigate production issues that span Google Cloud Platform (GCP) services and the local codebase, then report the findings back to Linear or the user.
+
+1. Confirm the incident scope
+   - If the invocation includes a Linear issue key, extract it and fetch the ticket with the Linear MCP before asking questions.
+   - If no key is provided, ask for either the Linear issue or a concise symptom description (metric, stack trace snippet, failing endpoint, etc.).
+   - Summarize the reported signal (service, environment, time window) and capture any ambiguity needing clarification.
+   - If critical metadata (project ID, region, product) is missing, ask targeted follow-up questions before continuing.
+
+2. Anchor in the correct repositories
+   - Ensure you are operating from the repository root that owns the service (verify a `.git` folder exists; traverse ancestors if needed).
+   - Note any `AGENTS.md`, `RUNBOOK.md`, or similar high-priority guides and follow their instructions.
+   - Record the relative path to the repo or worktree in your status notes so Linear reflects where analysis occurred.
+
+3. Gather Google Cloud telemetry
+   - Identify the likely GCP service(s) from the symptom (Cloud Run, GKE, Cloud Functions, Cloud SQL, etc.).
+   - Run focused `gcloud` commands to inspect current state and historical signals—examples include:
+     * `gcloud logging read` with constrained filters and time ranges.
+     * `gcloud run services describe`, `gcloud compute instances describe`, `gcloud container clusters describe` depending on the stack.
+     * `gcloud monitoring time-series list` or similar when metrics are involved.
+   - Retrieve only the relevant slices of logs or metrics (sanitize secrets, avoid dumping entire logs). Document each command and summarize key findings.
+
+4. Correlate with application code
+   - Use `rg`, `git grep`, or language-aware tooling to locate the code responsible for the failing component (routes, jobs, infrastructure definitions).
+   - Review recent history (`git log`, `git blame`) around the suspect files to identify regressions or misconfigurations.
+   - Cross-check environment variables, feature flags, and deployment manifests against what the cloud telemetry shows.
+
+5. Form and vet hypotheses
+   - Draft at least one primary hypothesis explaining the incident, supported by evidence from both GCP telemetry and code review.
+   - Note competing or secondary hypotheses if the data is inconclusive.
+   - Call out assumptions explicitly and outline what additional data would confirm or refute them.
+
+6. Recommend a fix
+   - Propose the minimal viable remediation (code change, configuration update, rollback, infrastructure tweak).
+   - Reference specific files (e.g., `api/service.js:42`) or cloud resources (e.g., Cloud Run service `hello-api` in `us-central1`).
+   - Include validation steps (tests to run, canary rollout, metric to monitor post-fix). If new workstreams are required, add them as follow-up tasks in the Linear plan.
+
+7. Sync the analysis
+   - If a Linear issue was provided, insert or update a `## Root Cause Analysis` section in the ticket containing: summary, evidence (with command references), hypotheses, and recommended fix. Preserve other sections.
+   - Post a Linear comment summarizing key findings and next steps; mention blockers or approvals required.
+   - If no Linear key exists, deliver the same structured summary directly in your response.
+
+8. Report completion
+   - Reiterate the confirmed scope, main evidence, and proposed remediation.
+   - Present an **Affected Files and Code** section that lists each relevant repository file or code snippet involved in the incident, including line references when possible.
+   - Highlight any gaps still needing follow-up (missing metrics, access requirements, upcoming rollouts).
+   - Suggest using `/finalize` or `/document` once the fix is implemented, and `/bug` or `/triage` if the issue moves into bug-tracking mode.
+
+Operate with least privilege, mask secrets in all outputs, and treat Linear as the system of record for the investigation.
+"""
