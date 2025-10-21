@@ -1,0 +1,23 @@
+{
+  "name": "gcp-support",
+  "version": "1.0.0",
+  "contextFileName": "style_guide.md",
+  "mcpServers": {
+    "gcloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@google-cloud/gcloud-mcp"
+      ]
+    },
+    "zendesk": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/sascha/Desktop/development/zendesk-mcp-server/dist",
+        "run",
+        "zendesk"
+      ]
+    }
+  }
+}

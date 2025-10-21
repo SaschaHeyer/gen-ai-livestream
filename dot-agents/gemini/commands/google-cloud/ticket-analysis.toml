@@ -1,0 +1,18 @@
+title="Cloud Run Debug"
+description="Analysis the logs of a specific Cloud Run service"
+prompt = """
+Please provide a detailed error / log analysis and root cause analysis on Cloud Run service: {{args}}.
+
+Follow these steps:
+1. gcloud run services logs read {{args}} --limit=30 --region=europe-west1
+2. Analye the recent logs for any errors
+3. Understand the issue of the error
+4. Use the mentioned code to cross reference any issues.
+6. Search the codebase if required.
+7. start the root cause analysis
+
+Return
+- Affected files and code
+- Root cause
+- Fix
+"""

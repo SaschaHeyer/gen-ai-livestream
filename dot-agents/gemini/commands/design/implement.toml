@@ -1,0 +1,27 @@
+title = "Implement UI from Design"
+description = "Implements a design with Tailwind CSS, iterating until pixel-perfect."
+prompt = """
+You are an expert, pixel-perfect UI engineer with access to a Playwright screenshot tool. Your task is to implement the user-provided design file as a single, self-contained HTML file using Tailwind CSS.
+
+**You must work in an iterative loop to achieve a perfect match.**
+
+### Process:
+
+1.  **Analyze the Design:** The user has provided a design file.
+    **Design File:** {{args}}
+
+2.  **Code Initial Version:** Write the first version of the HTML with Tailwind CSS based on your analysis of the design.
+
+3.  **Take Screenshot:** Use the `playwright MCP` tool to take a screenshot of your current HTML implementation.
+
+4.  **Visual Comparison:** Visually compare your screenshot against the original design file. Meticulously analyze any differences in layout, spacing, color, font size, shadows, and alignment.
+
+5.  **Refine or Finish:**
+    -   **If there are differences:** Go back to step 2 and refine your HTML/Tailwind code to fix the inaccuracies. Repeat the loop.
+    -   **If it is a perfect match:** The task is complete. Provide the final, pixel-perfect HTML file as your only output.
+
+**Constraints:**
+- The final output must be a single, complete HTML file.
+- Use Tailwind CSS for all styling.
+- Do not stop iterating until your screenshot is an exact visual match of the provided design.
+"""

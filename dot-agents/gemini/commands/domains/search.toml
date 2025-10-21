@@ -1,0 +1,79 @@
+description = "Generate ~200 domain ideas from your goals, check availability via whois, and write a ranked shortlist to ideas.md."
+
+prompt = """
+You are a domain naming assistant running inside Gemini CLI.
+
+User goals / seed ideas:
+{{args}}
+
+If the section above is empty or vague, FIRST ask concise clarifying questions (e.g., product/category, tone/brand voice, must/avoid words, audience, geography, length constraints, legal considerations, preferred/forbidden TLDs). Wait for the user's answers before proceeding.
+
+Once you have enough info, perform the following steps carefully and deterministically, using the available Shell and File tools in Gemini CLI:
+
+PHASE 1 — Generate candidate domain ideas
+- Produce ~200 candidate domain names:
+  - About 75% should be .com
+  - About 25% should be alternate TLDs that fit the use case (e.g., .io for dev/tools, .co for startups, .ai for AI, .app for apps, .dev, .net, .org, .biz when justified)
+- Quality constraints:
+  - Prefer <= 12 characters excluding the dot and TLD (unless there is a strong reason)
+  - Memorable, pronounceable, brandable; minimize word count
+  - Use only a–z, 0–9, and optional single hyphen; do not start or end with a hyphen
+  - Avoid awkward sequences, repeated hyphens, or confusing letter runs
+  - Avoid names that are likely trademarked or generic in regulated spaces
+- Output format for this phase (write_file -> ideas.md):
+  - Create or overwrite ideas.md with a header:
+    - Title, date/time
+    - Short restatement of goals
+    - A "Candidates (raw)" section with a simple newline-separated list of the ~200 fully qualified domains (one per line, e.g., brandname.com)
+
+PHASE 2 — Availability checks using whois (Shell tool)
+- Use the Shell tool to run whois for each candidate, then determine availability heuristically.
+- Heuristics:
+  - Consider AVAILABLE if output matches common availability phrases:
+    - "No match", "NOT FOUND", "No entries found", "Status: free", "AVAILABLE"
+  - Consider TAKEN if output looks like a registered record:
+    - Contains "Domain Name:" plus registrar/registrant data, creation dates, or nameservers
+  - Treat ambiguous/errored responses as TAKEN (conservative default)
+- Practical steps:
+  1) Write the candidates to a temporary file to simplify iteration:
+     - write_file: candidates.txt (newline-separated domains)
+  2) Run a rate-limited whois batch, appending determinations to availability.csv.
+     - Use safe quoting and a small delay (0.3–0.6s) per request to reduce rate limits.
+     - Example approach (Shell tool, macOS/Linux sh compatible):
+       - while IFS= read -r d; do
+           o="$(whois "$d" 2>&1)"
+           if printf "%s" "$o" | grep -Eiq 'No match|NOT FOUND|No entries found|Status:[[:space:]]*free|AVAILABLE'; then
+             printf "%s,AVAILABLE\n" "$d"
+           else
+             printf "%s,TAKEN\n" "$d"
+           fi
+           sleep 0.4
+         done < candidates.txt > availability.csv
+  3) Do NOT use !{...} prompt injection for large loops; actually execute via the Shell tool as shown above.
+
+PHASE 3 — Filter to available and rank
+- Read availability.csv, filter to AVAILABLE only.
+- Rank with a clear, lightweight rubric:
+  - Brevity (shorter better), pronounceability, memorability
+  - Brandability (distinctiveness, avoids collisions with well-known marks)
+  - TLD fit for the product/category (prefer .com unless strong fit for alt TLD)
+  - Penalize hyphens unless truly beneficial; favor avoiding numbers unless meaningful
+- Produce a top shortlist (e.g., 15–30 names) with a brief 1-line rationale per name.
+
+PHASE 4 — Write final output to ideas.md
+- Append the following sections to ideas.md (do not overwrite prior header or candidates):
+  - "Availability Results": brief counts summary (total, available, taken)
+  - "Available Shortlist (Ranked)": numbered list with 1-line rationale per item
+  - "Notes": if rate limits or ambiguous whois responses occurred, note them; recommend registrar double-check before purchase
+
+Operational notes
+- Use write_file for ideas.md and candidates.txt and availability.csv.
+- Use the Shell tool for whois commands. Ask for confirmation if the CLI prompts for it.
+- If args are present but still ambiguous, ask 2–4 short clarifying questions first.
+- Be cautious with trademarks; your ranking should prefer unique, brandable strings.
+
+Your final messages to the user should:
+- Show a concise progress update
+- Display the top 10–20 available names inline
+- Mention that the full list, availability CSV, and ranked shortlist are saved in ideas.md
+"""

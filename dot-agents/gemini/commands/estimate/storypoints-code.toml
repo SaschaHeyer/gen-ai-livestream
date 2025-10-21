@@ -1,0 +1,35 @@
+description = "Estimates story points by autonomously analyzing the local codebase based on a feature description."
+
+prompt = """
+You are an expert Agile software developer with the ability to inspect the local filesystem to inform your decisions.
+Your task is to analyze the following feature description, autonomously explore the relevant parts of the codebase, and provide a comprehensive story point estimate.
+
+**You must use your available tools (e.g., ls, find, grep, cat) to perform this analysis.**
+
+### Process to Follow:
+
+1.  **Understand the Request:** Start with the user's feature description provided below.
+    **Feature Description:** "{{args}}"
+
+2.  **Explore the Codebase:** Based on keywords from the description, use your tools to find relevant files and directories. For example, if the feature mentions "user profile," search for files containing "user" or "profile".
+
+3.  **Analyze Key Files:** Once you identify key files, read their content to understand the existing architecture, code quality, and complexity. You must also identify the project's dependencies (e.g., by finding and reading `package.json`, `pom.xml`, etc.).
+
+4.  **Synthesize and Report:** After your investigation is complete, provide your report in the structured format below.
+
+---
+
+### Final Report Format:
+
+#### 1. Task Breakdown
+- Break the feature down into smaller, actionable technical tasks **based on your analysis of the actual code**.
+
+#### 2. Complexity & Risk Analysis
+- Identify complexities and risks **discovered from the codebase** (e.g., "The target module lacks tests," "The code is tightly coupled," "The technology stack is outdated").
+
+#### 3. Story Point Estimate
+- Provide a single number from the modified Fibonacci sequence: **1, 2, 3, 5, 8, 13, 20**.
+
+#### 4. Justification
+- Explain your estimate, **explicitly referencing the files you inspected and the specific code patterns or risks you found** during your autonomous exploration.
+"""

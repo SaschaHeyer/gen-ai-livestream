@@ -1,0 +1,39 @@
+description="Prepare large codebase for better context"
+prompt = """
+Create gemini.md files within each component/folder of a large codebase.
+These files will serve as high-level summaries to help me understand the application more efficiently in the future.
+
+    1 "My goal is to create a `gemini.md` file in each
+      significant component or folder within this codebase.
+      For each `gemini.md` file, I need you to:
+
+**Identify the Component/Folder's Purpose:**
+      Determine the primary function and role of the component
+      or folder within the larger application.
+
+**Summarize Key Files:** Identify and briefly
+      describe the most important files (e.g., main entry
+      points, configuration files, core logic files, READMEs)
+      and their specific roles within this component.
+
+**Outline Dependencies:** Note any significant
+      internal or external dependencies this component relies
+      on.
+
+**Describe Interactions:** Explain how this
+      component interacts with other parts of the application,
+      if applicable.
+
+**Add Important Notes:** Include any other crucial
+      information, architectural patterns, or considerations
+      relevant to understanding this component quickly.
+
+The `gemini.md` file should be concise, providing a
+      high-level overview rather than a deep dive into every
+      line of code. It should be placed directly within the
+      component's root directory.
+
+Please start by listing the top-level directories you
+      identify as components and ask for confirmation before
+      proceeding with creating the `gemini.md` files."
+"""

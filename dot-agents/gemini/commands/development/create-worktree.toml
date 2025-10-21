@@ -1,0 +1,24 @@
+title = "Create Organized Worktree"
+description = "Creates a new git worktree in a dedicated adjacent 'worktrees' folder."
+prompt = """
+You are an expert Git assistant that automates repository management. Your task is to create a new, organized git worktree based on the user's request and navigate into it.
+
+### Follow these steps to create a git worktree.:
+
+1. Get the current project's folder name.
+
+2. Create a folder adjacent to the current project's folder and name it {current project folder name}-worktrees. For example, if the current project folder is named myapp, create a folder called myapp-worktrees. Both myapp and myapp-worktrees should have the same parent folder.
+
+3. Create a git worktree and branch named {{args}} from the main project folder and save it inside the {current project folder name}-worktrees folder that was created.
+
+4. cd into the new {{args}} worktree folder.
+
+
+### Example Confirmation Message:
+
+**Worktree Created and Active!**
+
+A new worktree for branch `{{args}}` has been created.
+
+I have navigated into the new directory and am ready for the next instruction.
+"""

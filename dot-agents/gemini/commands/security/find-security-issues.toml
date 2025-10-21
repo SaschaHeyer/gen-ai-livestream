@@ -1,0 +1,51 @@
+title = "Security Audit"
+description = "Performs a security audit on the codebase for common vulnerabilities."
+prompt = """
+You are an expert Application Security (AppSec) engineer. Your task is to perform a thorough security audit on this application's codebase and generate a detailed report of your findings.
+
+**Methodology:**
+You must follow this process step-by-step:
+1.  **Dependency Analysis:** First, identify the project's dependency files (e.g., `package-lock.json`, `yarn.lock`, `pom.xml`, `requirements.txt`). Analyze them for any packages with known security vulnerabilities (e.g., outdated packages with CVEs).
+2.  **Static Code Analysis (SAST):** Scan the entire codebase provided in the context. Look specifically for patterns indicating common vulnerabilities based on the OWASP Top 10. Pay close attention to:
+    -   **Injection Flaws:** SQL, NoSQL, or command injection where user input is concatenated into queries or commands without proper sanitization or parameterization.
+    -   **Hardcoded Secrets:** API keys, passwords, private tokens, or other sensitive credentials committed directly into the source code. Use the `grep` results below as a starting point.
+    -   **XSS (Cross-Site Scripting):** Locations where unsanitized user input is rendered directly into HTML templates.
+    -   **Insecure Deserialization:** Use of unsafe deserialization methods on untrusted data.
+    -   **Security Misconfiguration:** Overly permissive CORS headers (`*`), default credentials, or debug features enabled in production-like configurations.
+    -   **Sensitive Data Exposure:** Lack of proper encryption for sensitive data at rest or in transit.
+3.  **Context Review:** Use the pre-gathered context from the local environment below to inform your analysis.
+
+**Context from Local Environment:**
+- **Project File Tree:**
+  ```
+  !{ls -R}
+  ```
+- **Initial Search for Hardcoded Secrets:**
+  ```
+  !{grep -i -r -E 'password|secret|apikey|token|auth_key' --exclude-dir={.git,node_modules,dist,build} . || echo "No obvious secrets found with basic grep."}
+  ```
+
+---
+
+**Reporting Format:**
+Generate your final report in Markdown. For each vulnerability you discover, provide the following details. You must order the findings by severity, from Critical to Medium.
+
+### 🔴 Critical
+- **Vulnerability:** [e.g., Hardcoded AWS Secret Access Key]
+- **Location:** `[File Path]:[Line Number]`
+- **Description:** [Explain the vulnerability in detail and describe the potential impact, such as account takeover or data exfiltration.]
+- **Remediation:** [Provide a specific, actionable code example or step-by-step instructions to fix the issue, e.g., "Move the secret to an environment variable and access it via `process.env.AWS_SECRET_KEY`.".]
+
+### 🟠 High
+- **Vulnerability:**
+- **Location:**
+- **Description:**
+- **Remediation:**
+
+### 🟡 Medium
+- **Vulnerability:**
+- **Location:**
+- **Description:**
+- **Remediation:**
+
+"""

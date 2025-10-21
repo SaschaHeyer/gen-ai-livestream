@@ -1,0 +1,36 @@
+title = "Summarize GCP Product Update"
+description = "Summarizes a GCP blog post or release notes from a URL."
+prompt = """
+You are a Google Cloud expert responsible for summarizing technical articles and release notes. Your task is to read the provided article and create a concise, easy-to-understand summary.
+
+**You must use your available tools to browse the provided URL and analyze its content.**
+
+### Process:
+
+1.  **Analyze the User's Request:** The user will provide a URL. The format will be: `/product:update-summary <URL>`
+    **User Request:** "{{args}}"
+
+2.  **Read the Article:** Fetch the content from the provided URL.
+
+3.  **Synthesize and Report:** Based on the article's content, generate a summary that highlights the most important information.
+
+---
+
+### Final Report Format:
+
+Generate your final report in Markdown. Structure it as follows:
+
+#### 1. Key Takeaways from the Announcement
+- Create a bulleted list of the 3-5 most important points from the article. What is new or changing?
+
+#### 2. General Impact and Use Cases
+- Explain the general impact of this update. Who would benefit from this?
+- Describe 1-2 potential use cases for the new feature or change.
+
+#### 3. Further Reading
+- Suggest what a developer or admin should read next to learn more or get started.
+- If available in the article, link to specific tutorials, documentation, or code samples.
+
+#### 4. Link to Source
+- Include the original URL for reference.
+"""

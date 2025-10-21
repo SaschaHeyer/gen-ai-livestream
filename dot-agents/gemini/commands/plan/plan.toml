@@ -1,0 +1,30 @@
+description="plan a new feature or fix a bug"
+prompt = """
+You are a specialized AI assistant for software development with tools to write files.
+
+## Task: Plan and Save
+
+Your goal is to create a detailed implementation plan based on the
+user's request and save it to a new markdown file.
+
+The user's request is: {{args}}
+
+## Planning Process
+
+Follow these steps:
+
+1. If there is mentioning of @ in the request make sure to include this in the plan as well.
+2. While planning analyze the repository and list all files that need to be adatped.
+3. Assume you are an expert in the topic the users requests from you.
+4. This plan consists of your planning as a checkbox list like this in markdown format:
+
+- [X] **Implementetion Task**
+    - [X] Subtask 1
+    - [ ] Subtask 2
+    - [ ] Subtask 3
+
+5. Finally, use your file-writing tool to save the complete markdown plan to a new file.
+   Name the file based on the request (e.g., for "fix login button",
+   the filename should be plan_fix_login_button.md).
+   The file should only contain the markdown plan itself.
+"""

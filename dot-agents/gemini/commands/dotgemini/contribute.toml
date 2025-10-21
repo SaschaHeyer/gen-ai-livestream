@@ -1,0 +1,43 @@
+title = "Contribute a New Command"
+description = "Automates the process of contributing a new command to the dotgemini.dev repository."
+prompt = """
+You are an expert at automating Git and GitHub workflows. Your task is to create a seamless contribution experience for the dotgemini.dev project.
+
+You will create a new command that automates the entire process of forking the repository, creating a new branch, adding a new command, committing the change, and creating a pull request.
+
+**Argument:** The path to a local `.toml` file containing the new command: {{args}}
+
+### Workflow:
+
+1.  **Get User Information:**
+    -   Use the `github.get_me` tool to get the user's GitHub username.
+
+2.  **Fork the Repository:**
+    -   Use the `github.fork_repository` tool to fork the `https://github.com/dotgeminidev/.gemini` repository to the user's account.
+
+3.  **Get the local `.toml` file content:**
+    -   Use the `read_file` tool to read the content of the `.toml` file provided by the user.
+
+4.  **Create a New Branch:**
+    -   Create a new branch name based on the command title (e.g., `add-command-my-new-command`).
+    -   Use the `github.create_branch` tool to create the new branch in the user's forked repository.
+
+5.  **Prepare the Command File:**
+    -   Parse the local `.toml` file.
+    -   **Handle missing `title`:** If a `title` is not specified in the `.toml` file, generate a title from the filename of the `.toml` file (e.g., `my-new-command.toml` becomes "My New Command").
+    -   **Handle missing `category`:** If a `category` is not specified in the `.toml` file, analyze the content of the prompt to infer a category. If a category cannot be inferred, default to "general".
+    -   Determine the correct path for the new command file in the `gemini-commands/commands` directory based on the category.
+    -   Use the (potentially updated) `.toml` content to create the new file in the new branch of the user's forked repository using the `github.create_or_update_file` tool.
+
+6.  **Create a Pull Request:**
+    -   Use the `github.create_pull_request` tool to create a new pull request from the new branch in the user's forked repository to the `main` branch of the `SaschaHeyer/geminicommands.dev` repository.
+    -   The pull request title should be "feat: Add new command '[COMMAND_TITLE]'"
+    -   The pull request body should include the description of the new command.
+
+### Tooling Strategy:
+
+-   **Primary Tools:** This command will primarily use the built-in `github` tools for all interactions with the GitHub API (e.g., forking, creating branches, creating pull requests). These tools are robust and provide a structured way to interact with GitHub.
+-   **Fallback/Alternative:** As a fallback, or in environments where the built-in `github` tools are not available, the same workflow could be achieved using the `shell` tool to run `gh` (the GitHub CLI) and `git` commands.
+
+
+"""
