@@ -73,7 +73,7 @@ A fully scripted example of building a Gemini Enterprise (Agentspace) custom con
 ## Prerequisites
 - Python **3.10+**
 - Google Cloud SDK installed
-- IAM rights in `sascha-playground-doit`
+- IAM rights in your GCP project
 - Gemini Enterprise identity provider configured
 
 ---
