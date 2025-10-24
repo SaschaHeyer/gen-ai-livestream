@@ -280,4 +280,17 @@ Choose the pattern that matches your audience management needs.
 - Extend with additional metadata (owners, tags) to power richer Gemini Enterprise experiences.
 
 ---
+## Discovery Questionnaire
+Use this checklist when scoping a new custom connector with a customer:
+
+- Define the use case: which knowledge sources, personas, and access controls are required?
+- Plan data sync: how will data be extracted and refreshed (batch exports, source APIs, webhooks)?
+- Gather sample content and metadata; decide how ACLs will be represented (users, groups, external identities).
+- Provision a Discovery Engine datastore with chunking and ACL enforcement tied to the identity provider.
+- Transform source content into Discovery Engine `Document` payloads (content, structData, aclInfo).
+- Import documents via the DocumentService API; establish an ongoing sync mechanism (watcher, job, pipeline).
+- Register the datastore as a custom connector inside Gemini Enterprise and scope an assistant workspace to it.
+- Validate end-to-end by impersonating personas, confirming permissions, and iterating on metadata/ACL mappings.
+
+---
 Happy indexing! 🎉
