@@ -5,7 +5,7 @@
     "sourceType": "handbook",
     "owners": ["sascha@domain.com"],
     "tags": ["launch", "operations"],
-    "allowedPrincipals": ["user:sascha@domain.com", "user:another-user@doit.com"],
+    "allowedPrincipals": ["user:sascha@domain.com", "user:another-user@domain.com"],
     "confidentiality": "internal"
   },
   {
