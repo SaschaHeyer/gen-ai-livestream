@@ -2,7 +2,7 @@ from google import genai
 from google.genai import types
 
 # Only for videos of size <20Mb
-video_file_name = "./sample/sample.mp4"
+video_file_name = "./sample/sample.webm"
 video_bytes = open(video_file_name, "rb").read()
 
 client = genai.Client(
@@ -13,9 +13,11 @@ model_id = "gemini-2.5-flash"
 response = client.models.generate_content(
     model=model_id,
     contents=[
+        #"extract the full text shown in the video",
+        "extract the full text shown in the video. It is a fast moving video with words popping up in sequence don't repeat words. include emoijs",
         types.Part(
             inline_data=types.Blob(data=video_bytes, mime_type="video/mp4"),
-            video_metadata=types.VideoMetadata(fps=5),
+            video_metadata=types.VideoMetadata(fps=10),
         ),
     ],
 )
