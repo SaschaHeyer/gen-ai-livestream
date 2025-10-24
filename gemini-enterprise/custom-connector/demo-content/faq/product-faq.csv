@@ -1,0 +1,4 @@
+question,answer,owner,confidentiality
+"How do I request feature toggles?","Submit a ticket in the LaunchOps queue with rollout plan details.","sascha@doit.com","internal"
+"What metrics define a healthy launch?","Error rate <1%, latency P95 <250ms, zero Sev1 incidents.","another-user@doit.com","internal"
+"Where is the escalation matrix?","See the Launch Operations Handbook appendix.","sascha@doit.com","restricted"

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "launch-operations-handbook",
+    "path": "handbook/launch-operations-handbook.md",
+    "sourceType": "handbook",
+    "owners": ["sascha@domain.com"],
+    "tags": ["launch", "operations"],
+    "allowedPrincipals": ["user:sascha@domain.com", "user:another-user@doit.com"],
+    "confidentiality": "internal"
+  },
+  {
+    "id": "product-faq",
+    "path": "faq/product-faq.csv",
+    "sourceType": "faq",
+    "owners": ["another-user@domain.com"],
+    "tags": ["faq", "launch"],
+    "allowedPrincipals": ["user:sascha@domain.com", "user:another-user@domain.com"],
+    "confidentiality": "internal"
+  },
+  {
+    "id": "database-rollover-runbook",
+    "path": "runbooks/database-rollover.txt",
+    "sourceType": "runbook",
+    "owners": ["sascha@domain.com"],
+    "tags": ["database", "operations"],
+    "allowedPrincipals": ["user:sascha@domain.com"],
+    "confidentiality": "restricted"
+  }
+]

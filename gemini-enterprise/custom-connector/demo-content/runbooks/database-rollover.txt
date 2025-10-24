@@ -1,0 +1,8 @@
+# Database Rollover Runbook
+
+1. Notify on-call channel 10 minutes prior to switch.
+2. Trigger automated backup using `gcloud sql backups create`.
+3. Execute rollover script `scripts/rollover.sh`.
+4. Validate read replicas are caught up within 90 seconds.
+5. Announce completion and update incident timeline.
+6. test
