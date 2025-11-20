@@ -9,7 +9,7 @@ client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 MODEL_ID = "gemini-3-pro-image-preview"
 
 prompt = """
-Replace the person on the left side of the robot with the person from the second image. do not change the persons look. Keep it perfectly. """
+Replace the person on the left side of the robot with the person from the second image. do not change the persons look. """
 
 
 with open("x1.png", "rb") as f:
