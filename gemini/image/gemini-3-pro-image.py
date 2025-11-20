@@ -1,7 +1,5 @@
-from IPython.display import Image, Markdown, display
 from google import genai
 from google.genai.types import GenerateContentConfig, Part, ImageConfig, FinishReason
-import os
 
 PROJECT_ID = "sascha-playground-doit"
 LOCATION = "global"
@@ -29,8 +27,11 @@ if response.candidates[0].finish_reason != FinishReason.STOP:
   reason = response.candidates[0].finish_reason
   raise ValueError(f"Prompt Content Error: {reason}")
 
-for part in response.candidates[0].content.parts:
-  if part.thought:
-      continue # skip displaying thoughts
-  if part.inline_data:
-      display(Image(data=part.inline_data.data, width=1000))
+# Collect non-thought image parts and save them to disk (similar to the editing sample).
+image_parts = [part for part in response.candidates[0].content.parts if part.inline_data and not part.thought]
+
+for idx, part in enumerate(image_parts, start=1):
+    image = part.as_image()
+    output_path = f"generated_image_{idx}.png"
+    image.save(output_path)
+    print(f"Saved: {output_path}")
