@@ -7,6 +7,7 @@ import SearchBar from '../../components/SearchBar';
 import VideoCard from '../../components/VideoCard';
 import FacetFilter from '../../components/FacetFilter';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { useUserEvents } from '../../hooks/useUserEvents';
 
 function SearchContent() {
     const searchParams = useSearchParams();
@@ -19,6 +20,9 @@ function SearchContent() {
     const [selectedMediaType, setSelectedMediaType] = useState<string[]>([]);
     const [sortBy, setSortBy] = useState<string>('relevance');
     const [facets, setFacets] = useState<any[]>([]);
+    const [attributionToken, setAttributionToken] = useState<string | null>(null);
+
+    const { sendEvent } = useUserEvents();
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -52,6 +56,15 @@ function SearchContent() {
                 const data = await response.json();
                 setResults(data.results);
                 setFacets(data.facets || []);
+                setAttributionToken(data.attributionToken || null);
+
+                // Fire search event
+                sendEvent({
+                    eventType: 'search',
+                    searchQuery: query,
+                    attributionToken: data.attributionToken,
+                    documents: data.results?.map((r: any) => r.id).filter(Boolean) || [],
+                });
             } catch (err) {
                 setError('An error occurred while searching. Please try again.');
                 console.error(err);

@@ -156,6 +156,7 @@ export async function POST(request: Request) {
             results: filteredResults,
             totalSize: response?.totalSize,
             facets: facetsOut,
+            attributionToken: (response as any)?.attributionToken,
         });
 
     } catch (error) {

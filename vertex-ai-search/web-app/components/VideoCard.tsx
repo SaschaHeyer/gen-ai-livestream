@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { PlayCircle, FileText, Headphones, Calendar } from 'lucide-react';
+import { useUserEvents } from '../hooks/useUserEvents';
 
 interface VideoCardProps {
     result: {
@@ -30,6 +31,18 @@ const formatDuration = (duration?: string) => {
 const VideoCard: React.FC<VideoCardProps> = ({ result }) => {
     const isVideo = result.mediaType === 'video';
     const isAudio = result.mediaType === 'audio';
+    const { sendEvent } = useUserEvents();
+
+    const handleClick = () => {
+        sendEvent({
+            eventType: isVideo ? 'media-play' : isAudio ? 'media-play' : 'view-item',
+            documents: [result.id],
+            mediaInfo: {
+                mediaProgressDuration: result.duration,
+                mediaSessionType: isVideo ? 'VIDEO' : isAudio ? 'AUDIO' : 'UNKNOWN',
+            },
+        });
+    };
 
     return (
         <div className="group flex flex-col bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow overflow-hidden border border-gray-100">
@@ -64,7 +77,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ result }) => {
                     )}
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2 mb-1">
-                    <Link href={result.uri} className="focus:outline-none">
+                    <Link href={result.uri} className="focus:outline-none" onClick={handleClick}>
                         {result.title}
                     </Link>
                 </h3>
@@ -76,7 +89,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ result }) => {
                     <div className="flex items-center text-xs text-gray-400">
                         {isVideo ? 'Video' : isAudio ? 'Audio' : 'Article'}
                     </div>
-                    <button className="text-blue-600 text-sm font-medium hover:text-blue-800">
+                    <button className="text-blue-600 text-sm font-medium hover:text-blue-800" onClick={handleClick}>
                         {isVideo ? 'Watch Now' : isAudio ? 'Listen' : 'Read More'}
                     </button>
                 </div>
