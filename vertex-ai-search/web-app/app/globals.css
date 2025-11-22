@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
+/* Chronos palette */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --chronos-black: #0a0a0a;
+  --chronos-white: #f4f4f0;
+  --chronos-accent: #ff4d00;
+  --chronos-blue: #2563eb;
+  --background: var(--chronos-white);
+  --foreground: var(--chronos-black);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-space-grotesk, 'Space Grotesk', system-ui, -apple-system, sans-serif);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--chronos-white);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--chronos-black);
+}
+
+/* Utility classes mirroring the design HTML */
+.neo-border {
+  border: 2px solid var(--chronos-black);
+  box-shadow: 4px 4px 0px var(--chronos-black);
+  transition: all 0.2s ease;
+}
+.neo-border:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--chronos-black);
+}
+.neo-border:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--chronos-black);
+}
+
+.glass-panel {
+  background: rgba(244, 244, 240, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+.glitch-hover:hover {
+  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
 }

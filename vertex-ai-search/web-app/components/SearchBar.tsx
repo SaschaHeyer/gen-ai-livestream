@@ -54,8 +54,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ initialQuery = '' }) => {
                 </div>
                 <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-4 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-lg shadow-sm transition-shadow hover:shadow-md"
-                    placeholder="Search for videos, news, and more..."
+                    className="block w-full pl-10 pr-20 py-4 border-2 border-[var(--chronos-black)] rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--chronos-accent)] shadow-[4px_4px_0px_var(--chronos-black)] transition-all font-mono text-sm sm:text-base"
+                    placeholder="Ask the Archives..."
                     value={query}
                     onChange={(e) => {
                         setQuery(e.target.value);
@@ -64,22 +64,22 @@ const SearchBar: React.FC<SearchBarProps> = ({ initialQuery = '' }) => {
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
                 />
-                <button
-                    type="submit"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                    <div className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 transition-colors">
+                <div className="absolute right-3 top-2">
+                    <span className="text-[10px] font-mono bg-gray-200 px-1 rounded text-gray-500 border border-gray-300">VERTEX AI</span>
+                </div>
+                <button type="submit" className="absolute inset-y-0 right-0 pr-10 flex items-center">
+                    <div className="bg-[var(--chronos-black)] hover:bg-[var(--chronos-accent)] text-white rounded-full p-2 transition-colors">
                         <Search className="h-5 w-5" />
                     </div>
                 </button>
             </form>
 
             {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                <div className="absolute mt-2 w-full bg-white border-2 border-[var(--chronos-black)] shadow-[8px_8px_0px_var(--chronos-black)] z-50 overflow-hidden">
                     {suggestions.map((s, idx) => (
                         <button
                             key={`${s}-${idx}`}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700"
+                            className="w-full text-left px-4 py-3 hover:bg-gray-100 text-gray-800 font-sans text-sm"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
                                 setQuery(s);

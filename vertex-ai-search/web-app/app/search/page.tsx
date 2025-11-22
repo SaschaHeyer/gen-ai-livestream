@@ -4,9 +4,9 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Layout from '../../components/Layout';
 import SearchBar from '../../components/SearchBar';
-import VideoCard from '../../components/VideoCard';
+import MediaCard from '../../components/MediaCard';
 import FacetFilter from '../../components/FacetFilter';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { useUserEvents } from '../../hooks/useUserEvents';
 
 function SearchContent() {
@@ -32,7 +32,14 @@ function SearchContent() {
                 // Construct filter string
                 const filters = [];
                 if (selectedCategory.length > 0) {
-                    filters.push(`categories: ANY("${selectedCategory.join('","')}")`);
+                    const selectedChildren: string[] = [];
+                    selectedCategory.forEach((parentVal) => {
+                        const opt = categoryOptions.find((o: any) => o.value === parentVal);
+                        if (opt?.children?.length) selectedChildren.push(...opt.children);
+                        else selectedChildren.push(parentVal);
+                    });
+                    const uniq = Array.from(new Set(selectedChildren));
+                    if (uniq.length > 0) filters.push(`categories: ANY("${uniq.join('","')}")`);
                 }
                 if (selectedMediaType.length > 0) {
                     filters.push(`content_type: ANY("${selectedMediaType.join('","')}")`);
@@ -88,34 +95,54 @@ function SearchContent() {
         );
     };
 
-    // Human-friendly labels for categories/content types
+    // Human-friendly labels and grouping for categories/content types
     const prettify = (text: string) =>
         text
             .split(/[-_]/)
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
             .join(' ');
 
-    const formatCategoryLabel = (value: string) => {
+    const groupLabel = (value: string) => {
         const parts = value.split('>').map((p) => p.trim());
-        const leaf = parts[parts.length - 1] || value;
-        const parent = parts.length > 1 ? parts[parts.length - 2] : '';
+        const leaf = parts.pop() || value;
+        const parent = parts.pop();
         const leafPretty = prettify(leaf);
         const parentPretty = parent ? prettify(parent) : '';
         return parentPretty ? `${leafPretty} (${parentPretty})` : leafPretty;
+    };
+
+    const rollupCategories = (facetValues: any[]) => {
+        const grouped: Record<string, { parent: string; count: number; children: string[] }> = {};
+        facetValues.forEach((v) => {
+            const raw = v.value as string;
+            const parts = raw.split('>').map((p) => p.trim());
+            const leaf = parts.pop() || raw;
+            const parent = parts.pop() || leaf;
+            const key = parent;
+            if (!grouped[key]) grouped[key] = { parent: key, count: 0, children: [] };
+            grouped[key].count += v.count || 0;
+            grouped[key].children.push(raw);
+        });
+        return Object.values(grouped).sort((a, b) => b.count - a.count || a.parent.localeCompare(b.parent));
     };
 
     // Helper to transform API facets to UI options with formatted labels
     const getFacetOptions = (key: string) => {
         const facet = facets.find((f: any) => f.key === key);
         if (!facet || !facet.values) return [];
+
+        if (key === 'categories') {
+            return rollupCategories(facet.values).map((v) => ({
+                label: prettify(v.parent),
+                value: v.parent, // UI value
+                count: v.count,
+                children: v.children, // full paths to filter on
+            }));
+        }
+
         return facet.values.map((v: any) => {
             const raw = v.value as string;
-            const label =
-                key === 'categories'
-                    ? formatCategoryLabel(raw)
-                    : key === 'content_type'
-                        ? prettify(raw)
-                        : raw;
+            const label = key === 'content_type' ? prettify(raw) : raw;
             return { label, value: raw, count: v.count };
         });
     };
@@ -125,23 +152,23 @@ function SearchContent() {
 
     return (
         <>
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Search Results</h1>
+            <div className="bg-[var(--chronos-white)] border-b-2 border-[var(--chronos-black)]">
+                <div className="max-w-6xl mx-auto py-8 px-4">
+                    <h1 className="font-serif text-4xl font-bold mb-6 tracking-tight">Search the Chronos Archives</h1>
                     <SearchBar initialQuery={query} />
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="flex flex-col lg:flex-row gap-8">
+            <div className="max-w-6xl mx-auto px-4 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Sidebar / Facets */}
-                    <div className="w-full lg:w-64 flex-shrink-0">
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 sticky top-24">
+                    <aside className="lg:col-span-3 space-y-8">
+                        <div className="sticky top-24 neo-border bg-white p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+                                <h2 className="font-mono font-bold text-lg">FILTERS</h2>
                                 <button
                                     onClick={() => { setSelectedCategory([]); setSelectedMediaType([]); }}
-                                    className="text-sm text-blue-600 hover:text-blue-800"
+                                    className="text-xs underline hover:text-[var(--chronos-accent)]"
                                 >
                                     Clear all
                                 </button>
@@ -151,8 +178,10 @@ function SearchContent() {
                                 options={categoryOptions}
                                 selectedValues={selectedCategory}
                                 onChange={handleCategoryChange}
+                                collapsible
+                                defaultOpenCount={8}
                             />
-                            <div className="border-t border-gray-100 my-4"></div>
+                            <div className="border-t border-gray-300 my-4"></div>
                             <FacetFilter
                                 title="Media Type"
                                 options={mediaTypeOptions}
@@ -160,36 +189,58 @@ function SearchContent() {
                                 onChange={handleMediaTypeChange}
                             />
                         </div>
-                    </div>
+                    </aside>
 
                     {/* Main Content */}
-                    <div className="flex-1">
+                    <section className="lg:col-span-9 space-y-6">
+                        {/* Generative summary placeholder */}
+                        <div className="bg-gray-50 border-2 border-[var(--chronos-blue)] p-6 relative overflow-hidden neo-border">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[var(--chronos-blue)]" />
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 bg-[var(--chronos-blue)] text-white flex items-center justify-center rounded">
+                                    <Sparkles className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-mono font-bold text-[var(--chronos-blue)] mb-2 flex items-center gap-2">
+                                        Generative Answer <span className="text-[10px] bg-blue-100 px-1 rounded text-blue-800">BETA</span>
+                                    </h3>
+                                    <p className="font-sans text-base text-gray-800 leading-relaxed">
+                                        {query
+                                            ? `Highlights related to "${query}" from the Chronos archive. Select a result to dive deeper.`
+                                            : 'Ask the archives anything—tech, off-world, policy—and see media, audio, and articles together.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Toolbar */}
-                        <div className="flex items-center justify-between mb-6">
-                            <p className="text-sm text-gray-500">
-                                Showing <span className="font-medium text-gray-900">{results.length}</span> results for "<span className="font-medium text-gray-900">{query}</span>"
-                            </p>
-                            <div className="flex items-center">
-                                <label htmlFor="sort" className="mr-2 text-sm text-gray-700">Sort by:</label>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between font-mono text-xs text-gray-600 gap-2">
+                            <span id="result-count">
+                                {query.trim()
+                                    ? `Showing ${results.length} results for "${query}"`
+                                    : `Showing ${results.length} results (browse all)`}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <span>SORT BY:</span>
                                 <select
                                     id="sort"
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value)}
-                                    className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                                    className="bg-transparent border-b border-gray-300 focus:outline-none text-[var(--chronos-black)]"
                                 >
-                                    <option value="relevance">Relevance</option>
-                                    <option value="newest">Newest</option>
+                                    <option value="relevance">RELEVANCE</option>
+                                    <option value="newest">DATE</option>
                                 </select>
                             </div>
                         </div>
 
-                        {/* Results Grid */}
+                        {/* Results */}
                         {loading ? (
                             <div className="flex justify-center items-center h-64">
-                                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+                                <Loader2 className="h-8 w-8 text-[var(--chronos-blue)] animate-spin" />
                             </div>
                         ) : error ? (
-                            <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
+                            <div className="bg-red-50 border-2 border-red-400 p-4 neo-border">
                                 <div className="flex">
                                     <div className="flex-shrink-0">
                                         <AlertCircle className="h-5 w-5 text-red-400" />
@@ -200,18 +251,18 @@ function SearchContent() {
                                 </div>
                             </div>
                         ) : results.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {results.map((result) => (
-                                    <VideoCard key={result.id} result={result} />
+                                    <MediaCard key={result.id} result={result} attributionToken={attributionToken} />
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                                <p className="text-gray-500 text-lg">No results found for "{query}"</p>
-                                <p className="text-gray-400 mt-2">Try adjusting your search or filters.</p>
+                            <div className="text-center py-16 border-2 border-dashed border-gray-300 neo-border bg-white">
+                                <p className="text-gray-700 font-serif text-xl mb-2">No records found in the archives.</p>
+                                <p className="text-gray-500 font-mono text-sm">Try a different query or adjust filters.</p>
                             </div>
                         )}
-                    </div>
+                    </section>
                 </div>
             </div>
         </>

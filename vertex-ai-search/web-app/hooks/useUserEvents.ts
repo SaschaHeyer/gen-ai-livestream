@@ -20,6 +20,7 @@ export function useUserEvents() {
         attributionToken?: string;
         documents?: string[];
         mediaInfo?: Record<string, unknown>;
+        eventTime?: string;
     }) => {
         try {
             await fetch('/api/events', {
@@ -28,6 +29,7 @@ export function useUserEvents() {
                 body: JSON.stringify({
                     ...payload,
                     userPseudoId,
+                    eventTime: payload.eventTime || new Date().toISOString(),
                     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
                     pageViewId: typeof window !== 'undefined' ? window.location.pathname : undefined,
                 }),

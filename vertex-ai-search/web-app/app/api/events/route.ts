@@ -15,6 +15,7 @@ export async function POST(request: Request) {
             mediaInfo,
             userAgent,
             pageViewId,
+            eventTime,
         } = body;
 
         if (!eventType || !userPseudoId) {
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
         const userEvent: any = {
             eventType,
             userPseudoId,
-            eventTime: new Date().toISOString(),
+            eventTime: eventTime || new Date().toISOString(),
         };
 
         if (searchQuery || attributionToken || documents?.length) {

@@ -91,7 +91,7 @@ export async function POST(request: Request) {
                 category: data?.categories?.[0] || 'General',
                 publishTime: data?.available_time,
                 mediaType: data?.content_type || data?.media_type || (data?.uri?.endsWith('.mp4') ? 'video' : data?.uri?.endsWith('.mp3') ? 'audio' : 'news'),
-                thumbnail: data?.thumbnail, // If available
+                thumbnail: data?.images?.[0]?.uri || data?.image_uri || data?.thumbnail, // prefer schema images
                 duration: data?.duration,
             };
         }) || [];
