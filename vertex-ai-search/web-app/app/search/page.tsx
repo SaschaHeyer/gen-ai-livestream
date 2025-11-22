@@ -21,6 +21,7 @@ function SearchContent() {
     const [sortBy, setSortBy] = useState<string>('relevance');
     const [facets, setFacets] = useState<any[]>([]);
     const [attributionToken, setAttributionToken] = useState<string | null>(null);
+    const [corrected, setCorrected] = useState<string | null>(null);
 
     const { sendEvent } = useUserEvents();
 
@@ -64,6 +65,7 @@ function SearchContent() {
                 setResults(data.results);
                 setFacets(data.facets || []);
                 setAttributionToken(data.attributionToken || null);
+                setCorrected(data.correctedQuery || null);
 
                 // Fire search event
                 sendEvent({
@@ -209,6 +211,11 @@ function SearchContent() {
                                             ? `Highlights related to "${query}" from the Chronos archive. Select a result to dive deeper.`
                                             : 'Ask the archives anything—tech, off-world, policy—and see media, audio, and articles together.'}
                                     </p>
+                                    {corrected && corrected !== query && (
+                                        <p className="font-mono text-xs text-gray-600 mt-2">
+                                            Did you mean: <button className="underline" onClick={() => window.location.href = `/search?q=${encodeURIComponent(corrected)}`}>{corrected}</button>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

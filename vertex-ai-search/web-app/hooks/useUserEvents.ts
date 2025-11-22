@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 const PSEUDO_KEY = 'userPseudoId';
 
@@ -14,30 +14,30 @@ const getOrCreatePseudoId = () => {
 export function useUserEvents() {
     const userPseudoId = useMemo(() => getOrCreatePseudoId(), []);
 
-    const sendEvent = async (payload: {
+    const sendEvent = useCallback(async (payload: {
         eventType: string;
         searchQuery?: string;
         attributionToken?: string;
         documents?: string[];
         mediaInfo?: Record<string, unknown>;
-        eventTime?: string;
     }) => {
         try {
+            const body = {
+                ...payload,
+                userPseudoId,
+                userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+                pageViewId: typeof window !== 'undefined' ? window.location.pathname : undefined,
+            };
             await fetch('/api/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...payload,
-                    userPseudoId,
-                    eventTime: payload.eventTime || new Date().toISOString(),
-                    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-                    pageViewId: typeof window !== 'undefined' ? window.location.pathname : undefined,
-                }),
+                body: JSON.stringify(body),
+                keepalive: true,
             });
         } catch (err) {
             console.error('Failed to send user event', err);
         }
-    };
+    }, [userPseudoId]);
 
     return { userPseudoId, sendEvent };
 }

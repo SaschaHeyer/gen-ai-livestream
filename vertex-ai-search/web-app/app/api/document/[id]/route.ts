@@ -5,25 +5,20 @@ const client = new DocumentServiceClient();
 
 export async function GET(
     _req: Request,
-    context: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const params = await context.params;
         const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
         const location = process.env.GOOGLE_CLOUD_LOCATION || 'global';
         const dataStoreId = process.env.VERTEX_AI_DATA_STORE_ID;
-        const id = context.params.id;
+        const id = params.id;
 
         if (!projectId || !dataStoreId) {
             return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
         }
 
-        const name = client.documentPath(
-            projectId,
-            location,
-            dataStoreId,
-            'default_branch',
-            id
-        );
+        const name = `projects/${projectId}/locations/${location}/collections/default_collection/dataStores/${dataStoreId}/branches/0/documents/${id}`;
 
         const [doc] = await client.getDocument({ name });
 

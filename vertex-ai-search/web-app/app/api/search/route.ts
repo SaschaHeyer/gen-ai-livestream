@@ -1,8 +1,9 @@
-import { SearchServiceClient } from '@google-cloud/discoveryengine';
+import { SearchServiceClient, CompletionServiceClient } from '@google-cloud/discoveryengine';
 import { NextResponse } from 'next/server';
 
 // Initialize client
 const client = new SearchServiceClient();
+const completionClient = new CompletionServiceClient();
 
 export async function POST(request: Request) {
     try {
@@ -42,6 +43,9 @@ export async function POST(request: Request) {
                 { facetKey: { key: 'categories', prefixes: ['doit'] }, limit: 20 },
                 { facetKey: { key: 'content_type' }, limit: 10 },
             ],
+            spellCorrectionSpec: {
+                mode: 'SUGGESTION_ONLY',
+            },
         };
 
         if (pageToken) {
@@ -49,6 +53,10 @@ export async function POST(request: Request) {
         }
 
         const [results, , response] = await client.search(request_body);
+        let correctedQuery = (response as any)?.correctedQuery || null;
+        if (correctedQuery) {
+            console.log('Spell correction suggestion:', correctedQuery, 'for query:', query);
+        }
 
         // Helper to unwrap Protobuf Struct
         const unwrapValue = (value: any): any => {
@@ -152,11 +160,32 @@ export async function POST(request: Request) {
             ];
         }
 
+        // If no correction from search (or we want a suggestion), fall back to completion for a suggestion
+        if (!correctedQuery && (query || '').length >= 2) {
+            try {
+                const name = `projects/${projectId}/locations/${location}/collections/default_collection/dataStores/${dataStoreId}`;
+                const [comp] = await completionClient.completeQuery({
+                    dataStore: name,
+                    query: query || '',
+                    pageSize: 1,
+                    queryModel: 'document',
+                });
+                const suggestion = comp.querySuggestions?.[0]?.suggestion;
+                if (suggestion && suggestion.toLowerCase() !== (query || '').toLowerCase()) {
+                    correctedQuery = suggestion;
+                    console.log('Completion-based suggestion:', suggestion, 'for query:', query);
+                }
+            } catch (e) {
+                console.warn('Completion fallback failed:', e);
+            }
+        }
+
         return NextResponse.json({
             results: filteredResults,
             totalSize: response?.totalSize,
             facets: facetsOut,
             attributionToken: (response as any)?.attributionToken,
+            correctedQuery,
         });
 
     } catch (error) {

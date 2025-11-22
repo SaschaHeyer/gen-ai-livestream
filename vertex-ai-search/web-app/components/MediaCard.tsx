@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PlayCircle, FileText, Headphones, Clock, ArrowUpRight } from 'lucide-react';
 import { useUserEvents } from '../hooks/useUserEvents';
 
@@ -35,17 +36,11 @@ const MediaCard: React.FC<MediaCardProps> = ({ result, attributionToken }) => {
     const isVideo = result.mediaType === 'video';
     const isAudio = result.mediaType === 'audio';
     const { sendEvent } = useUserEvents();
+    const router = useRouter();
 
     const handleClick = () => {
-        // always log view-item
-        sendEvent({
-            eventType: 'view-item',
-            documents: [result.id],
-            attributionToken,
-        });
-
+        sendEvent({ eventType: 'view-item', documents: [result.id], attributionToken });
         if (isVideo || isAudio) {
-            // media-play
             sendEvent({
                 eventType: 'media-play',
                 documents: [result.id],
@@ -55,22 +50,21 @@ const MediaCard: React.FC<MediaCardProps> = ({ result, attributionToken }) => {
                     mediaSessionType: isVideo ? 'VIDEO' : 'AUDIO',
                 },
             });
-            // optimistic media-complete (no actual player telemetry)
-            sendEvent({
-                eventType: 'media-complete',
-                documents: [result.id],
-                attributionToken,
-                mediaInfo: {
-                    mediaProgressDuration: result.duration,
-                    mediaProgressPercentage: 1.0,
-                    mediaSessionType: isVideo ? 'VIDEO' : 'AUDIO',
-                },
-            });
         }
     };
 
+    const goToDetail = () => {
+        handleClick();
+        router.push(`/item/${result.id}`);
+    };
+
     return (
-        <div className="neo-border bg-white flex flex-col group cursor-pointer overflow-hidden h-full transition-all hover:shadow-[6px_6px_0px_var(--chronos-blue)]">
+        <div
+            className="neo-border bg-white flex flex-col group cursor-pointer overflow-hidden h-full transition-all hover:shadow-[6px_6px_0px_var(--chronos-blue)]"
+            onClick={goToDetail}
+            role="button"
+            tabIndex={0}
+        >
             <div className="relative overflow-hidden aspect-video">
                 <div className="absolute top-2 left-2 z-10">
                     <span className="bg-chronos-black text-white px-2 py-1 text-[10px] font-mono uppercase flex items-center gap-1">
@@ -100,7 +94,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ result, attributionToken }) => {
                     {result.publishTime && <span>{new Date(result.publishTime).toLocaleDateString()}</span>}
                 </div>
                 <h3 className="font-serif text-2xl font-bold leading-tight mb-2 group-hover:text-chronos-accent transition-colors line-clamp-2">
-                    <Link href={`/item/${result.id}`} className="focus:outline-none" onClick={handleClick}>
+                    <Link href={`/item/${result.id}`} className="focus:outline-none" onClick={(e) => { e.stopPropagation(); goToDetail(); }}>
                         {result.title}
                     </Link>
                 </h3>

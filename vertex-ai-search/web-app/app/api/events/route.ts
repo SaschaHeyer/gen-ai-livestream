@@ -32,10 +32,14 @@ export async function POST(request: Request) {
 
         const parent = `projects/${projectId}/locations/${location}/collections/default_collection/dataStores/${dataStoreId}`;
 
+        const now = new Date();
         const userEvent: any = {
             eventType,
             userPseudoId,
-            eventTime: eventTime || new Date().toISOString(),
+            eventTime: {
+                seconds: Math.floor(now.getTime() / 1000),
+                nanos: (now.getTime() % 1000) * 1e6,
+            },
         };
 
         if (searchQuery || attributionToken || documents?.length) {

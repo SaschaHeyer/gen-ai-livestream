@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Clock, Headphones, PlayCircle, Sparkles, Share2 } from 'lucide-react';
 import Link from 'next/link';
-import { useUserEvents } from '../../hooks/useUserEvents';
+import { useUserEvents } from '../../../hooks/useUserEvents';
 
 type DocData = {
     id: string;
