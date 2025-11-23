@@ -24,7 +24,102 @@ export default function About() {
                     <li><strong>User Events</strong>: search, view-item, media-play, media-complete (optimistic) with attributionToken and pseudo user IDs.</li>
                     <li><strong>Browse Feed</strong>: Home “Latest Feed” pulls live results (empty query, sorted by available_time desc).</li>
                     <li><strong>Facets</strong>: Parent-level category rollups (e.g., Politics) with expand/collapse; media type filters.</li>
+                    <li><strong>Language- & Market-aware search</strong>: Preferences set in <code>/config</code> are sent to Vertex AI Search and Completion; German typo “eegriewende” still suggests “Energiewende 2.0 beschleunigt” (see screenshot below). Market (SE/DE/ES) is softly boosted in ranking.</li>
                 </ul>
+            </section>
+
+            <section className="neo-border bg-white p-6 space-y-3">
+                <h2 className="font-mono text-sm text-gray-600">Facets & Filtering</h2>
+                <p className="font-sans text-sm text-gray-700">
+                    Vertex AI Search returns facet counts alongside results. We surface categories (hierarchical rollups), media type, author, language, and market. Selecting a facet sends a filter like <code>categories: ANY("chronos &gt; politics")</code> or <code>market: ANY("DE")</code>; when the backend lacks filterable fields, we apply the same filter client-side as a resilience fallback.
+                </p>
+                <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
+{`// app/api/search/route.ts (facet specs)
+facetSpecs: [
+  { facetKey: { key: 'categories', prefixes: ['doit'] }, limit: 20 },
+  { facetKey: { key: 'content_type' }, limit: 10 },
+  { facetKey: { key: 'author' }, limit: 20 },
+  { facetKey: { key: 'language' }, limit: 10 },
+  { facetKey: { key: 'market' }, limit: 10 },
+],`}
+                </pre>
+                <p className="font-sans text-xs text-gray-600">If the API doesn’t return facets (e.g., fields not yet marked filterable), we derive counts from the current page so the UI stays usable.</p>
+            </section>
+
+            <section className="neo-border bg-white p-6 space-y-3">
+                <h2 className="font-mono text-sm text-gray-600">Language Hinting Demo</h2>
+                <p className="font-sans text-sm text-gray-700">
+                    Autocomplete and search receive <code>languageCodes</code> from <code>/config</code>. Even with a misspelled German query (below), Completion suggests the correct German headline based on the language hint.
+                </p>
+                <div className="border border-gray-200">
+                    <img src="about/language.png" alt="German autocomplete suggestion example" className="w-full" />
+                </div>
+                <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
+{`// components/SearchBar.tsx (excerpt)
+const { userPseudoId } = useUserEvents();
+const { languageCodes, countryCode } = useUserPreferences();
+
+const fetchSuggestions = async (text: string) => {
+  const res = await fetch('/api/autocomplete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: text, userPseudoId, languageCodes, userCountryCode: countryCode }),
+  });
+};`}
+                </pre>
+            </section>
+
+            <section className="neo-border bg-white p-6 space-y-3">
+                <h2 className="font-mono text-sm text-gray-600">Market Boost in Ranking</h2>
+                <p className="font-sans text-sm text-gray-700">
+                    Searches softly boost results whose <code>market</code> matches the userselected country from <code>/config</code>. This keeps localized stories near the top while still showing global content.
+                </p>
+                <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
+{`// app/api/search/route.ts (excerpt)
+if (userCountryCode) {
+  request_body.boostSpec = {
+    conditionBoostSpecs: [
+      {
+        condition: 'market: ANY("' + userCountryCode + '")',
+        boost: 0.5, // boost must be in [-1, 1]
+      },
+    ],
+  };
+}`}
+                </pre>
+                <p className="font-sans text-xs text-gray-600">Tune the boost (max 1.0) or swap to a default filter for stricter localization.</p>
+            </section>
+
+            <section className="neo-border bg-white p-6 space-y-3">
+                <h2 className="font-mono text-sm text-gray-600">Query Expansion (AUTO)</h2>
+                <p className="font-sans text-sm text-gray-700">
+                    Vertex AI Search expands misspelled or related terms to keep recall high. With <code>queryExpansionSpec.condition = 'AUTO'</code> and <code>pinUnexpandedResults = true</code>, exact matches stay on top while expanded matches (e.g., “colonny” → “colony”) still return results.
+                </p>
+                <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
+{`// app/api/search/route.ts (excerpt)
+queryExpansionSpec: {
+  condition: 'AUTO',
+  pinUnexpandedResults: true,
+},
+spellCorrectionSpec: {
+  mode: 'AUTO',
+},`}
+                </pre>
+                <p className="font-sans text-xs text-gray-600">AUTO may return results without a visible correctedQuery; it silently broadens the query while keeping exact hits pinned.</p>
+            </section>
+
+            <section className="neo-border bg-white p-6 space-y-3">
+                <h2 className="font-mono text-sm text-gray-600">Spell Correction (AUTO)</h2>
+                <p className="font-sans text-sm text-gray-700">
+                    Spell correction is set to <code>mode: 'AUTO'</code>, so misspellings are corrected server-side without requiring user clicks. This pairs with query expansion to catch typos and near-matches.
+                </p>
+                <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
+{`// app/api/search/route.ts (excerpt)
+spellCorrectionSpec: {
+  mode: 'AUTO',
+},`}
+                </pre>
+                <p className="font-sans text-xs text-gray-600">Use this when you prefer automatic fixes; switch to SUGGESTION_ONLY if you want to show “Did you mean…” and let users opt in.</p>
             </section>
 
             <section className="neo-border bg-white p-6 space-y-3">

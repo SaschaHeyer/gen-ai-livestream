@@ -5,12 +5,16 @@ import SearchBar from '../components/SearchBar';
 import MediaCard from '../components/MediaCard';
 import Link from 'next/link';
 import { Loader2, Grid, List } from 'lucide-react';
+import { useUserEvents } from '../hooks/useUserEvents';
+import { useUserPreferences } from '../hooks/useUserPreferences';
 
 export default function Home() {
     const [latest, setLatest] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+    const { userPseudoId, userId } = useUserEvents();
+    const { languageCodes, countryCode } = useUserPreferences();
 
     useEffect(() => {
         const fetchLatest = async () => {
@@ -23,6 +27,10 @@ export default function Home() {
                         query: '',
                         orderBy: 'available_time desc',
                         pageSize: 9,
+                        userPseudoId,
+                        userId,
+                        userCountryCode: countryCode,
+                        languageCodes,
                     }),
                 });
                 if (!res.ok) throw new Error('Failed to fetch latest feed');
@@ -35,7 +43,7 @@ export default function Home() {
             }
         };
         fetchLatest();
-    }, []);
+    }, [userPseudoId, userId, languageCodes, countryCode]);
 
     const featured = latest[0];
     const briefing = latest.find((i) => i.mediaType === 'audio');

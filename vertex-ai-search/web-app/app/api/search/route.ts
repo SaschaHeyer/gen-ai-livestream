@@ -8,7 +8,7 @@ const completionClient = new CompletionServiceClient();
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { query, pageToken, filter, orderBy } = body;
+        const { query, pageToken, filter, orderBy, userPseudoId, userId, userCountryCode, languageCodes, pageSize } = body;
 
         const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
         const location = process.env.GOOGLE_CLOUD_LOCATION || 'global';
@@ -27,10 +27,10 @@ export async function POST(request: Request) {
 
         const effectiveQuery = query ?? '';
 
-        const request_body = {
+        const request_body: any = {
             servingConfig: servingConfig,
             query: effectiveQuery,
-            pageSize: 10,
+            pageSize: pageSize || 10,
             offset: 0,
             // Backend filters are omitted because custom fields may not be marked filterable;
             // we apply filters locally below.
@@ -39,14 +39,47 @@ export async function POST(request: Request) {
                 snippetSpec: { returnSnippet: true },
                 summarySpec: { summaryResultCount: 5, includeCitations: true },
             },
+            queryExpansionSpec: {
+                condition: 'AUTO',
+                pinUnexpandedResults: true,
+            },
             facetSpecs: [
                 { facetKey: { key: 'categories', prefixes: ['doit'] }, limit: 20 },
                 { facetKey: { key: 'content_type' }, limit: 10 },
+                { facetKey: { key: 'author' }, limit: 20 },
+                { facetKey: { key: 'language' }, limit: 10 },
+                { facetKey: { key: 'market' }, limit: 10 },
             ],
             spellCorrectionSpec: {
-                mode: 'SUGGESTION_ONLY',
+                mode: 'AUTO',
             },
         };
+
+        // Soft geo/market boost based on user-selected country (config page)
+        if (userCountryCode) {
+            request_body.boostSpec = {
+                conditionBoostSpecs: [
+                    {
+                        condition: `market: ANY("${userCountryCode}")`,
+                        boost: 1.0, // max boost (must be in [-1, 1])
+                    },
+                ],
+            };
+        }
+
+        if (userPseudoId) request_body.userPseudoId = userPseudoId;
+        if (userId) {
+            request_body.userInfo = {
+                userId,
+                userAgent: request.headers.get('user-agent') || undefined,
+            };
+        }
+        if (userCountryCode) {
+            request_body.userLabels = { country: userCountryCode };
+        }
+        if (languageCodes && Array.isArray(languageCodes) && languageCodes.length > 0) {
+            request_body.languageCode = languageCodes[0];
+        }
 
         if (pageToken) {
             // request_body.pageToken = pageToken;
@@ -101,6 +134,11 @@ export async function POST(request: Request) {
                 mediaType: data?.content_type || data?.media_type || (data?.uri?.endsWith('.mp4') ? 'video' : data?.uri?.endsWith('.mp3') ? 'audio' : 'news'),
                 thumbnail: data?.images?.[0]?.uri || data?.image_uri || data?.thumbnail, // prefer schema images
                 duration: data?.duration,
+                author: data?.author,
+                language: data?.language || data?.language_code,
+                market: data?.market,
+                popularity: data?.popularity,
+                rating: data?.rating,
             };
         }) || [];
 
@@ -110,17 +148,28 @@ export async function POST(request: Request) {
         let filteredResults = mappedResults;
 
         if (filter) {
-            // Very small parser for filters like `categories: ANY("a","b") AND media_type: ANY("clip")`
-            const categoriesMatch = /categories:\s*ANY\(\"([^\)]*)\"\)/i.exec(filter);
-            const mediaTypeMatch = /content_type:\s*ANY\(\"([^\)]*)\"\)/i.exec(filter);
+            // Very small parser for filters like `categories: ANY("a","b") AND content_type: ANY("clip")`
+            const categoriesMatch = /categories:\s*ANY\("([^\)]*)"\)/i.exec(filter);
+            const mediaTypeMatch = /content_type:\s*ANY\("([^\)]*)"\)/i.exec(filter);
+            const authorMatch = /author:\s*ANY\("([^\)]*)"\)/i.exec(filter);
+            const languageMatch = /language:\s*ANY\("([^\)]*)"\)/i.exec(filter);
+            const marketMatch = /market:\s*ANY\("([^\)]*)"\)/i.exec(filter);
 
             const selectedCategories = categoriesMatch?.[1]?.split('","').map((s) => s.replace(/\"/g, '')) || [];
             const selectedMediaTypes = mediaTypeMatch?.[1]?.split('","').map((s) => s.replace(/\"/g, '')) || [];
+            const selectedAuthors = authorMatch?.[1]?.split('","').map((s) => s.replace(/\"/g, '')) || [];
+            const selectedLanguages = languageMatch?.[1]?.split('","').map((s) => s.replace(/\"/g, '')) || [];
+            const selectedMarkets = marketMatch?.[1]?.split('","').map((s) => s.replace(/\"/g, '')) || [];
 
             filteredResults = mappedResults.filter((r) => {
-                const catOk = selectedCategories.length === 0 || (r.category && selectedCategories.includes(r.category));
+                const catOk =
+                    selectedCategories.length === 0 ||
+                    (r.category && selectedCategories.some((c) => r.category.toLowerCase().includes(c.toLowerCase())));
                 const typeOk = selectedMediaTypes.length === 0 || (r.mediaType && selectedMediaTypes.includes(r.mediaType));
-                return catOk && typeOk;
+                const authorOk = selectedAuthors.length === 0 || (r.author && selectedAuthors.includes(r.author));
+                const languageOk = selectedLanguages.length === 0 || (r.language && selectedLanguages.includes(r.language));
+                const marketOk = selectedMarkets.length === 0 || (r.market && selectedMarkets.includes(r.market));
+                return catOk && typeOk && authorOk && languageOk && marketOk;
             });
         }
 
@@ -149,14 +198,23 @@ export async function POST(request: Request) {
 
             const categoryValues: (string | undefined)[] = [];
             const mediaTypeValues: (string | undefined)[] = [];
+            const authorValues: (string | undefined)[] = [];
+            const languageValues: (string | undefined)[] = [];
+            const marketValues: (string | undefined)[] = [];
             filteredResults.forEach((r) => {
                 categoryValues.push(r.category);
                 mediaTypeValues.push(r.mediaType);
+                authorValues.push((r as any).author);
+                languageValues.push((r as any).language);
+                marketValues.push((r as any).market);
             });
 
             facetsOut = [
                 { key: 'categories', values: tally(categoryValues) },
                 { key: 'content_type', values: tally(mediaTypeValues) },
+                { key: 'author', values: tally(authorValues) },
+                { key: 'language', values: tally(languageValues) },
+                { key: 'market', values: tally(marketValues) },
             ];
         }
 

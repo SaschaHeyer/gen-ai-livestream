@@ -34,9 +34,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         </div>
 
                         <nav className="hidden lg:flex gap-6 font-mono text-sm font-bold">
-                            <Link href="/search" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">POLITICS</Link>
-                            <Link href="/search" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">TECH</Link>
-                            <Link href="/search" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">OFF-WORLD</Link>
+                            <Link href="/search?cat=politics" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">POLITICS</Link>
+                            <Link href="/search?cat=tech" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">TECH</Link>
+                            <Link href="/config" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">CONFIG</Link>
+                            <Link href="/about" className="hover:text-[var(--chronos-accent)] hover:underline decoration-2 underline-offset-4">ABOUT</Link>
                             <span className="flex items-center gap-2 hover:text-[var(--chronos-accent)] cursor-pointer">LOGIN</span>
                         </nav>
                     </div>

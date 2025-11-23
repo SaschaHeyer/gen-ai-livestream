@@ -8,10 +8,12 @@ import MediaCard from '../../components/MediaCard';
 import FacetFilter from '../../components/FacetFilter';
 import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { useUserEvents } from '../../hooks/useUserEvents';
+import { useUserPreferences } from '../../hooks/useUserPreferences';
 
 function SearchContent() {
     const searchParams = useSearchParams();
     const query = searchParams.get('q') || '';
+    const initialCat = searchParams.get('cat');
 
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -22,8 +24,23 @@ function SearchContent() {
     const [facets, setFacets] = useState<any[]>([]);
     const [attributionToken, setAttributionToken] = useState<string | null>(null);
     const [corrected, setCorrected] = useState<string | null>(null);
+    const [selectedAuthor, setSelectedAuthor] = useState<string[]>([]);
+    const [selectedLanguage, setSelectedLanguage] = useState<string[]>([]);
+    const [selectedMarket, setSelectedMarket] = useState<string[]>([]);
+    const [catHydrated, setCatHydrated] = useState(false);
 
-    const { sendEvent } = useUserEvents();
+    const { sendEvent, userPseudoId, userId } = useUserEvents();
+    const { languageCodes, countryCode } = useUserPreferences();
+
+    useEffect(() => {
+        if (initialCat) {
+            setSelectedCategory([initialCat]);
+            setCatHydrated(false);
+        } else {
+            setSelectedCategory([]);
+            setCatHydrated(false);
+        }
+    }, [initialCat]);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -40,12 +57,31 @@ function SearchContent() {
                         else selectedChildren.push(parentVal);
                     });
                     const uniq = Array.from(new Set(selectedChildren));
-                    if (uniq.length > 0) filters.push(`categories: ANY("${uniq.join('","')}")`);
+                    if (uniq.length > 0) {
+                        filters.push(`categories: ANY("${uniq.join('","')}")`);
+                    } else {
+                        // Fallback: apply parent values directly if facet children not yet available
+                        filters.push(`categories: ANY("${selectedCategory.join('","')}")`);
+                    }
                 }
                 if (selectedMediaType.length > 0) {
                     filters.push(`content_type: ANY("${selectedMediaType.join('","')}")`);
                 }
+                if (selectedAuthor.length > 0) {
+                    filters.push(`author: ANY("${selectedAuthor.join('","')}")`);
+                }
+                if (selectedLanguage.length > 0) {
+                    filters.push(`language: ANY("${selectedLanguage.join('","')}")`);
+                }
+                if (selectedMarket.length > 0) {
+                    filters.push(`market: ANY("${selectedMarket.join('","')}")`);
+                }
                 const filterString = filters.join(' AND ');
+
+                let resolvedOrderBy: string | undefined = undefined;
+                if (sortBy === 'newest') resolvedOrderBy = 'available_time desc';
+                else if (sortBy === 'popularity') resolvedOrderBy = 'popularity desc';
+                else if (sortBy === 'rating') resolvedOrderBy = 'rating desc';
 
                 const response = await fetch('/api/search', {
                     method: 'POST',
@@ -53,7 +89,11 @@ function SearchContent() {
                     body: JSON.stringify({
                         query,
                         filter: filterString,
-                        orderBy: sortBy === 'newest' ? 'available_time desc' : undefined
+                        orderBy: resolvedOrderBy,
+                        userPseudoId,
+                        userId,
+                        userCountryCode: countryCode,
+                        languageCodes,
                     }),
                 });
 
@@ -83,7 +123,7 @@ function SearchContent() {
         };
 
         fetchResults();
-    }, [query, selectedCategory, selectedMediaType, sortBy]);
+    }, [query, selectedCategory, selectedMediaType, selectedAuthor, selectedLanguage, selectedMarket, sortBy, languageCodes, countryCode, userId, userPseudoId]);
 
     const handleCategoryChange = (value: string) => {
         setSelectedCategory(prev =>
@@ -95,6 +135,15 @@ function SearchContent() {
         setSelectedMediaType(prev =>
             prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
         );
+    };
+    const handleAuthorChange = (value: string) => {
+        setSelectedAuthor(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
+    };
+    const handleLanguageChange = (value: string) => {
+        setSelectedLanguage(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
+    };
+    const handleMarketChange = (value: string) => {
+        setSelectedMarket(prev => prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]);
     };
 
     // Human-friendly labels and grouping for categories/content types
@@ -151,6 +200,20 @@ function SearchContent() {
 
     const categoryOptions = getFacetOptions('categories');
     const mediaTypeOptions = getFacetOptions('content_type');
+    const authorOptions = getFacetOptions('author');
+    const languageOptions = getFacetOptions('language');
+    const marketOptions = getFacetOptions('market');
+
+    // Once facets are available, hydrate the initial category selection so filters use the correct child values
+    useEffect(() => {
+        if (initialCat && !catHydrated && categoryOptions.length > 0) {
+            const opt = categoryOptions.find((o: any) => o.value === initialCat);
+            if (opt) {
+                setSelectedCategory([opt.value]);
+                setCatHydrated(true);
+            }
+        }
+    }, [initialCat, catHydrated, categoryOptions]);
 
     return (
         <>
@@ -169,7 +232,7 @@ function SearchContent() {
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="font-mono font-bold text-lg">FILTERS</h2>
                                 <button
-                                    onClick={() => { setSelectedCategory([]); setSelectedMediaType([]); }}
+                                    onClick={() => { setSelectedCategory([]); setSelectedMediaType([]); setSelectedAuthor([]); setSelectedLanguage([]); setSelectedMarket([]); }}
                                     className="text-xs underline hover:text-[var(--chronos-accent)]"
                                 >
                                     Clear all
@@ -189,6 +252,36 @@ function SearchContent() {
                                 options={mediaTypeOptions}
                                 selectedValues={selectedMediaType}
                                 onChange={handleMediaTypeChange}
+                            />
+                            <div className="border-t border-gray-300 my-4"></div>
+                            <FacetFilter
+                                title="Author"
+                                options={authorOptions}
+                                selectedValues={selectedAuthor}
+                                onChange={handleAuthorChange}
+                                collapsible
+                                defaultOpenCount={6}
+                                collapsedByDefault
+                            />
+                            <div className="border-t border-gray-300 my-4"></div>
+                            <FacetFilter
+                                title="Language"
+                                options={languageOptions}
+                                selectedValues={selectedLanguage}
+                                onChange={handleLanguageChange}
+                                collapsible
+                                defaultOpenCount={6}
+                                collapsedByDefault
+                            />
+                            <div className="border-t border-gray-300 my-4"></div>
+                            <FacetFilter
+                                title="Market"
+                                options={marketOptions}
+                                selectedValues={selectedMarket}
+                                onChange={handleMarketChange}
+                                collapsible
+                                defaultOpenCount={6}
+                                collapsedByDefault
                             />
                         </div>
                     </aside>
@@ -237,6 +330,8 @@ function SearchContent() {
                                 >
                                     <option value="relevance">RELEVANCE</option>
                                     <option value="newest">DATE</option>
+                                    <option value="popularity">POPULARITY</option>
+                                    <option value="rating">RATING</option>
                                 </select>
                             </div>
                         </div>

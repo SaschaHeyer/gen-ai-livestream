@@ -6,7 +6,7 @@ const searchClient = new SearchServiceClient();
 
 export async function POST(request: Request) {
     try {
-        const { query } = await request.json();
+        const { query, userPseudoId, userId, languageCodes, userCountryCode } = await request.json();
         if (!query || !query.trim()) {
             return NextResponse.json({ suggestions: [] });
         }
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
             query,
             pageSize: 5,
             queryModel: 'document', // suitable for media/doc search
+            userPseudoId: userPseudoId || undefined,
         });
 
         let suggestions =

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320">
+  <rect width="100%" height="100%" fill="#f4f4f0"/>
+  <rect x="20" y="20" width="920" height="280" fill="white" stroke="#111" stroke-width="4"/>
+  <text x="40" y="70" font-family="'Space Grotesk', 'Helvetica', sans-serif" font-size="36" font-weight="600" fill="#1f2933">Language Hinting Demo</text>
+  <text x="40" y="120" font-family="'Space Grotesk', 'Helvetica', sans-serif" font-size="22" fill="#374151">Autocomplete uses <tspan font-family="monospace">languageCodes</tspan> from /config to suggest localized titles.</text>
+  <rect x="40" y="150" width="880" height="70" fill="#111" stroke="#111" stroke-width="4"/>
+  <rect x="52" y="162" width="856" height="46" fill="white"/>
+  <text x="70" y="195" font-family="'Space Grotesk', 'Helvetica', sans-serif" font-size="26" fill="#1f2933">eegriewende &rarr; Energiewende 2.0 beschleunigt</text>
+</svg>

@@ -9,6 +9,7 @@ export async function POST(request: Request) {
         const {
             eventType,
             userPseudoId,
+            userId,
             searchQuery,
             attributionToken,
             documents,
@@ -43,8 +44,10 @@ export async function POST(request: Request) {
         };
 
         if (searchQuery || attributionToken || documents?.length) {
+            // For non-search events, attributionToken without searchInfo triggers a required-field error.
+            const includeAttribution = attributionToken && searchQuery;
             userEvent.searchInfo = searchQuery ? { searchQuery } : undefined;
-            userEvent.attributionToken = attributionToken;
+            userEvent.attributionToken = includeAttribution ? attributionToken : undefined;
             if (documents?.length) {
                 userEvent.documents = documents.map((id: string) => ({ id }));
             }
@@ -56,6 +59,7 @@ export async function POST(request: Request) {
 
         userEvent.userInfo = {
             userAgent: userAgent || undefined,
+            userId: userId || undefined,
         };
 
         if (pageViewId) {

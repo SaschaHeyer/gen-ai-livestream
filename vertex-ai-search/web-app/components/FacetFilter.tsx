@@ -7,10 +7,24 @@ interface FacetFilterProps {
     onChange: (value: string) => void;
     collapsible?: boolean;
     defaultOpenCount?: number;
+    initialShowAll?: boolean;
+    collapsedByDefault?: boolean;
 }
 
-const FacetFilter: React.FC<FacetFilterProps> = ({ title, options, selectedValues, onChange, collapsible = false, defaultOpenCount = 6 }) => {
-    const [showAll, setShowAll] = React.useState(false);
+const FacetFilter: React.FC<FacetFilterProps> = ({ title, options, selectedValues, onChange, collapsible = false, defaultOpenCount = 6, initialShowAll = false, collapsedByDefault = false }) => {
+    const [showAll, setShowAll] = React.useState(initialShowAll);
+    const [collapsed, setCollapsed] = React.useState(collapsedByDefault);
+    if (collapsed) {
+        return (
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-serif font-bold text-[13px] uppercase">{title}</h3>
+                    <button className="text-xs font-mono underline" onClick={() => setCollapsed(false)}>Show</button>
+                </div>
+            </div>
+        );
+    }
+
     const rendered = collapsible && !showAll ? options.slice(0, defaultOpenCount) : options;
 
     return (

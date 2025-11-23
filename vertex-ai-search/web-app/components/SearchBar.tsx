@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
+import { useUserEvents } from '../hooks/useUserEvents';
+import { useUserPreferences } from '../hooks/useUserPreferences';
 
 interface SearchBarProps {
     initialQuery?: string;
@@ -14,6 +16,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ initialQuery = '' }) => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const router = useRouter();
+    const { userPseudoId } = useUserEvents();
+    const { languageCodes, countryCode } = useUserPreferences();
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ initialQuery = '' }) => {
             const res = await fetch('/api/autocomplete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: text }),
+                body: JSON.stringify({ query: text, userPseudoId, languageCodes, userCountryCode: countryCode }),
             });
             if (!res.ok) return;
             const data = await res.json();
