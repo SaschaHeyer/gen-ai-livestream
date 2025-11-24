@@ -1,13 +1,18 @@
-import { SearchServiceClient, CompletionServiceClient } from '@google-cloud/discoveryengine';
+import { GoogleAuth } from 'google-auth-library';
+import { v1beta } from '@google-cloud/discoveryengine';
 import { NextResponse } from 'next/server';
 
-// Initialize client
-const client = new SearchServiceClient();
-const completionClient = new CompletionServiceClient();
+// Completion still via SDK; search via REST to mirror curl that returns facets
+const completionClient = new v1beta.CompletionServiceClient();
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
+        let body: any = {};
+        try {
+            body = await request.json();
+        } catch (e) {
+            body = {};
+        }
         const { query, pageToken, filter, orderBy, userPseudoId, userId, userCountryCode, languageCodes, pageSize } = body;
 
         const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
@@ -30,7 +35,7 @@ export async function POST(request: Request) {
         const request_body: any = {
             servingConfig: servingConfig,
             query: effectiveQuery,
-            pageSize: pageSize || 10,
+            pageSize: pageSize || 35,
             offset: 0,
             // Backend filters are omitted because custom fields may not be marked filterable;
             // we apply filters locally below.
@@ -44,11 +49,11 @@ export async function POST(request: Request) {
                 pinUnexpandedResults: true,
             },
             facetSpecs: [
-                { facetKey: { key: 'categories', prefixes: ['doit'] }, limit: 20 },
+                { facetKey: { key: 'categories' }, limit: 20 },
                 { facetKey: { key: 'content_type' }, limit: 10 },
-                { facetKey: { key: 'author' }, limit: 20 },
-                { facetKey: { key: 'language' }, limit: 10 },
-                { facetKey: { key: 'market' }, limit: 10 },
+                { facetKey: { key: 'language_code' }, limit: 10 },
+                { facetKey: { key: 'author_facet' }, limit: 20 },
+                { facetKey: { key: 'market_facet' }, limit: 10 },
             ],
             spellCorrectionSpec: {
                 mode: 'AUTO',
@@ -85,8 +90,20 @@ export async function POST(request: Request) {
             // request_body.pageToken = pageToken;
         }
 
-        const [results, , response] = await client.search(request_body);
-        let correctedQuery = (response as any)?.correctedQuery || null;
+        // Call REST search to ensure facet parity with curl
+        const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+        const client = await auth.getClient();
+        const searchUrl = `https://discoveryengine.googleapis.com/v1beta/${servingConfig}:search`;
+        const resp = await client.request<any>({
+            url: searchUrl,
+            method: 'POST',
+            data: request_body,
+        });
+        const searchResponse = resp.data;
+
+        const results = (searchResponse as any)?.results || [];
+        console.log('Facets from Vertex:', JSON.stringify((searchResponse as any)?.facets || [], null, 2));
+        let correctedQuery = (searchResponse as any)?.correctedQuery || null;
         if (correctedQuery) {
             console.log('Spell correction suggestion:', correctedQuery, 'for query:', query);
         }
@@ -173,52 +190,9 @@ export async function POST(request: Request) {
             });
         }
 
-        // Facet derivation from filtered results
-        let facetsOut = response?.facets || [];
-        if (!facetsOut || facetsOut.length === 0) {
-            const tally = (items: (string | undefined)[]) => {
-                const counts: Record<string, number> = {};
-                items.filter(Boolean).forEach((v) => {
-                    const key = (v as string).trim();
-                    counts[key] = (counts[key] || 0) + 1;
-                });
-                // group by the last path segment for readability (e.g., finops)
-                const grouped: Record<string, { value: string; count: number }[]> = {};
-                Object.entries(counts).forEach(([value, count]) => {
-                    const parts = value.split('>');
-                    const leaf = parts[parts.length - 1].trim();
-                    if (!grouped[leaf]) grouped[leaf] = [];
-                    grouped[leaf].push({ value, count });
-                });
+        let facetsOut = (searchResponse as any)?.facets || [];
 
-                return Object.values(grouped)
-                    .map((arr) => arr.reduce((a, b) => ({ value: a.value, count: a.count + b.count })))
-                    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
-            };
-
-            const categoryValues: (string | undefined)[] = [];
-            const mediaTypeValues: (string | undefined)[] = [];
-            const authorValues: (string | undefined)[] = [];
-            const languageValues: (string | undefined)[] = [];
-            const marketValues: (string | undefined)[] = [];
-            filteredResults.forEach((r) => {
-                categoryValues.push(r.category);
-                mediaTypeValues.push(r.mediaType);
-                authorValues.push((r as any).author);
-                languageValues.push((r as any).language);
-                marketValues.push((r as any).market);
-            });
-
-            facetsOut = [
-                { key: 'categories', values: tally(categoryValues) },
-                { key: 'content_type', values: tally(mediaTypeValues) },
-                { key: 'author', values: tally(authorValues) },
-                { key: 'language', values: tally(languageValues) },
-                { key: 'market', values: tally(marketValues) },
-            ];
-        }
-
-        // If no correction from search (or we want a suggestion), fall back to completion for a suggestion
+// If no correction from search (or we want a suggestion), fall back to completion for a suggestion
         if (!correctedQuery && (query || '').length >= 2) {
             try {
                 const name = `projects/${projectId}/locations/${location}/collections/default_collection/dataStores/${dataStoreId}`;
@@ -240,9 +214,9 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             results: filteredResults,
-            totalSize: response?.totalSize,
+            totalSize: (searchResponse as any)?.totalSize,
             facets: facetsOut,
-            attributionToken: (response as any)?.attributionToken,
+            attributionToken: (searchResponse as any)?.attributionToken,
             correctedQuery,
         });
 

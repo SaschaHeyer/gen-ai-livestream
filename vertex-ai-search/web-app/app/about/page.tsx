@@ -31,19 +31,27 @@ export default function About() {
             <section className="neo-border bg-white p-6 space-y-3">
                 <h2 className="font-mono text-sm text-gray-600">Facets & Filtering</h2>
                 <p className="font-sans text-sm text-gray-700">
-                    Vertex AI Search returns facet counts alongside results. We surface categories (hierarchical rollups), media type, author, language, and market. Selecting a facet sends a filter like <code>categories: ANY("chronos &gt; politics")</code> or <code>market: ANY("DE")</code>; when the backend lacks filterable fields, we apply the same filter client-side as a resilience fallback.
+                    Vertex AI Search returns global facet counts (media search doesn’t re-scope counts after filtering). We facet on categories, media type, author, language, and market. To avoid key-property restrictions, we facet on dedicated fields (<code>categories_facet</code>, <code>content_type_facet</code>, <code>author_facet</code>, <code>language_facet</code>, <code>market_facet</code>) marked indexable + filterable + dynamic facetable in the schema.
                 </p>
                 <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
 {`// app/api/search/route.ts (facet specs)
 facetSpecs: [
-  { facetKey: { key: 'categories', prefixes: ['doit'] }, limit: 20 },
+  { facetKey: { key: 'categories' }, limit: 20 },
   { facetKey: { key: 'content_type' }, limit: 10 },
-  { facetKey: { key: 'author' }, limit: 20 },
-  { facetKey: { key: 'language' }, limit: 10 },
-  { facetKey: { key: 'market' }, limit: 10 },
+  { facetKey: { key: 'language_code' }, limit: 10 },
+  { facetKey: { key: 'author_facet' }, limit: 20 },
+  { facetKey: { key: 'market_facet' }, limit: 10 },
 ],`}
                 </pre>
-                <p className="font-sans text-xs text-gray-600">If the API doesn’t return facets (e.g., fields not yet marked filterable), we derive counts from the current page so the UI stays usable.</p>
+                <pre className="bg-gray-50 border border-gray-200 p-4 font-mono text-xs overflow-auto whitespace-pre-wrap">
+{`// app/api/search/route.ts (REST call)
+const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] });
+const client = await auth.getClient();
+const searchUrl = 'https://discoveryengine.googleapis.com/v1beta/' + servingConfig + ':search';
+const resp = await client.request({ url: searchUrl, method: 'POST', data: request_body });
+const facets = resp.data.facets;`}
+                </pre>
+                <p className="font-sans text-xs text-gray-600">Facet counts shown are global (not re-scoped by current filters). For demo simplicity we fetch all docs and could recompute counts client-side if needed.</p>
             </section>
 
             <section className="neo-border bg-white p-6 space-y-3">

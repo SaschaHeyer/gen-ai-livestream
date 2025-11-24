@@ -102,6 +102,7 @@ function SearchContent() {
                 }
 
                 const data = await response.json();
+                console.log('Facets (client):', data.facets);
                 setResults(data.results);
                 setFacets(data.facets || []);
                 setAttributionToken(data.attributionToken || null);
@@ -200,9 +201,9 @@ function SearchContent() {
 
     const categoryOptions = getFacetOptions('categories');
     const mediaTypeOptions = getFacetOptions('content_type');
-    const authorOptions = getFacetOptions('author');
-    const languageOptions = getFacetOptions('language');
-    const marketOptions = getFacetOptions('market');
+    const authorOptions = getFacetOptions('author_facet');
+    const languageOptions = getFacetOptions('language_code');
+    const marketOptions = getFacetOptions('market_facet');
 
     // Once facets are available, hydrate the initial category selection so filters use the correct child values
     useEffect(() => {
