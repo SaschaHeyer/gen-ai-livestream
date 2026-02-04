@@ -1,0 +1,9 @@
+[project]
+name = "flight-mcp-server"
+version = "0.1.0"
+description = "A sample MCP server for flight bookings"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastmcp",
+]
