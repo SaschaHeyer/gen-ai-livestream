@@ -80,10 +80,10 @@ From the model card and the classifier defaults, confirmed against the installed
 
 These ship with the skill and are the verified reference implementations, run them rather than rewriting from scratch.
 
+- [requirements.txt](requirements.txt) pinned to the exact versions that ran, installs tabfm from GitHub on purpose
 - [scripts/demo.py](scripts/demo.py) zero-shot classification end to end, the Quick Start as a runnable file
 - [scripts/race.py](scripts/race.py) the honest benchmark, TabFM vs XGBoost vs TabICL on the same split, each model in its own subprocess (XGBoost and PyTorch load conflicting OpenMP runtimes on macOS, one process segfaults)
 - [scripts/limit-test.py](scripts/limit-test.py) proves the 10-class cap, an 11-class fit raises the documented ValueError
-- [scripts/requirements.txt](scripts/requirements.txt) pinned to the exact versions that ran, installs tabfm from GitHub on purpose
 
 ## Documentation Pages
 

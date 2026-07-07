@@ -12,7 +12,7 @@ Python 3.11 or newer is required.
 
 ```bash
 python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r skill/scripts/requirements.txt
+pip install -r skill/requirements.txt
 
 # the default Hugging Face Xet download backend can crash mid-download,
 # plain HTTP is reliable
