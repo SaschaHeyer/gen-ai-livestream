@@ -67,14 +67,25 @@ print(accuracy_score(y_test, preds.astype(int)))
 
 Measured on the wine dataset (178 rows, 13 features, 3 classes), model load 7.6s warm, fit plus predict 49.2s on CPU, accuracy 1.0000.
 
+## The honest benchmark result
+
+Same data, same split, TabFM vs the classics. On the wine dataset all three tied at accuracy 1.0000, and the costs were not close, XGBoost 0.4s with a megabyte-scale model, TabICL 2.5s with 0.11 GB, TabFM 55.0s with 13.1 GB of checkpoints. When recommending a model, benchmark on the user's own data first, and when a classic ties TabFM there, prefer the classic, it is orders of magnitude cheaper to run and deploy.
+
+> [!WARNING]
+> Never import xgboost and tabfm in the same Python process on macOS. Both bundle their own OpenMP runtime and the process segfaults or silently deadlocks at 0 percent CPU. Run each model in its own subprocess when comparing, [scripts/race.py](scripts/race.py) shows the pattern. `KMP_DUPLICATE_LIB_OK=TRUE` does NOT fix it.
+
+## Determinism
+
+TabFM predictions are fully reproducible by default. Measured, 10 full fit and predict retries produced byte-identical outputs, and 10 further runs with different `random_state` values produced zero prediction flips across the test set. The mechanism, prediction is a 32-member ensemble averaged and argmaxed, not generative sampling, and the sklearn wrapper pins `random_state=42`. Borderline rows on harder data are where different seeds could flip a prediction.
+
 ## Hard limits
 
 From the model card and the classifier defaults, confirmed against the installed package.
 
-- Classification supports at most 10 classes, a hard architectural limit.
+- Classification supports at most 10 classes, a hard architectural limit. Confirmed in code, an 11-class fit raises the ValueError.
 - Optimized for up to 500 features (`max_num_features=500` default).
-- Every training row is passed as context at inference, memory scales with your table. Thousands of rows are fine on CPU, very large tables fall over.
-- Regression uses `TabFMRegressor` with the separate regression checkpoint (6.59 GB).
+- Every training row is passed as context at inference, memory AND latency scale with your table. Measured on CPU, 124 context rows took 49s for fit plus predict, 1,000 rows took 13.3 minutes, 5,000 rows exceeded 30 minutes. For anything beyond a few hundred context rows plan for a GPU, or deduplicate and subsample the context.
+- Regression uses `TabFMRegressor` with the separate regression checkpoint (6.59 GB), not verified here.
 
 ## Supporting files
 
