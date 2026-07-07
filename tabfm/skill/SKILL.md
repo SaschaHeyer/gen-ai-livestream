@@ -85,6 +85,7 @@ From the model card and the classifier defaults, confirmed against the installed
 - Classification supports at most 10 classes, a hard architectural limit. Confirmed in code, an 11-class fit raises the ValueError.
 - Optimized for up to 500 features (`max_num_features=500` default).
 - Every training row is passed as context at inference, memory AND latency scale with your table. Measured on CPU, 124 context rows took 49s for fit plus predict, 1,000 rows took 13.3 minutes, 5,000 rows exceeded 30 minutes. For anything beyond a few hundred context rows plan for a GPU, or deduplicate and subsample the context.
+- Dedup plus stratified subsampling works. On a synthetic 1M-row table with 90 percent duplicate rows, 1,000 deduplicated context rows matched an XGBoost trained on the full 800,000, measured across two rounds. Do not feed a large table raw, sample it.
 - Regression uses `TabFMRegressor` with the separate regression checkpoint (6.59 GB), not verified here.
 
 ## Run it on a cloud GPU
@@ -100,6 +101,7 @@ These ship with the skill and are the verified reference implementations, run th
 - [scripts/demo.py](scripts/demo.py) zero-shot classification end to end, the Quick Start as a runnable file
 - [scripts/race.py](scripts/race.py) the honest benchmark, TabFM vs XGBoost vs TabICL on the same split, each model in its own subprocess (XGBoost and PyTorch load conflicting OpenMP runtimes on macOS, one process segfaults)
 - [scripts/limit-test.py](scripts/limit-test.py) proves the 10-class cap, an 11-class fit raises the documented ValueError
+- [scripts/determinism.py](scripts/determinism.py) proves predictions are reproducible, 10 retries byte-identical, 10 seeds zero flips
 - [scripts/vertex_task.py](scripts/vertex_task.py) the task that runs inside the Vertex AI job, GPU aware
 - [scripts/vertex_submit.sh](scripts/vertex_submit.sh) one-command Vertex AI job submission, L4 default
 
