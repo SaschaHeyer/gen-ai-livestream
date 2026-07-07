@@ -5,7 +5,7 @@ Gemini API Managed Agents run server side in a Google hosted sandbox. This episo
 The skill and all runnable code live in [skill/](skill/).
 
 - [skill/SKILL.md](skill/SKILL.md), the skill, current facts, quick start, gotchas inline.
-- [skill/scripts/](skill/scripts/), the three verified demos plus the REST helper.
+- [skill/scripts/](skill/scripts/), the three verified demos plus the shared SDK helper they import.
 - [skill/requirements.txt](skill/requirements.txt), one dependency, `requests`.
 
 Install for your agent.
