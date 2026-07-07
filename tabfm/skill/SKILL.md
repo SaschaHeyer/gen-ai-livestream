@@ -28,12 +28,15 @@ Verified end to end on 2026-07-07, CPU only, no GPU.
 ```bash
 # Python >= 3.11 required (3.12 verified)
 uv venv --python 3.12 .venv
-uv pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm"
+uv pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm" safetensors
 
 # the default HF Xet download backend can crash mid-download
 # (hf-xet Internal Writer Error), plain HTTP is reliable
 export HF_HUB_DISABLE_XET=1
 ```
+
+> [!WARNING]
+> `safetensors` must be installed explicitly. tabfm does not declare it as a dependency but its loader needs it, the published weights are safetensors-only. In a clean environment without it, `load()` fails with `NameError: name 'safetensors' is not defined` deep inside huggingface_hub, after the 6.6 GB download.
 
 Zero-shot classification, the whole thing:
 
