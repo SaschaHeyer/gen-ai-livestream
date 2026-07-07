@@ -63,7 +63,7 @@ for step in rec.steps:
 ```
 
 > [!WARNING]
-> A background interaction returns `environment_id` as `None`, even on the completed record. You cannot reopen that exact sandbox afterward. If you need the sandbox to persist across turns, run a foreground interaction (omit `background`) and chain with the `environment_id` it returns, see the next block.
+> A background interaction that creates its own sandbox returns `environment_id` as `None`, on the create response AND on the completed record, so that sandbox can never be referenced again. Passing an existing `environment_id` INTO a background create works and the files persist. The pattern, seed the sandbox with one foreground turn to get its `environment_id`, then run any number of background turns inside it, see the next block.
 
 > [!TIP]
 > To resume a dropped live stream instead of polling, `client.interactions.get(id, stream=True, last_event_id=last_seen)` replays from the last event you saw.
