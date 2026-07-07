@@ -87,14 +87,21 @@ From the model card and the classifier defaults, confirmed against the installed
 - Every training row is passed as context at inference, memory AND latency scale with your table. Measured on CPU, 124 context rows took 49s for fit plus predict, 1,000 rows took 13.3 minutes, 5,000 rows exceeded 30 minutes. For anything beyond a few hundred context rows plan for a GPU, or deduplicate and subsample the context.
 - Regression uses `TabFMRegressor` with the separate regression checkpoint (6.59 GB), not verified here.
 
+## Run it on a cloud GPU
+
+The CPU numbers above are the reason, beyond a few hundred context rows CPU inference takes minutes to hours. For provisioning TabFM on a Vertex AI GPU (one L4, one command), load [vertex-ai.md](vertex-ai.md), it has the submit script, the machine and quota choices, and the caching notes.
+
 ## Supporting files
 
 These ship with the skill and are the verified reference implementations, run them rather than rewriting from scratch.
 
 - [requirements.txt](requirements.txt) pinned to the exact versions that ran, installs tabfm from GitHub on purpose
+- [vertex-ai.md](vertex-ai.md) run TabFM on a Vertex AI GPU, load when someone wants cloud provisioning
 - [scripts/demo.py](scripts/demo.py) zero-shot classification end to end, the Quick Start as a runnable file
 - [scripts/race.py](scripts/race.py) the honest benchmark, TabFM vs XGBoost vs TabICL on the same split, each model in its own subprocess (XGBoost and PyTorch load conflicting OpenMP runtimes on macOS, one process segfaults)
 - [scripts/limit-test.py](scripts/limit-test.py) proves the 10-class cap, an 11-class fit raises the documented ValueError
+- [scripts/vertex_task.py](scripts/vertex_task.py) the task that runs inside the Vertex AI job, GPU aware
+- [scripts/vertex_submit.sh](scripts/vertex_submit.sh) one-command Vertex AI job submission, L4 default
 
 ## Documentation Pages
 
