@@ -18,6 +18,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"device: {device}"
       + (f" ({torch.cuda.get_device_name(0)})" if device == "cuda" else ""), flush=True)
 
+# a GPU job that silently falls back to CPU still SUCCEEDS and still bills the
+# GPU, fail loudly instead (set ALLOW_CPU=1 to run on CPU on purpose)
+if device == "cpu" and os.environ.get("ALLOW_CPU") != "1":
+    raise SystemExit(
+        "FATAL: no CUDA device visible but this is a GPU job. "
+        "Check the container sees the driver (LD_LIBRARY_PATH, nvidia-smi). "
+        "Set ALLOW_CPU=1 only if CPU is intended.")
+
 X, y = load_wine(return_X_y=True, as_frame=True)
 print(f"dataset: wine, {X.shape[0]} rows, {X.shape[1]} features, {y.nunique()} classes", flush=True)
 X_train, X_test, y_train, y_test = train_test_split(

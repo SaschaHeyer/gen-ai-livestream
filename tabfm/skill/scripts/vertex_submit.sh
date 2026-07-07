@@ -24,7 +24,7 @@ RAW="https://raw.githubusercontent.com/SaschaHeyer/gen-ai-livestream/main/tabfm/
 # safetensors is listed explicitly, tabfm does not declare it but its loader
 # needs it (the published weights are safetensors-only), a clean environment
 # fails with "NameError: name 'safetensors' is not defined" without it
-RUN_CMD="pip install --quiet 'tabfm[pytorch] @ https://github.com/google-research/tabfm/archive/refs/heads/main.tar.gz' safetensors scikit-learn && python -c \"import urllib.request as u; u.urlretrieve(*'$RAW /tmp/vertex_task.py'.split())\" && HF_HUB_DISABLE_XET=1 python /tmp/vertex_task.py"
+RUN_CMD="export LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/nvidia/lib && export PATH=\$PATH:/usr/local/nvidia/bin && (nvidia-smi || echo NO-NVIDIA-SMI) && pip install --quiet 'tabfm[pytorch] @ https://github.com/google-research/tabfm/archive/refs/heads/main.tar.gz' safetensors scikit-learn && python -c \"import urllib.request as u; u.urlretrieve(*'$RAW /tmp/vertex_task.py'.split())\" && HF_HUB_DISABLE_XET=1 python /tmp/vertex_task.py"
 
 gcloud ai custom-jobs create \
   --project="$PROJECT" \
