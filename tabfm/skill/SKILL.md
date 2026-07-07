@@ -76,6 +76,15 @@ From the model card and the classifier defaults, confirmed against the installed
 - Every training row is passed as context at inference, memory scales with your table. Thousands of rows are fine on CPU, very large tables fall over.
 - Regression uses `TabFMRegressor` with the separate regression checkpoint (6.59 GB).
 
+## Supporting files
+
+These ship with the skill and are the verified reference implementations, run them rather than rewriting from scratch.
+
+- [scripts/demo.py](scripts/demo.py) zero-shot classification end to end, the Quick Start as a runnable file
+- [scripts/race.py](scripts/race.py) the honest benchmark, TabFM vs XGBoost vs TabICL on the same split, each model in its own subprocess (XGBoost and PyTorch load conflicting OpenMP runtimes on macOS, one process segfaults)
+- [scripts/limit-test.py](scripts/limit-test.py) proves the 10-class cap, an 11-class fit raises the documented ValueError
+- [scripts/requirements.txt](scripts/requirements.txt) pinned to the exact versions that ran, installs tabfm from GitHub on purpose
+
 ## Documentation Pages
 
 You MUST fetch the matching page below before writing code. These hosted pages are the source of truth for parameters, limits, and the license, do not rely solely on the examples above.

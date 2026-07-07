@@ -12,7 +12,7 @@ Python 3.11 or newer is required.
 
 ```bash
 python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r skill/scripts/requirements.txt
 
 # the default Hugging Face Xet download backend can crash mid-download,
 # plain HTTP is reliable
@@ -25,9 +25,19 @@ The classification checkpoint is 6.6 GB and downloads from Hugging Face on the f
 
 ## The scripts
 
-- `demo.py` zero-shot classification in six lines, fit stashes your table as context, predict is a single forward pass. Measured here, accuracy 1.0000 on wine, model load 7.6s warm, fit plus predict 49s on CPU.
-- `race.py` the honest benchmark, TabFM vs XGBoost vs TabICL, same split, accuracy, time, and checkpoint size side by side. Each model runs in its own subprocess, XGBoost and PyTorch both bring their own OpenMP runtime on macOS and crash or deadlock inside one process.
-- `limit-test.py` proves the 10-class hard cap first hand, an 11-class fit raises `ValueError: The number of classes (11) exceeds the maximum number of classes (10) supported by the model.`
+They live in `skill/scripts/` so they ship as supporting files with the installable agent skill, one folder, one source of truth.
+
+- `skill/scripts/demo.py` zero-shot classification in six lines, fit stashes your table as context, predict is a single forward pass. Measured here, accuracy 1.0000 on wine, model load 7.6s warm, fit plus predict 49s on CPU.
+- `skill/scripts/race.py` the honest benchmark, TabFM vs XGBoost vs TabICL, same split, accuracy, time, and checkpoint size side by side. Each model runs in its own subprocess, XGBoost and PyTorch both bring their own OpenMP runtime on macOS and crash or deadlock inside one process.
+- `skill/scripts/limit-test.py` proves the 10-class hard cap first hand, an 11-class fit raises `ValueError: The number of classes (11) exceeds the maximum number of classes (10) supported by the model.`
+
+## Install the agent skill
+
+```bash
+npx skills add https://github.com/SaschaHeyer/gen-ai-livestream/tree/main/tabfm/skill
+```
+
+Your agent gets the verified setup, all the sharp edges below, and the runnable scripts.
 
 ## Sharp edges to know
 
