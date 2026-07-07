@@ -5,7 +5,7 @@ description: Use this skill when running Gemini API Managed Agents through the I
 
 # Gemini Managed Agents Skill
 
-Managed Agents run server side in a Google hosted sandbox that can write files and run code for you. The Interactions API drives them, through `client.interactions` in the `google-genai` SDK. This skill covers the four capabilities that shipped in July 2026 on top of the existing managed agents, background execution, remote MCP tools, custom functions, and credential refresh.
+Managed Agents run server side in a Google hosted sandbox that can write files and run code for you. The Interactions API drives them, through `client.interactions` in the `google-genai` SDK. July 2026 added four capabilities on top of the existing managed agents. Three are covered below with verified code, background execution, remote MCP tools, and custom function calling. The fourth, network credential refresh, is documented on the antigravity agent page linked at the bottom.
 
 > [!IMPORTANT]
 > The managed agent is `antigravity-preview-05-2026`, powered by Gemini 3.5 Flash. Pass it in the `agent` field, never `model`. Passing it as `model` returns HTTP 400, "antigravity-preview-05-2026 is not supported as a model. Use it as an agent instead." Google's own background execution doc shows `model=` here, which throws, while the antigravity agent doc and Google's Interactions API skill both correctly use `agent`. The name carries `preview` for a reason, expect it to change, do not hardcode it as permanent.
@@ -67,6 +67,9 @@ for step in rec.steps:
 
 > [!TIP]
 > To resume a dropped live stream instead of polling, `client.interactions.get(id, stream=True, last_event_id=last_seen)` replays from the last event you saw.
+
+> [!IMPORTANT]
+> The id is your ONLY handle on an interaction. A dropped connection does not kill the work, a foreground streaming run killed mid task kept working server side and was fully retrievable by `get(id)` afterward. But there is no list endpoint (GET on the interactions collection returns 404), so an interaction whose id you never captured is unrecoverable even though it completed. Persist the id the moment you receive it, and prefer `background=True`, which returns the id instantly instead of at the end of the run.
 
 ### Reuse a sandbox across turns with environment_id
 
@@ -141,7 +144,7 @@ final = client.interactions.create(
 | `code_execution_result` | `result` (str), `call_id`, `is_error`                    |
 | `model_output`          | `content` (list of text parts, each with `.text`)        |
 
-Statuses seen in prep, `in_progress`, `completed`, `requires_action`.
+Statuses observed against the live API, `in_progress`, `completed`, `requires_action`.
 
 ## Supporting files
 
