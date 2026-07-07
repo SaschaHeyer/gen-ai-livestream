@@ -101,7 +101,7 @@ The agent keeps its built in sandbox tools and also gets the remote MCP server's
 ```python
 inter = client.interactions.create(
     agent=AGENT,
-    input="What is the weather in Berlin today? Use the weather tool.",
+    input="Do I need a jacket in Berlin today? Use the weather tool.",
     environment="remote",
     tools=[{
         "type": "mcp_server",
@@ -113,7 +113,7 @@ inter = client.interactions.create(
 ```
 
 > [!WARNING]
-> A remote MCP server is a live network dependency inside your agent run. If it is slow, down, or rate limited, the interaction stalls or errors. Treat it like any other flaky upstream, set expectations and have a fallback.
+> A remote MCP server is a live network dependency inside your agent run. Observed live, a second tool call on this demo server returned `CONNECTION_CLOSED` mid interaction, the error surfaced as a `function_result` step with `agent_error` and the agent still answered from the data it already had. Treat a remote MCP server like any other flaky upstream, expect per call failures in the step trace and have a fallback.
 
 ### Custom function calling, the requires_action flow
 
