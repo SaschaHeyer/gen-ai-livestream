@@ -42,7 +42,8 @@ Kick off a long task, get an id back immediately, then poll it from anywhere, no
 # fire and forget
 inter = client.interactions.create(
     agent=AGENT,
-    input="Create a folder named project/ and write hello.py inside that prints hi.",
+    input="Create a folder stream-tools/ and write chapters.py inside that turns "
+          "a list of video timestamps into YouTube chapter markers.",
     environment="remote",
     background=True,
 )
@@ -78,7 +79,7 @@ A foreground interaction returns `environment_id`. Chain the next turn with both
 ```python
 first = client.interactions.create(
     agent=AGENT,
-    input="Write notes.txt containing the single line: prep works.",
+    input="Write episode-notes.txt containing the single line: background agents keep working.",
     environment="remote",
 )
 
@@ -86,7 +87,7 @@ second = client.interactions.create(
     agent=AGENT,
     previous_interaction_id=first.id,
     environment=first.environment_id,   # same sandbox, files persist
-    input="List the files and show the contents of notes.txt.",
+    input="List the files and show the contents of episode-notes.txt.",
 )
 ```
 
@@ -100,7 +101,7 @@ The agent keeps its built in sandbox tools and also gets the remote MCP server's
 ```python
 inter = client.interactions.create(
     agent=AGENT,
-    input="What is the weather in Tokyo today? Use the weather tool.",
+    input="What is the weather in Berlin today? Use the weather tool.",
     environment="remote",
     tools=[{
         "type": "mcp_server",

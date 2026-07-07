@@ -6,7 +6,7 @@ MCP server (a phone it can call out on). Here it uses Google's demo weather MCP.
 import agent
 
 rec = agent.create(
-    input="What is the weather in Tokyo today? Use the weather tool.",
+    input="What is the weather in Berlin today? Use the weather tool.",
     tools=[{
         "type": "mcp_server",
         "name": "weather",   # lowercase alphanumeric

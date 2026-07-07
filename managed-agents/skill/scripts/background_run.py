@@ -2,7 +2,8 @@
 import agent
 
 rec = agent.create(
-    input="Create a folder named project/ and write hello.py inside that prints hi.",
+    input="Create a folder stream-tools/ and write chapters.py inside that turns "
+          "a list of video timestamps into YouTube chapter markers.",
     background=True,
 )
 print("id:    ", rec.id)
