@@ -21,6 +21,13 @@ Zero-shot prediction on tabular data with Google's TabFM, the scikit-learn compa
 
 ---
 
+## Dependencies and Prerequisites
+
+- **Python >= 3.11** (3.12 verified). This floor is hard, the tabfm package refuses older interpreters, and Google's own prebuilt Vertex training containers ship 3.10 and cannot run it.
+- **Packages**, install the pinned set with `pip install -r requirements.txt`, or minimally `pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm" safetensors scikit-learn pandas xgboost tabicl`. The `[pytorch]` extra and the explicit `safetensors` are both required, see the warnings above.
+- **No system binaries needed.** CPU works for small tables, a CUDA GPU makes inference ~14x faster (see the GPU section).
+- **Disk**, the classification checkpoint is 6.6 GB, downloaded from Hugging Face on first `load()`.
+
 ## Quick Start
 
 Verified end to end on 2026-07-07, CPU only, no GPU.
@@ -70,6 +77,19 @@ print(accuracy_score(y_test, preds.astype(int)))
 
 Measured on the wine dataset (178 rows, 13 features, 3 classes), model load 7.6s warm, fit plus predict 49.2s on CPU, accuracy 1.0000.
 
+## Workflow, benchmark the user's own data
+
+The headline utility is [scripts/benchmark.py](scripts/benchmark.py), it runs TabFM, XGBoost, and TabICL on any CSV with the same split and prints accuracy, time, and context size side by side.
+
+1. **Check the data first.** Classification only, at most 10 classes in the target column (the script refuses more, before the 6.6 GB model loads), a warning above 500 features.
+2. **Run it.**
+   ```bash
+   ./scripts/benchmark.py data.csv --target label
+   ./scripts/benchmark.py data.csv --target label --models xgboost,tabfm --max-context 500
+   ```
+   Context above `--max-context` (default 1,000) is deduplicated and stratified-sampled for the zero-shot models, every context row costs TabFM memory and time (1,000 rows measured at ~13 minutes on CPU).
+3. **Report the table back**, and the honest reading, a tie means the smaller model already does the job, and one split is one draw, rerun with another `--seed` before deciding anything.
+
 ## The honest benchmark result
 
 Same data, same split, TabFM vs the classics. On the wine dataset all three tied at accuracy 1.0000, and the costs were not close, XGBoost 0.4s with a megabyte-scale model, TabICL 2.5s with 0.11 GB, TabFM 55.0s with a 6.6 GB checkpoint (13.1 GB on disk when both classification and regression are fetched, which is what broken PyPI installs do). On a Vertex AI NVIDIA L4 the same TabFM fit plus predict drops to 3.6s (verified, see the GPU section), which closes most of the gap yet still leaves CPU XGBoost 9x faster at zero hardware cost. When recommending a model, benchmark on the user's own data first, and when a classic ties TabFM there, prefer the classic, it is orders of magnitude cheaper to run and deploy.
@@ -99,14 +119,22 @@ The CPU numbers above are the reason, beyond a few hundred context rows CPU infe
 
 These ship with the skill and are the verified reference implementations, run them rather than rewriting from scratch.
 
+- [scripts/benchmark.py](scripts/benchmark.py) THE HEADLINE UTILITY, the honest benchmark on any CSV, guardrails built in, each model in its own subprocess (XGBoost and PyTorch load conflicting OpenMP runtimes on macOS, one process segfaults)
+  `./scripts/benchmark.py data.csv --target label`
 - [requirements.txt](requirements.txt) pinned to the exact versions that ran, installs tabfm from GitHub on purpose
+  `pip install -r requirements.txt`
 - [vertex-ai.md](vertex-ai.md) run TabFM on a Vertex AI GPU, load when someone wants cloud provisioning
-- [scripts/demo.py](scripts/demo.py) zero-shot classification end to end, the Quick Start as a runnable file
-- [scripts/race.py](scripts/race.py) the honest benchmark, TabFM vs XGBoost vs TabICL on the same split, each model in its own subprocess (XGBoost and PyTorch load conflicting OpenMP runtimes on macOS, one process segfaults)
+- [scripts/demo.py](scripts/demo.py) the episode's verified zero-shot demo on wine, the Quick Start as a runnable file
+  `python scripts/demo.py`
+- [scripts/race.py](scripts/race.py) the episode's frozen three-way benchmark on wine, the reproduction behind the published numbers
+  `python scripts/race.py`
 - [scripts/limit-test.py](scripts/limit-test.py) proves the 10-class cap, an 11-class fit raises the documented ValueError
+  `python scripts/limit-test.py`
 - [scripts/determinism.py](scripts/determinism.py) proves predictions are reproducible, 10 retries byte-identical, 10 seeds zero flips
-- [scripts/vertex_task.py](scripts/vertex_task.py) the task that runs inside the Vertex AI job, GPU aware
+  `python scripts/determinism.py`
+- [scripts/vertex_task.py](scripts/vertex_task.py) the task that runs inside the Vertex AI job, GPU aware, fails loudly on silent CPU fallback
 - [scripts/vertex_submit.sh](scripts/vertex_submit.sh) one-command Vertex AI job submission, L4 default
+  `./scripts/vertex_submit.sh YOUR_PROJECT_ID europe-west4`
 
 ## Documentation Pages
 
