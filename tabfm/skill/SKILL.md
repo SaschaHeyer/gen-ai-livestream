@@ -72,7 +72,7 @@ Measured on the wine dataset (178 rows, 13 features, 3 classes), model load 7.6s
 
 ## The honest benchmark result
 
-Same data, same split, TabFM vs the classics. On the wine dataset all three tied at accuracy 1.0000, and the costs were not close, XGBoost 0.4s with a megabyte-scale model, TabICL 2.5s with 0.11 GB, TabFM 55.0s with a 6.6 GB checkpoint (13.1 GB on disk when both classification and regression are fetched, which is what broken PyPI installs do). When recommending a model, benchmark on the user's own data first, and when a classic ties TabFM there, prefer the classic, it is orders of magnitude cheaper to run and deploy.
+Same data, same split, TabFM vs the classics. On the wine dataset all three tied at accuracy 1.0000, and the costs were not close, XGBoost 0.4s with a megabyte-scale model, TabICL 2.5s with 0.11 GB, TabFM 55.0s with a 6.6 GB checkpoint (13.1 GB on disk when both classification and regression are fetched, which is what broken PyPI installs do). On a Vertex AI NVIDIA L4 the same TabFM fit plus predict drops to 3.6s (verified, see the GPU section), which closes most of the gap yet still leaves CPU XGBoost 9x faster at zero hardware cost. When recommending a model, benchmark on the user's own data first, and when a classic ties TabFM there, prefer the classic, it is orders of magnitude cheaper to run and deploy.
 
 > [!WARNING]
 > Never import xgboost and tabfm in the same Python process on macOS. Both bundle their own OpenMP runtime and the process segfaults or silently deadlocks at 0 percent CPU. Run each model in its own subprocess when comparing, [scripts/race.py](scripts/race.py) shows the pattern. `KMP_DUPLICATE_LIB_OK=TRUE` does NOT fix it.
