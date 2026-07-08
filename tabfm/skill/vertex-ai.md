@@ -2,8 +2,8 @@
 
 Load this when someone wants to run TabFM on a cloud GPU instead of their laptop. The measured CPU scaling is the reason to bother, 124 context rows took 49s, 1,000 rows 13.3 minutes, 5,000 rows exceeded 30 minutes. Anything beyond a few hundred context rows wants a GPU.
 
-> [!WARNING]
-> Verification status, the full pipeline (submit, container start, install, 6.6 GB weight download, load, fit, predict) ran clean end to end in a real job on 2026-07-07. What is NOT yet confirmed is `device: cuda`, the verifying runs kept landing in GPU-starved regions, see the capacity warning below. The submit script exports the driver path and the task fails loudly on silent CPU fallback, confirm the first `device: cuda` log line before relying on GPU timings, then update this warning.
+> [!IMPORTANT]
+> Verified end to end on a real GPU on 2026-07-08, `device: cuda (NVIDIA L4)` in europe-west4. Measured in the job, model load 102.9s (includes the cold 6.6 GB weight download), fit plus predict 3.6s on the wine smoke test, accuracy 1.0000. The same fit plus predict took 49.2s on CPU, the L4 is roughly 14x faster and the bfloat16 default is correct there.
 
 > [!WARNING]
 > A GPU job that cannot see the driver SUCCEEDS silently on CPU while billing the attached GPU. Measured, a plain `python:3.12-slim` container ran the whole task on `device: cpu` with an idle L4 attached and reported success. The submit script now exports `LD_LIBRARY_PATH=/usr/local/nvidia/lib64` for the platform driver mount, and [scripts/vertex_task.py](scripts/vertex_task.py) exits with a FATAL error when CUDA is missing unless `ALLOW_CPU=1` is set. Keep both guards.

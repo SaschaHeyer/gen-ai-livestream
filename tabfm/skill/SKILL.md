@@ -93,7 +93,7 @@ From the model card and the classifier defaults, confirmed against the installed
 
 ## Run it on a cloud GPU
 
-The CPU numbers above are the reason, beyond a few hundred context rows CPU inference takes minutes to hours. For provisioning TabFM on a Vertex AI GPU (one L4, one command), load [vertex-ai.md](vertex-ai.md), it has the submit script, the machine and quota choices, and the caching notes.
+The CPU numbers above are the reason, beyond a few hundred context rows CPU inference takes minutes to hours. Verified on a Vertex AI NVIDIA L4, the same wine fit plus predict took 3.6s vs 49.2s on CPU, roughly 14x, and the bfloat16 default is correct on GPU. For provisioning (one L4, one command), load [vertex-ai.md](vertex-ai.md), it has the submit script, the measured numbers, and three verified cloud traps, Google's prebuilt training containers ship Python 3.10 which tabfm rejects, a job that cannot see the GPU driver succeeds silently on CPU while billing the GPU, and L4 capacity starves by region and hour.
 
 ## Supporting files
 
