@@ -11,7 +11,7 @@ Zero-shot prediction on tabular data with Google's TabFM, the scikit-learn compa
 > Install from the GitHub repo, `pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm"`. Python 3.11 or newer, and the `[pytorch]` extra is required, without it no backend is installed at all.
 
 > [!WARNING]
-> Do NOT `pip install tabfm` from PyPI. PyPI 1.0.0 is stale and cannot load the published weights, its loader looks for `classification/pytorch_model.bin` while the Hugging Face repo `google/tabfm-1.0.0-pytorch` ships `model.safetensors`, so `load()` dies with FileNotFoundError. The GitHub package loads safetensors natively and downloads only the checkpoint it needs (6.6 GB instead of the full 13.2 GB).
+> Do NOT `pip install tabfm` from PyPI. PyPI 1.0.0 is stale and cannot load the published weights, its loader looks for `classification/pytorch_model.bin` while the Hugging Face repo `google/tabfm-1.0.0-pytorch` ships `model.safetensors`, so `load()` dies with FileNotFoundError. The GitHub package loads safetensors natively and downloads only the checkpoint it needs (6.6 GB instead of the full 13.1 GB).
 
 > [!WARNING]
 > The word open has an asterisk. The GitHub code is Apache 2.0, but the model weights carry the TabFM Non-Commercial License v1.0. Do not build a commercial product on the weights without reading that license.
@@ -72,7 +72,7 @@ Measured on the wine dataset (178 rows, 13 features, 3 classes), model load 7.6s
 
 ## The honest benchmark result
 
-Same data, same split, TabFM vs the classics. On the wine dataset all three tied at accuracy 1.0000, and the costs were not close, XGBoost 0.4s with a megabyte-scale model, TabICL 2.5s with 0.11 GB, TabFM 55.0s with 13.1 GB of checkpoints. When recommending a model, benchmark on the user's own data first, and when a classic ties TabFM there, prefer the classic, it is orders of magnitude cheaper to run and deploy.
+Same data, same split, TabFM vs the classics. On the wine dataset all three tied at accuracy 1.0000, and the costs were not close, XGBoost 0.4s with a megabyte-scale model, TabICL 2.5s with 0.11 GB, TabFM 55.0s with a 6.6 GB checkpoint (13.1 GB on disk when both classification and regression are fetched, which is what broken PyPI installs do). When recommending a model, benchmark on the user's own data first, and when a classic ties TabFM there, prefer the classic, it is orders of magnitude cheaper to run and deploy.
 
 > [!WARNING]
 > Never import xgboost and tabfm in the same Python process on macOS. Both bundle their own OpenMP runtime and the process segfaults or silently deadlocks at 0 percent CPU. Run each model in its own subprocess when comparing, [scripts/race.py](scripts/race.py) shows the pattern. `KMP_DUPLICATE_LIB_OK=TRUE` does NOT fix it.

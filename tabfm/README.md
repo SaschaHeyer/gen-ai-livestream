@@ -49,4 +49,4 @@ Your agent gets the verified setup, all the sharp edges below, and the runnable 
 
 ## The result
 
-On wine, all three models tie at accuracy 1.0000. TabFM pays 55 seconds and 13.1 GB of checkpoints for it, TabICL 2.5 seconds and 0.11 GB, XGBoost 0.4 seconds. The takeaway is not that TabFM is bad, it is that a leaderboard number is not your data. Benchmark on your own table before you swap anything out.
+On wine, all three models tie at accuracy 1.0000. TabFM pays 55 seconds and a 6.6 GB checkpoint for it, TabICL 2.5 seconds and 0.11 GB, XGBoost 0.4 seconds. The takeaway is not that TabFM is bad, it is that a leaderboard number is not your data. Benchmark on your own table before you swap anything out.
