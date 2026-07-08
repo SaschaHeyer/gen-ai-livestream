@@ -8,7 +8,7 @@ description: Use this skill when working with TabFM, Google's zero-shot tabular 
 Zero-shot prediction on tabular data with Google's TabFM, the scikit-learn compatible foundation model that reads your whole table as context and predicts in a single forward pass, no training, no tuning, no feature engineering.
 
 > [!IMPORTANT]
-> Install from the GitHub repo, `pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm"`. Python 3.11 or newer, and the `[pytorch]` extra is required, without it no backend is installed at all.
+> Install from the GitHub repo, `pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm@633cd265f498e1d20c9625be0639f6305d8e2541"`. Python 3.11 or newer, and the `[pytorch]` extra is required, without it no backend is installed at all.
 
 > [!WARNING]
 > Do NOT `pip install tabfm` from PyPI. PyPI 1.0.0 is stale and cannot load the published weights, its loader looks for `classification/pytorch_model.bin` while the Hugging Face repo `google/tabfm-1.0.0-pytorch` ships `model.safetensors`, so `load()` dies with FileNotFoundError. The GitHub package loads safetensors natively and downloads only the checkpoint it needs (6.6 GB instead of the full 13.2 GB).
@@ -28,7 +28,7 @@ Verified end to end on 2026-07-07, CPU only, no GPU.
 ```bash
 # Python >= 3.11 required (3.12 verified)
 uv venv --python 3.12 .venv
-uv pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm"
+uv pip install "tabfm[pytorch] @ git+https://github.com/google-research/tabfm@633cd265f498e1d20c9625be0639f6305d8e2541"
 
 # the default HF Xet download backend can crash mid-download
 # (hf-xet Internal Writer Error), plain HTTP is reliable

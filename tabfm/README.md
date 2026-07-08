@@ -6,6 +6,12 @@ From the Friday livestream. [EPISODE VIDEO LINK]
 
 Original announcement, https://research.google/blog/introducing-tabfm-a-zero-shot-foundation-model-for-tabular-data/
 
+## Run it yourself in Colab
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SaschaHeyer/gen-ai-livestream/blob/main/tabfm/notebook.ipynb)
+
+The companion notebook runs the whole episode, the zero-shot demo, the honest three-way benchmark, and the hard-limit test, with a your-turn cell in every section. CPU only, the 6.6 GB checkpoint downloads on first load. The badge resolves once this branch merges to main.
+
 ## Setup
 
 Python 3.11 or newer is required.

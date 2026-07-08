@@ -1,4 +1,4 @@
-tabfm[pytorch] @ git+https://github.com/google-research/tabfm
+tabfm[pytorch] @ git+https://github.com/google-research/tabfm@633cd265f498e1d20c9625be0639f6305d8e2541
 torch==2.12.1
 xgboost==3.3.0
 tabicl==2.1.1
