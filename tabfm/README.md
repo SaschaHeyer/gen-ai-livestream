@@ -2,6 +2,8 @@
 
 Zero-shot tabular prediction with Google's TabFM, benchmarked honestly against XGBoost and TabICL on the same data and the same split. Everything here ran end to end before it was published.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SaschaHeyer/gen-ai-livestream/blob/main/tabfm/notebook.ipynb)
+
 From the Friday livestream. [EPISODE VIDEO LINK]
 
 Original announcement, https://research.google/blog/introducing-tabfm-a-zero-shot-foundation-model-for-tabular-data/
