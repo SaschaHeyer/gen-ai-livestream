@@ -95,6 +95,42 @@ A  Episode e02, titled "Managed Agents background and remote MCP", covered backg
 > NOT grade it. A separate judge model call scores it against the reference and writes the reason.
 > Keeping the optimizer and the grader apart is the point of the flywheel.
 
+### Optimize and iterate, the loop closing
+
+This is the payoff. The judge told you WHY a case failed, so you apply one targeted fix and rerun to
+prove it helped. Google's own framing, it proposes, you approve, human in the loop, not hands off. The
+fix is almost always an edit to the agent's instruction, not the model.
+
+Start from an agent that has no footer, graded by a rubric that requires one
+(`eval_config_footer.json`). The judge fails it and says exactly why.
+
+```
+BEFORE   rubric_based_final_response_quality_v1: FAILED score=0.5
+  why [names_episode]     1.0: names the correct episode id and title.
+  why [ends_with_footer]  0.0: does not contain the footer line "More at stagestudio.tv".
+```
+
+The fix the judge points you to is one line added to the agent's instruction.
+
+```python
+instruction=(
+    "You are the Stage Studio episode helper. When a viewer asks which "
+    "episode covered a topic, tell them the episode id and title. "
+    "End every response with the exact line: More at stagestudio.tv"   # <- the fix
+)
+```
+
+Rerun the same eval, and the loop closes.
+
+```
+AFTER    rubric_based_final_response_quality_v1: PASSED score=1.0
+  why [names_episode]     1.0: names the correct episode id and title.
+  why [ends_with_footer]  1.0: ends with the exact line "More at stagestudio.tv".
+```
+
+That is one turn of the flywheel, read the reason, apply a targeted fix, rerun, compare to the
+baseline. Repeat until the case passes, expect several turns on a real agent.
+
 ## Workflow
 
 When asked to evaluate an ADK agent, follow this loop.
@@ -131,6 +167,7 @@ When asked to evaluate an ADK agent, follow this loop.
 - [scripts/tests/eval/eval_config_judge.json](scripts/tests/eval/eval_config_judge.json), adds the AI judge `final_response_match_v2`.
 - [scripts/tests/eval/eval_config_fixed.json](scripts/tests/eval/eval_config_fixed.json), tool trajectory plus the judge, all green.
 - [scripts/tests/eval/eval_config_rubric.json](scripts/tests/eval/eval_config_rubric.json), rubric judge with three rules, the reasons come from here.
+- [scripts/tests/eval/eval_config_footer.json](scripts/tests/eval/eval_config_footer.json), the optimize and iterate demo, a footer rubric that fails until you add the footer line to the instruction.
 
 ## Documentation Pages
 
