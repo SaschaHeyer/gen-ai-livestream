@@ -1,0 +1,12 @@
+{
+  "criteria": {
+    "rubric_based_final_response_quality_v1": {
+      "threshold": 0.8,
+      "rubrics": [
+        {"rubric_id": "names_episode_id", "rubric_content": {"text_property": "The response states the specific episode id, for example e02."}},
+        {"rubric_id": "names_title", "rubric_content": {"text_property": "The response includes the episode title."}},
+        {"rubric_id": "no_guessing", "rubric_content": {"text_property": "The response only states facts that came from the find_episode tool, it does not invent details."}}
+      ]
+    }
+  }
+}

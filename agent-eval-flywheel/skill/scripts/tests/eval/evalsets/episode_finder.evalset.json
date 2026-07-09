@@ -1,0 +1,96 @@
+{
+  "eval_set_id": "episode_finder_evalset",
+  "name": "episode_finder_evalset",
+  "description": "Does the helper call find_episode before answering",
+  "eval_cases": [
+    {
+      "eval_id": "bg-agents",
+      "conversation": [
+        {
+          "invocation_id": "bg-agents-inv1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Which Stage Studio episode covered background agents?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "That was episode e02."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {
+                  "topic": "background agents"
+                },
+                "name": "find_episode"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "session_input": {
+        "app_name": "episode_finder",
+        "user_id": "viewer",
+        "state": {}
+      },
+      "creation_timestamp": 0.0,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "agent-eval",
+      "conversation": [
+        {
+          "invocation_id": "agent-eval-inv1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Which episode covered agent evaluation?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "That was episode e03."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {
+                  "topic": "agent evaluation"
+                },
+                "name": "find_episode"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "session_input": {
+        "app_name": "episode_finder",
+        "user_id": "viewer",
+        "state": {}
+      },
+      "creation_timestamp": 0.0,
+      "final_session_state": {}
+    }
+  ],
+  "creation_timestamp": 0.0
+}
