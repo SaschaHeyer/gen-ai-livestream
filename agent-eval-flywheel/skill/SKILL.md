@@ -16,10 +16,11 @@ about, run the eval, read what the judge says, and refine. The payoff is a judge
 answer's meaning and explains its verdict in plain English, a score you can act on.
 
 > [!IMPORTANT]
-> Two skills ship this workflow. `google-agents-cli-eval` drives ADK agents through `agents-cli eval
-> run` (which wraps `adk eval`). `agent-platform-eval-flywheel` is the framework agnostic sibling for
-> the cloud Evaluation SDK. This skill covers the local ADK path, which needs nothing but the Gemini
-> API key.
+> Two skills ship this workflow. `google-agents-cli-eval` drives ADK agents through the agents-cli
+> toolchain (in agents-cli 0.1.1 `eval run` shells out to `adk eval`, in 1.0.0 it chains
+> `eval generate` and `eval grade`). `agent-platform-eval-flywheel` is the framework agnostic sibling
+> for the cloud Evaluation SDK, published in google/skills under skills/cloud/. This skill covers the
+> local ADK path, which needs nothing but the Gemini API key.
 
 > [!IMPORTANT]
 > The metric menu is the whole mental model. Two metrics run LOCALLY and free, `tool_trajectory_avg_score`
@@ -131,6 +132,12 @@ AFTER    rubric_based_final_response_quality_v1: PASSED score=1.0
 That is one turn of the flywheel, read the reason, apply a targeted fix, rerun, compare to the
 baseline. Repeat until the case passes, expect several turns on a real agent.
 
+> [!NOTE]
+> An automated version of this turn exists. google-adk 2.4.0 ships `adk optimize`, which refines the
+> root agent instructions with the GEPA framework against a target metric, and agents-cli 1.0.0
+> exposes it as the experimental `eval optimize`. Both are confirmed from the tools' own help output,
+> not yet exercised by this skill's verified runs, treat them as experimental.
+
 ## Workflow
 
 When asked to evaluate an ADK agent, follow this loop.
@@ -146,8 +153,10 @@ When asked to evaluate an ADK agent, follow this loop.
 
 - Python 3.10 or newer (`uv venv --python 3.12` if the system Python is 3.9).
 - `google-adk[eval] >= 2.4.0`, install `uv pip install "google-adk[eval]"`.
-- `agents-cli` optional, for the wrapped `agents-cli eval run` command,
-  `uv tool install google-agents-cli`. Verified at 0.1.1, 1.0.0 is available.
+- `agents-cli` optional, `uv tool install google-agents-cli`. Verified at 0.1.1 where `eval run`
+  shells out to `adk eval`. The 1.0.0 release restructures the group, `eval run` chains
+  `eval generate` and `eval grade`, and adds experimental `eval analyze` (loss clusters, needs a
+  GCP project) and `eval optimize` (runs `adk optimize`, GEPA prompt refinement).
 - A Gemini API key for both the agent and the judge, or Vertex via
   `GOOGLE_GENAI_USE_VERTEXAI=1` and a project.
 
