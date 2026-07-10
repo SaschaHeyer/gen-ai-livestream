@@ -1,0 +1,6 @@
+# Deps for scripts/evolve.py. The alpha_evolve client library itself is NOT on
+# PyPI, install it from https://github.com/Google-Cloud-AI/alphaevolve-on-googlecloud
+# with `uv pip install -e ".[examples]"` (see SKILL.md prerequisites).
+numpy>=1.26
+nest-asyncio>=1.6.0
+python-dotenv>=1.0.0
