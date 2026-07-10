@@ -49,16 +49,21 @@ python scripts/evolve.py \
 > [!WARNING]
 > The client authenticates with Application Default Credentials, so `gcloud auth application-default login` must run first. A plain `gcloud auth login` is not enough, the library uses ADC specifically and will raise `RefreshError: Reauthentication is needed` if ADC is stale.
 
-**Measured on a real n=26 circle packing run** (project with Gemini Enterprise, 0.7 flash / 0.3 pro, `--max-programs 20`): the naive seed scores `sum_of_radii = 0.9415`, the best evolved program scores `2.6294`, a **2.79x** improvement and essentially the known optimum for this problem. Wall clock was about 7.5 minutes.
+The command above smoke-tests your setup on Google's circle packing sample. The real showcase is [examples/camera-background-blur](../examples/camera-background-blur), the flagship experiment from the episode.
+
+**Flagship result, a real webcam background blur made faster.** The seed is production code from Stage Studio, a native macOS streaming app, the per-frame person-segmentation-plus-blur that ran the webcam compositor. AlphaEvolve made it **3.4x faster with visually identical output** (17.95 ms to 5.26 ms per frame, SSIM 0.998 versus the original), in a single run of 10 candidates, judged entirely by an automated evaluator, no human in the loop. It evolves **Swift**, compiled with `swiftc` and scored locally, which works because evaluation is fully client-side, any language you can compile and score works.
+
+> [!IMPORTANT]
+> **AlphaEvolve never sees your output, only the numbers your evaluator returns.** So the metric must be ungameable. The blur experiment scores `speedup` but gates it behind an SSIM floor, any candidate below SSIM 0.98 mean or 0.95 on its worst frame gets the failure sentinel instead of a speedup. Quality is a rule, not a tradeoff, the only way to score is to look identical and be faster. If your metric has a loophole, evolution finds the loophole, not the optimization.
 
 > [!WARNING]
-> **Progress is non-monotonic, do not stop early.** On the real run the scores went 0.9415 seed, then a candidate at 2.36, then one back down at 0.24, then 1.97, then eventually 2.63. The best score plateaus and jumps, a flat stretch is not a stuck run.
+> **Progress is non-monotonic, do not stop early.** The best score plateaus and jumps, and an early candidate can score worse than the seed before the run climbs past it. A backward step is not a stuck run.
 
 > [!WARNING]
-> **Invalid candidates are expected and are a signal, not an error.** A candidate that breaks a constraint or fails to run comes back with the sentinel score `-1e12` (a big negative number, not `-inf`, the API needs a real number). On the real 20 program run 4 candidates came back at exactly `-1e12`. Their insight messages are fed back to steer the next generation.
+> **Invalid candidates are a signal, not an error.** A candidate that breaks a constraint, fails to compile, or falls below the quality gate comes back with the sentinel score `-1e12` (a big negative number, not `-inf`, the API needs a real number), plus an insight string so the evolver learns why it died, a compile error versus a gate failure, not just that it died.
 
 > [!WARNING]
-> **The backend can finish before it hits your budget.** The controller loop stops itself after 120 seconds with no new candidates and an empty queue. The real `--max-programs 20` run stopped at 19 of 20 evaluated when the service went idle. This is normal, treat the budget as a ceiling, not a guarantee.
+> **The backend can finish before it hits your budget.** The controller loop stops itself after 120 seconds with no new candidates and an empty queue. Treat the budget as a ceiling, not a guarantee, a run can finish a candidate or two short.
 
 > [!IMPORTANT]
 > **The scoring function is the whole game.** AlphaEvolve can only optimize what your `evaluate()` measures. A lazy scorer gets lazy evolution. Almost all of your effort belongs in the evaluator, the client wiring is boilerplate.
@@ -93,7 +98,8 @@ uv pip install -e ".[examples]"     # installs alpha_evolve + numpy, matplotlib,
 ## Supporting files
 
 - [scripts/evolve.py](scripts/evolve.py) — the utility. Point it at any program with EVOLVE-BLOCK markers and an `evaluate()`, it drives the full AlphaEvolve loop and writes the best program. Run `python scripts/evolve.py --program scripts/examples/circle_packing.py --metric sum_of_radii --inputs '{"n": 26}' --max-programs 20`.
-- [scripts/examples/circle_packing.py](scripts/examples/circle_packing.py) — the verified seed program, n=26 circles in a unit square, maximize summed radii. The canonical AlphaEvolve problem, use it to smoke-test your setup.
+- [scripts/examples/circle_packing.py](scripts/examples/circle_packing.py) — Google's circle packing sample (n=26, maximize summed radii), a simple Python example to smoke-test your setup.
+- [../examples/camera-background-blur](../examples/camera-background-blur) — the flagship experiment, evolve a real macOS webcam blur to run 3.4x faster with identical output. Its own seed (Swift), evaluator (speedup gated by SSIM), bench harness, and the winning program. Read this one to see how a real, ungameable objective is built.
 - [requirements.txt](requirements.txt) — the pip-installable deps for `evolve.py` (the `alpha_evolve` library installs separately from the repo above).
 
 ## Documentation Pages
@@ -106,4 +112,4 @@ You MUST fetch the matching page below before writing code against AlphaEvolve. 
 
 ## From the episode
 
-Built live on the Friday stream, AlphaEvolve is live, run DeepMind's evolutionary coding agent on your own code. Video link to follow.
+Built live on the Friday stream, we made a real webcam background blur 3.4x faster with AlphaEvolve, on the actual production code from a shipping macOS app. Video link to follow.
