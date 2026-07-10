@@ -4,6 +4,10 @@ Run DeepMind's Gemini-powered evolutionary coding agent on your own code. You gi
 
 From the Friday stream, AlphaEvolve is live, run DeepMind's evolutionary coding agent on your own code.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SaschaHeyer/gen-ai-livestream/blob/main/alphaevolve/notebook.ipynb)
+
+Run the whole episode yourself in [notebook.ipynb](notebook.ipynb), the real circle packing evolution with your own Gemini Enterprise engine, plus two your-turn exercises.
+
 ## What is here
 
 - [skill/](skill/) — the installable skill. Point `skill/scripts/evolve.py` at any function with `EVOLVE-BLOCK` markers and an `evaluate()`, it drives the full AlphaEvolve loop and returns the best program. Start with `skill/SKILL.md`.
