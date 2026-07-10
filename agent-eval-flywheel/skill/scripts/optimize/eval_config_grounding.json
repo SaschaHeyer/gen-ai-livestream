@@ -1,0 +1,10 @@
+{
+  "criteria": {
+    "rubric_based_final_response_quality_v1": {
+      "threshold": 0.8,
+      "rubrics": [
+        {"rubric_id": "grounded", "rubric_content": {"text_property": "If the find_episode tool returned found=false for the topic, the response must clearly say that topic has not been covered on the show yet. It must NOT name, invent, or imply any specific episode number or title for that topic."}}
+      ]
+    }
+  }
+}

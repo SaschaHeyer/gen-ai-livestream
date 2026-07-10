@@ -1,0 +1,139 @@
+{
+  "eval_set_id": "hallu",
+  "name": "hallu",
+  "eval_cases": [
+    {
+      "eval_id": "q1",
+      "conversation": [
+        {
+          "invocation_id": "q1-i1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Which episode covered quantum computing?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "We have not covered that yet."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {
+                  "topic": "quantum computing"
+                },
+                "name": "find_episode"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "session_input": {
+        "app_name": "finder",
+        "user_id": "v",
+        "state": {}
+      },
+      "creation_timestamp": 0.0,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "q2",
+      "conversation": [
+        {
+          "invocation_id": "q2-i1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Which episode covered prompt injection attacks?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "We have not covered that yet."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {
+                  "topic": "prompt injection"
+                },
+                "name": "find_episode"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "session_input": {
+        "app_name": "finder",
+        "user_id": "v",
+        "state": {}
+      },
+      "creation_timestamp": 0.0,
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "q3",
+      "conversation": [
+        {
+          "invocation_id": "q3-i1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Which episode covered fine-tuning Llama?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "We have not covered that yet."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {
+                  "topic": "fine-tuning llama"
+                },
+                "name": "find_episode"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "session_input": {
+        "app_name": "finder",
+        "user_id": "v",
+        "state": {}
+      },
+      "creation_timestamp": 0.0,
+      "final_session_state": {}
+    }
+  ],
+  "creation_timestamp": 0.0
+}
