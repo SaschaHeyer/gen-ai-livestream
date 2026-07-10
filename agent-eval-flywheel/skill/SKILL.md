@@ -92,9 +92,10 @@ A  Episode e02, titled "Managed Agents background and remote MCP", covered backg
 ```
 
 > [!IMPORTANT]
-> The judge is decoupled by design. Whatever wrote the answer, your agent, an optimizer, or you, does
-> NOT grade it. A separate judge model call scores it against the reference and writes the reason.
-> Keeping the optimizer and the grader apart is the point of the flywheel.
+> The judge is decoupled by design, Google's rule. Nothing grades its own work, the agent does not
+> score its answers and the optimizer does not score its fixes. A separate judge model call does the
+> grading against the reference and writes the reason. Keeping those two roles apart is the point of
+> the flywheel.
 
 ### Optimize and iterate, the loop closing
 
