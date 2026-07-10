@@ -118,18 +118,24 @@ A  We covered quantum computing in Episode 77: "Quantum Leaps and Bounds: The Fu
      why [grounded] 0.0: the tool returned found=false, but the answer invented "Episode 77", contradicting the evidence.
 ```
 
-The fix the judge points you to is grounding the instruction, trust only the tool, and admit what the
-show has not covered.
+Now the proposing part. `propose_fix.py` reads the judge's failing reason and the agent's current
+instruction, and asks a model to propose a revised instruction. The proposer is deliberately NOT the
+judge, same decoupling rule.
 
-```python
-instruction=(
-    "You are the Stage Studio episode helper. Only use what the find_episode tool returns. "
-    "If it returns found=false, tell the viewer we have not covered that topic yet, and never "
-    "invent or guess an episode number or title."   # <- the fix
-)
+```bash
+python propose_fix.py ./optimize/finder optimize/grounding.evalset.json \
+  --config optimize/eval_config_grounding.json
 ```
 
-Rerun the same eval, and the loop closes.
+```
+=== Proposed instruction (a model wrote this, NOT the judge) ===
+You are the Stage Studio episode helper. When a viewer asks which episode covered a topic,
+answer with the episode number and title. If the topic has not been covered, clearly state
+that it has not and do not invent an episode.
+```
+
+Approve it, paste it into the agent's instruction (the grounded version ships in `finder_fixed/`),
+and rerun the same eval. The loop closes.
 
 ```
 AFTER, grounded agent, same question
@@ -186,7 +192,7 @@ When asked to evaluate an ADK agent, follow this loop.
 - [scripts/tests/eval/eval_config_judge.json](scripts/tests/eval/eval_config_judge.json), adds the AI judge `final_response_match_v2`.
 - [scripts/tests/eval/eval_config_fixed.json](scripts/tests/eval/eval_config_fixed.json), tool trajectory plus the judge, all green.
 - [scripts/tests/eval/eval_config_rubric.json](scripts/tests/eval/eval_config_rubric.json), rubric judge with three rules, the reasons come from here.
-- [scripts/optimize/](scripts/optimize/), the optimize and iterate demo. `finder/` is the ungrounded agent that hallucinates, `finder_fixed/` is the grounded fix, `grounding.evalset.json` asks about uncovered topics, `eval_config_grounding.json` is the grounding rubric that catches the made-up episodes.
+- [scripts/optimize/](scripts/optimize/), the optimize and iterate demo. `finder/` is the ungrounded agent that hallucinates, `finder_fixed/` is the grounded fix, `grounding.evalset.json` asks about uncovered topics, `eval_config_grounding.json` is the grounding rubric that catches the made-up episodes, and `propose_fix.py` reads the judge's reason and proposes the instruction fix (a model, not the judge, writes the proposal). `python optimize/propose_fix.py AGENT_DIR EVALSET --config CONFIG`.
 
 ## Documentation Pages
 
