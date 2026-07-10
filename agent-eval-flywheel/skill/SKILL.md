@@ -97,37 +97,46 @@ A  Episode e02, titled "Managed Agents background and remote MCP", covered backg
 > grading against the reference and writes the reason. Keeping those two roles apart is the point of
 > the flywheel.
 
-### Optimize and iterate, the loop closing
+### Optimize and iterate, catching a hallucination
 
-This is the payoff. The judge told you WHY a case failed, so you apply one targeted fix and rerun to
-prove it helped. Google's own framing, it proposes, you approve, human in the loop, not hands off. The
-fix is almost always an edit to the agent's instruction, not the model.
+This is the payoff, and the failure it catches is the one everyone worries about, the agent making
+something up. The judge tells you WHY a case failed, you apply one targeted fix, and rerun to prove it
+helped. Google's own framing, it proposes, you approve, human in the loop, not hands off. The fix is
+almost always an edit to the agent's instruction, not the model.
 
-Start from an agent that has no footer, graded by a rubric that requires one
-(`eval_config_footer.json`). The judge fails it and says exactly why.
+Start from a well meaning but ungrounded agent (`optimize/finder`). Its instruction pushes it to
+always sound confident and never leave a viewer empty handed. Ask it about topics the show has not
+covered (`optimize/grounding.evalset.json`), and grade it with a grounding rubric
+(`optimize/eval_config_grounding.json`). It invents episodes that do not exist, and the judge catches
+every one.
 
 ```
-BEFORE   rubric_based_final_response_quality_v1: FAILED score=0.5
-  why [names_episode]     1.0: names the correct episode id and title.
-  why [ends_with_footer]  0.0: does not contain the footer line "More at stagestudio.tv".
+BEFORE, ungrounded agent, asked about a topic the tool did not find
+Q  Which episode covered quantum computing?
+A  We covered quantum computing in Episode 77: "Quantum Leaps and Bounds: The Future of Computing."
+   rubric_based_final_response_quality_v1: FAILED score=0.0
+     why [grounded] 0.0: the tool returned found=false, but the answer invented "Episode 77", contradicting the evidence.
 ```
 
-The fix the judge points you to is one line added to the agent's instruction.
+The fix the judge points you to is grounding the instruction, trust only the tool, and admit what the
+show has not covered.
 
 ```python
 instruction=(
-    "You are the Stage Studio episode helper. When a viewer asks which "
-    "episode covered a topic, tell them the episode id and title. "
-    "End every response with the exact line: More at stagestudio.tv"   # <- the fix
+    "You are the Stage Studio episode helper. Only use what the find_episode tool returns. "
+    "If it returns found=false, tell the viewer we have not covered that topic yet, and never "
+    "invent or guess an episode number or title."   # <- the fix
 )
 ```
 
 Rerun the same eval, and the loop closes.
 
 ```
-AFTER    rubric_based_final_response_quality_v1: PASSED score=1.0
-  why [names_episode]     1.0: names the correct episode id and title.
-  why [ends_with_footer]  1.0: ends with the exact line "More at stagestudio.tv".
+AFTER, grounded agent, same question
+Q  Which episode covered quantum computing?
+A  We have not covered quantum computing yet.
+   rubric_based_final_response_quality_v1: PASSED score=1.0
+     why [grounded] 1.0: says the topic has not been covered, invents no episode. Grounded.
 ```
 
 That is one turn of the flywheel, read the reason, apply a targeted fix, rerun, compare to the
@@ -177,7 +186,7 @@ When asked to evaluate an ADK agent, follow this loop.
 - [scripts/tests/eval/eval_config_judge.json](scripts/tests/eval/eval_config_judge.json), adds the AI judge `final_response_match_v2`.
 - [scripts/tests/eval/eval_config_fixed.json](scripts/tests/eval/eval_config_fixed.json), tool trajectory plus the judge, all green.
 - [scripts/tests/eval/eval_config_rubric.json](scripts/tests/eval/eval_config_rubric.json), rubric judge with three rules, the reasons come from here.
-- [scripts/tests/eval/eval_config_footer.json](scripts/tests/eval/eval_config_footer.json), the optimize and iterate demo, a footer rubric that fails until you add the footer line to the instruction.
+- [scripts/optimize/](scripts/optimize/), the optimize and iterate demo. `finder/` is the ungrounded agent that hallucinates, `finder_fixed/` is the grounded fix, `grounding.evalset.json` asks about uncovered topics, `eval_config_grounding.json` is the grounding rubric that catches the made-up episodes.
 
 ## Documentation Pages
 
