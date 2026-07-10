@@ -1,0 +1,6 @@
+# Local artifacts, never publish the test take or rendered frames
+clip.mov
+goldens/
+.venv/
+best-frames/
+*.png
