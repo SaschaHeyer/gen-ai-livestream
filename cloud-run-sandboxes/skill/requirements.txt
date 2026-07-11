@@ -1,0 +1,5 @@
+# sandbox_run.py (the client utility) uses only the Python standard library, no deps.
+# The service that runs in Cloud Run has its own pinned deps in scripts/service/requirements.txt:
+#   flask==3.1.0
+#   gunicorn==23.0.0
+#   google-genai==2.10.0
