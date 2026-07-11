@@ -1,0 +1,6 @@
+# Local artifacts, the test clip is cut from real stream recordings
+source.mov
+seg-*.mov
+concat.txt
+best_program.py
+*.log
