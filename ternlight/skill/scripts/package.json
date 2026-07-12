@@ -1,0 +1,8 @@
+{
+  "name": "ternlight-scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@ternlight/base": "^0.1.0"
+  }
+}
