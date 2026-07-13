@@ -1,0 +1,17 @@
+{
+  "target": {
+    "loadBalancingScheme": "LOAD_BALANCING_SCHEME_UNSPECIFIED",
+    "resources": ["projects/sascha-playground-doit/locations/us-central1/agentGateways/merch-egress-gw"]
+  },
+  "httpRules": [{
+    "to": {"operations": [{"paths": [{"prefix": "/"}]}]},
+    "when": "!request.headers['content-type'].startsWith('application/grpc') && (request.path.endsWith(':generateContent') || request.path.endsWith(':streamGenerateContent'))"
+  }],
+  "action": "CUSTOM",
+  "policyProfile": "CONTENT_AUTHZ",
+  "customProvider": {
+    "authzExtension": {
+      "resources": ["projects/sascha-playground-doit/locations/us-central1/authzExtensions/sgp-authz-ext"]
+    }
+  }
+}
