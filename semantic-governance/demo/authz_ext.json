@@ -1,0 +1,6 @@
+{
+  "service": "us-central1.sgp.internal",
+  "authority": "us-central1.sgp.internal",
+  "failOpen": false,
+  "loadBalancingScheme": "LOAD_BALANCING_SCHEME_UNSPECIFIED"
+}
