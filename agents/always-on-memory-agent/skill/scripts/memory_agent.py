@@ -8,6 +8,7 @@ Usage
   python memory_agent.py reset
   python memory_agent.py ingest sample-files/nordlicht-kickoff.md sample-files/nordlicht-chat.png
   python memory_agent.py consolidate
+  python memory_agent.py consolidate --loop --every 30   # always-on, Ctrl+C to stop
   python memory_agent.py query "Who is doing the Nordlicht thumbnail and is it done?"
 """
 import asyncio
@@ -16,6 +17,7 @@ import mimetypes
 import os
 import sqlite3
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -99,8 +101,13 @@ def db():
     con.execute(
         "CREATE TABLE IF NOT EXISTS memories ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT, content TEXT, "
-        "source TEXT, source_ids TEXT, created_at TEXT)"
+        "source TEXT, source_ids TEXT, created_at TEXT, "
+        "consolidated INTEGER DEFAULT 0)"
     )
+    # migrate a store created before the consolidated flag existed
+    cols = [r[1] for r in con.execute("PRAGMA table_info(memories)").fetchall()]
+    if "consolidated" not in cols:
+        con.execute("ALTER TABLE memories ADD COLUMN consolidated INTEGER DEFAULT 0")
     return con
 
 
@@ -160,15 +167,40 @@ def cmd_ingest(files):
     print(f"ingested {len(files)} file(s)")
 
 
-def cmd_consolidate():
-    con = db()
+def _consolidate_once(con):
+    # only fire when there is something new, so the always-on loop is idempotent
+    new = con.execute(
+        "SELECT COUNT(*) FROM memories WHERE kind='raw' AND consolidated=0"
+    ).fetchone()[0]
+    if not new:
+        print("  nothing new to consolidate")
+        return 0
+    # read the whole raw store, so a new fact can link back to older ones
     raw = all_memories(con, "raw")
     listing = "\n".join(f"{i}. {c}" for i, k, c, s in raw)
     out = run(consolidate_agent, [types.Part(text="Raw memories:\n" + listing)])
     for ins in out["insights"]:
         add_memory(con, "insight", ins["content"], source_ids=ins["source_ids"])
         print(f"  * insight (from {ins['source_ids']}): {ins['content']}")
+    con.execute("UPDATE memories SET consolidated=1 WHERE kind='raw'")
+    con.commit()
     print(f"wrote {len(out['insights'])} insight(s)")
+    return len(out["insights"])
+
+
+def cmd_consolidate(loop=False, every=30.0):
+    con = db()
+    if not loop:
+        _consolidate_once(con)
+        return
+    # this is the always-on part, a supervised background loop
+    print(f"always-on, consolidating every {every} min, Ctrl+C to stop")
+    try:
+        while True:
+            _consolidate_once(con)
+            time.sleep(every * 60)
+    except KeyboardInterrupt:
+        print("\nstopped")
 
 
 def cmd_query(question):
@@ -195,7 +227,9 @@ if __name__ == "__main__":
     if cmd == "ingest":
         cmd_ingest(sys.argv[2:])
     elif cmd == "consolidate":
-        cmd_consolidate()
+        a = sys.argv[2:]
+        every = float(a[a.index("--every") + 1]) if "--every" in a else 30.0
+        cmd_consolidate(loop="--loop" in a, every=every)
     elif cmd == "query":
         cmd_query(" ".join(sys.argv[2:]))
     elif cmd == "reset":

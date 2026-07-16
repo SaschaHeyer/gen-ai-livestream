@@ -34,7 +34,8 @@ export GOOGLE_GENAI_USE_VERTEXAI=0
 
 python scripts/memory_agent.py reset
 python scripts/memory_agent.py ingest sample-files/nordlicht-kickoff.md sample-files/nordlicht-chat.png sample-files/nordlicht-memo.wav
-python scripts/memory_agent.py consolidate
+python scripts/memory_agent.py consolidate                       # one pass
+python scripts/memory_agent.py consolidate --loop --every 30     # always-on, Ctrl+C to stop
 python scripts/memory_agent.py query "Who is doing the Nordlicht thumbnail and is it finished?"
 ```
 
@@ -83,14 +84,14 @@ part = types.Part(inline_data=types.Blob(mime_type="image/png", data=Path("chat.
 
 - **Extraction is non-deterministic.** Across prep runs the memory ids shifted and one run wrote the name `Lena` where the source said `Lina`. Do not build logic that assumes stable ids or perfect name fidelity, treat memories as fuzzy and let consolidation and citation carry the weight.
 - **This is not RAG, there is no retrieval.** No embeddings and no vector search anywhere. Query loads the entire memory store into the model context and lets the model pick and cite. The complexity did not disappear, it moved from vector search into LLM context selection.
-- **Consolidation cost scales with the store, measured.** Every consolidate pass re-reads all raw memories through the model in one call, so both latency and token cost grow linearly with memory. Measured on an 11 memory store, the consolidation prompt was 198 input tokens and a query was 341, roughly 20 tokens per memory. Against the `gemini-3.1-flash-lite` 1,048,576 token context window that whole-store approach tops out around 50,000 memories, and gets slow and expensive well before that. For anything real, batch or window it, or use managed Memory Bank. Consolidating after every ingest makes cumulative token cost climb like n squared even though each pass is a single n memory call.
-- **The timer is not a service.** "Always-on" here means a background loop you supervise. If the process dies, memory silently stops improving and nothing tells you. In production, supervise it or use managed Memory Bank.
+- **Consolidation cost scales with the store, measured.** Every consolidation that fires re-reads all raw memories through the model in one call, so both latency and token cost grow linearly with memory (idle ticks are skipped and free). Measured on an 11 memory store, the consolidation prompt was 198 input tokens and a query was 341, roughly 20 tokens per memory. Against the `gemini-3.1-flash-lite` 1,048,576 token context window that whole-store approach tops out around 50,000 memories, and gets slow and expensive well before that. For anything real, batch or window it, or use managed Memory Bank. Consolidating after every ingest makes cumulative token cost climb like n squared even though each pass is a single n memory call.
+- **The always-on loop is real but it is not a service.** `consolidate --loop --every N` runs a supervised `time.sleep` loop that fires only when there are new memories (idempotent via the `consolidated` flag, so idle ticks print "nothing new" and cost nothing). It is still just a background process. If it dies, memory silently stops improving and nothing tells you. In production, supervise it or use managed Memory Bank.
 - **Audio generation model.** `gemini-3.1-flash-tts` does not exist (404). The sample voice memo was generated with `gemini-2.5-flash-preview-tts`. Ingestion of audio uses `gemini-3.1-flash-lite`, only the optional memo generation uses the TTS model.
 
 ## Workflow
 
 1. Point ingest at the user's own files, `python scripts/memory_agent.py ingest <file>...`. It accepts text, images (png, jpg), audio (wav), and PDFs.
-2. Run `consolidate` after a batch to link facts across files into insights.
+2. Run `consolidate` once after a batch, or `consolidate --loop --every N` to keep it always-on, to link facts across files into insights. The loop only fires when there are new memories.
 3. Run `query "<question>"`, report the answer plus the cited memory ids back to the user.
 4. `reset` clears the store, the SQLite file is `memory.db` in the working directory, override with `MEMORY_DB`.
 
