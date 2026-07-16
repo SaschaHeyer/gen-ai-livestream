@@ -1,0 +1,5 @@
+# Verified on Python 3.12 during prep. Both floors are >= 3.10, the system macOS
+# python (3.9) is too old and pip resolves ADK to a stale 1.x there, use 3.12.
+google-adk>=2.4.0
+google-genai>=2.12.1
+pillow>=10.0.0
