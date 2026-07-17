@@ -1,123 +1,87 @@
 ---
 name: always-on-memory-agent
-description: Use this skill when building an agent that remembers across sessions, when you need persistent long-term memory that ingests files and consolidates facts on its own, or when deciding between rolling your own memory loop and Google's managed Vertex AI Memory Bank. Covers a three-agent ingest, consolidate, and query loop over SQLite, multimodal ingestion of text, images, and audio, and structured output with Pydantic schemas. SDKs used, Google ADK LlmAgent and InMemoryRunner, google-genai, Gemini 3.1 Flash Lite.
+description: Use this skill when evaluating agent memory options, when running or reviewing the always-on memory agent sample (Google generative-ai repo, by Shubham Saboo), or when deciding between a self-hosted memory loop and the managed Vertex AI Memory Bank. Covers how the sample works and its rough edges, and a verified Memory Bank quickstart. SDKs used, Google ADK, google-genai, vertexai agent engines, Gemini 3.1 Flash Lite.
 ---
 
 # Always-On Memory Agent Skill
 
-Build an agent that turns files into durable memories, connects them on a timer, and answers questions with citations back to the sources. Three ADK LlmAgents over a plain SQLite store, so the memory is something you can read, not a black box.
-
-## Overview
-
-- **Ingest**, extracts standalone memories from text, an image, or audio using Gemini multimodal.
-- **Consolidate**, reads all raw memories and writes higher level insights that link two or more sources, recording the source ids.
-- **Query**, answers using only stored memories and cites the ids it used.
+A tested comparison, not a build. It covers an existing always-on memory agent sample and the managed Vertex AI Memory Bank, so your agent can help you run the sample, expect its rough edges, and pick the right option.
 
 > [!IMPORTANT]
-> Use the model id `gemini-3.1-flash-lite`. Verified working through the AI Studio API key during prep. It is cheap and fast, which is what an always-on background loop needs.
-
-> [!WARNING]
-> `gemini-2.5-flash-lite` now returns `404 NOT_FOUND, no longer available to new users`. If your code still references it, switch to `gemini-3.1-flash-lite`.
+> The sample is not ours. It lives in Google's repo at github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent, written by Shubham Saboo. This skill tests it and compares it, it does not reimplement it.
 
 > [!IMPORTANT]
-> This pattern is NOT a new Google capability. Google already ships persistent agent memory WITH consolidation as a fully managed service, Vertex AI Memory Bank (`VertexAiMemoryBankService` in ADK), GA today. Build this loop yourself to understand consolidation or to run something small and personal. For real users, data isolation, and scale, reach for Memory Bank instead. See Documentation Pages below.
+> Model id `gemini-3.1-flash-lite`, GA, not new (announced March 2026, GA on Vertex May 2026). Vertex AI Memory Bank is GA. Neither is a new capability, the point is the honest comparison.
 
----
+## The sample in one look
 
-## Quick Start
+- Four ADK `Agent`s, an orchestrator routes to ingest, consolidate, query. Tool calling, not `output_schema`.
+- Always-on, an aiohttp API on :8888, an inbox folder watcher, and a consolidation loop every 30 minutes.
+- SQLite store with summary, entities, topics, connections, importance per memory.
 
-Install on Python 3.12 (see Dependencies, the system python is too old).
+Run it (from the sample repo):
 
 ```bash
+pip install -r requirements.txt
 export GOOGLE_API_KEY=your_ai_studio_key
-export GOOGLE_GENAI_USE_VERTEXAI=0
-
-python scripts/memory_agent.py reset
-python scripts/memory_agent.py ingest sample-files/nordlicht-kickoff.md sample-files/nordlicht-chat.png sample-files/nordlicht-memo.wav
-python scripts/memory_agent.py consolidate                       # one pass
-python scripts/memory_agent.py consolidate --loop --every 30     # always-on, Ctrl+C to stop
-python scripts/memory_agent.py query "Who is doing the Nordlicht thumbnail and is it finished?"
+python agent.py            # watches ./inbox, serves :8888
+curl -X POST localhost:8888/ingest -d '{"text":"Sascha streams Nordlicht Friday"}'
+curl "localhost:8888/query?q=when+is+the+stream"
 ```
 
-The three agents are plain ADK `LlmAgent`s with a Pydantic `output_schema`, which is what forces structured JSON back instead of prose.
+## Rough edges, measured when running it
 
-```python
-from google.adk.agents import LlmAgent
-from google.adk.runners import InMemoryRunner
-from google.genai import types
-
-ingest_agent = LlmAgent(
-    name="ingest",
-    model="gemini-3.1-flash-lite",
-    instruction="Extract each standalone fact worth remembering, one short sentence each, list the entities.",
-    output_schema=IngestResult,   # a pydantic BaseModel
-    output_key="ingest",
-)
-```
+- **Retrieval is a recent-window load, not search.** `read_all_memories` is `SELECT * FROM memories ORDER BY created_at DESC LIMIT 50`. There is no vector search in the sample. Past 50 memories, older ones silently drop out of the query context.
 
 > [!WARNING]
-> `LlmAgent` with `output_schema` set disables tool calls and agent transfer, the model must answer directly with the schema. That is the intended trade for structured extraction, do not also attach tools to these agents.
+> Symptom, a query stops finding an older fact once the store grows past 50 memories. Cause, the LIMIT 50 recent-window load, there is no similarity retrieval to pull it back.
 
-Run an agent once and read its structured result from the final event.
+- **Consolidation is capped at LIMIT 10.** `read_unconsolidated_memories` reads at most 10, so a burst of more than ten new memories only partly consolidates per pass.
+- **Per ingest latency 2.4 to 4.7s.** Every ingest routes orchestrator to sub agent to tool and back, measured on 3 files.
+- **One shared SQLite file, no per user isolation.** Fine for a personal assistant, not multi user.
+- **Thin governance.** A delete endpoint exists, no retention, audit, or scoped access. The repo frames it as a reference implementation.
 
-```python
-async def run_once(agent, parts):
-    runner = InMemoryRunner(agent=agent, app_name="memory")
-    sess = await runner.session_service.create_session(app_name="memory", user_id="sascha")
-    msg = types.Content(role="user", parts=parts)
-    async for ev in runner.run_async(user_id="sascha", session_id=sess.id, new_message=msg):
-        if ev.is_final_response() and ev.content:
-            return json.loads(ev.content.parts[0].text)
-```
+## The managed alternative, Vertex AI Memory Bank
 
-Multimodal ingest is just the right `Part`, an image or audio file goes in as `inline_data`, Gemini reads it.
-
-```python
-from pathlib import Path
-part = types.Part(inline_data=types.Blob(mime_type="image/png", data=Path("chat.png").read_bytes()))
-```
+Same three inputs, run for real during the episode. Memory Bank merged them into fewer, user-scoped memories and retrieved by vector similarity search in 0.7s, versus the sample loading its recent window.
 
 > [!IMPORTANT]
-> During prep this genuinely read a chat screenshot PNG (OCR) and transcribed an audio memo WAV, then the query connected facts from the note, the image, and the audio in one answer. Multimodal ingest is real, not text only.
+> Memory Bank retrieval is a scoped vector similarity search, and memories are stored first person per `user_id`. This is the core difference from the sample, the sample removed the vector search, Memory Bank keeps it.
 
-## Measured behavior and sharp edges
-
-- **Extraction is non-deterministic.** Across prep runs the memory ids shifted and one run wrote the name `Lena` where the source said `Lina`. Do not build logic that assumes stable ids or perfect name fidelity, treat memories as fuzzy and let consolidation and citation carry the weight.
-- **This is not RAG, there is no retrieval.** No embeddings and no vector search anywhere. Query loads the entire memory store into the model context and lets the model pick and cite. The complexity did not disappear, it moved from vector search into LLM context selection.
-- **Consolidation cost scales with the store, measured.** Every consolidation that fires re-reads all raw memories through the model in one call, so both latency and token cost grow linearly with memory (idle ticks are skipped and free). Measured on an 11 memory store, the consolidation prompt was 198 input tokens and a query was 341, roughly 20 tokens per memory. Against the `gemini-3.1-flash-lite` 1,048,576 token context window that whole-store approach tops out around 50,000 memories, and gets slow and expensive well before that. For anything real, batch or window it, or use managed Memory Bank. Consolidating after every ingest makes cumulative token cost climb like n squared even though each pass is a single n memory call.
-- **The always-on loop is real but it is not a service.** `consolidate --loop --every N` runs a supervised `time.sleep` loop that fires only when there are new memories (idempotent via the `consolidated` flag, so idle ticks print "nothing new" and cost nothing). It is still just a background process. If it dies, memory silently stops improving and nothing tells you. In production, supervise it or use managed Memory Bank.
-- **Audio generation model.** `gemini-3.1-flash-tts` does not exist (404). The sample voice memo was generated with `gemini-2.5-flash-preview-tts`. Ingestion of audio uses `gemini-3.1-flash-lite`, only the optional memo generation uses the TTS model.
-
-## Workflow
-
-1. Point ingest at the user's own files, `python scripts/memory_agent.py ingest <file>...`. It accepts text, images (png, jpg), audio (wav), and PDFs.
-2. Run `consolidate` once after a batch, or `consolidate --loop --every N` to keep it always-on, to link facts across files into insights. The loop only fires when there are new memories.
-3. Run `query "<question>"`, report the answer plus the cited memory ids back to the user.
-4. `reset` clears the store, the SQLite file is `memory.db` in the working directory, override with `MEMORY_DB`.
-
-## Dependencies and Prerequisites
-
-- Python 3.12 recommended. Floors, `google-adk >= 2.4.0`, `google-genai >= 2.12.1`, `pillow >= 10.0.0`.
-
-> [!WARNING]
-> The macOS system python is 3.9, and both ADK and google-genai require `>=3.10`. On 3.9 pip silently resolves ADK to a stale 1.x and the LlmAgent API looks broken. Symptom, import or attribute errors on `google.adk.agents`. Fix, `uv venv --python 3.12` and install there.
+[scripts/memory_bank_quickstart.py](scripts/memory_bank_quickstart.py), verified, point it at your own file and question.
 
 ```bash
-uv venv --python 3.12 .venv
-uv pip install --python .venv/bin/python google-adk google-genai pillow
+gcloud auth application-default login
+python scripts/memory_bank_quickstart.py --project YOUR_PROJECT --file notes.txt \
+    --query "what do you know about the project?" --user alice
 ```
+
+The real calls are `client.agent_engines.create()` (engine create was 4.3s in prep), `generate_memories(direct_contents_source={"events": [...]}, scope=...)`, and `retrieve_memories(similarity_search_params={"search_query": ...})`.
+
+## When to use which
+
+- Learn the mechanics, run something small and personal, or stay local and offline, the sample is a great teaching tool and it works.
+- Real users, isolation, retention, and retrieval that scales past a recent window, use managed Memory Bank.
 
 ## Supporting files
 
-- [scripts/memory_agent.py](scripts/memory_agent.py), the ingest, consolidate, query, reset CLI. Point it at your own files, `python scripts/memory_agent.py ingest ./notes.md ./whiteboard.png`.
-- [sample-files/](sample-files/), the frozen reproduction inputs from the episode, a meeting note, a chat screenshot, and a voice memo about a fictional project. Used by the Quick Start commands above.
-- [requirements.txt](requirements.txt), pinned floors.
+- [scripts/memory_bank_quickstart.py](scripts/memory_bank_quickstart.py), the verified Memory Bank create, generate, retrieve utility, parameterized.
+- [reference.md](reference.md), the full verified head to head, both run on the same inputs.
+- [sample-files/](sample-files/), example multimodal inputs (a note, a chat screenshot, a voice memo) to feed either system.
+
+## Dependencies and Prerequisites
+
+- Python 3.12 recommended. `google-adk >= 2.4.0`, `google-genai >= 2.12.1` for the sample, `google-cloud-aiplatform >= 1.161.0` for the Memory Bank quickstart.
+
+> [!WARNING]
+> The macOS system python is 3.9 and both ADK and google-genai require `>=3.10`. On 3.9 pip serves a stale ADK 1.x and the API looks broken. Use `uv venv --python 3.12`.
 
 ## Documentation Pages
 
-You MUST fetch the matching page below before writing code against Memory Bank or ADK memory. These hosted docs are the source of truth for parameters, types, and edge cases, do not rely solely on the examples above.
+You MUST fetch the matching page before writing code. These hosted docs are the source of truth for parameters, types, and edge cases.
 
-- Managed alternative, Memory Bank with ADK, https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/memory-bank/adk-quickstart
+- The sample, https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/agents/always-on-memory-agent
+- Memory Bank with ADK, https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/memory-bank/adk-quickstart
 - ADK memory concepts, https://google.github.io/adk-docs/sessions/memory/
 
 ## From the episode

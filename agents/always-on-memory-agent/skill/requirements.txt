@@ -1,5 +1,7 @@
-# Verified on Python 3.12 during prep. Both floors are >= 3.10, the system macOS
-# python (3.9) is too old and pip resolves ADK to a stale 1.x there, use 3.12.
+# Verified on Python 3.12. The system macOS python (3.9) is too old, ADK and
+# google-genai floor at 3.10, use uv venv --python 3.12.
+# For running the sample:
 google-adk>=2.4.0
 google-genai>=2.12.1
-pillow>=10.0.0
+# For the Memory Bank quickstart:
+google-cloud-aiplatform>=1.161.0
