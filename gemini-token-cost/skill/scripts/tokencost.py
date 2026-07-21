@@ -9,6 +9,7 @@ Examples
   python tokencost.py "Summarise the risks in this plan"
   python tokencost.py --file prompt.txt --repeat 5
   python tokencost.py --file prompt.txt --models gemini-3.6-flash gemini-3.5-flash-lite
+  python tokencost.py --file prompt.txt --thinking-level low
 """
 import argparse
 import os
@@ -26,8 +27,9 @@ PRICES = {
 }
 
 
-def measure(client, model, prompt):
-    interaction = client.interactions.create(model=model, input=prompt)
+def measure(client, model, prompt, thinking_level=None):
+    cfg = {"generation_config": {"thinking_level": thinking_level}} if thinking_level else {}
+    interaction = client.interactions.create(model=model, input=prompt, **cfg)
     u = interaction.usage
     visible = u.total_output_tokens or 0
     thought = u.total_thought_tokens or 0
@@ -61,6 +63,9 @@ def main():
                     help="samples per model, default 3, thinking token counts vary a lot")
     ap.add_argument("--monthly-calls", type=int,
                     help="also project a monthly bill at this call volume")
+    ap.add_argument("--thinking-level", choices=["low", "high"],
+                    help="thinking_level to send, low is usually the biggest cost lever. "
+                         "The API advertises minimal and medium too but both are rejected")
     args = ap.parse_args()
 
     if args.file:
@@ -80,7 +85,8 @@ def main():
         sys.exit("set GEMINI_API_KEY first")
     client = genai.Client(api_key=api_key)
 
-    print(f"prompt, {len(prompt)} characters, {args.repeat} sample(s) per model")
+    level_note = f", thinking_level {args.thinking_level}" if args.thinking_level else ""
+    print(f"prompt, {len(prompt)} characters, {args.repeat} sample(s) per model{level_note}")
     print()
     header = (f"{'model':<24}{'in':>8}{'visible':>10}{'thought':>10}"
               f"{'billed out':>12}{'cost USD':>12}")
@@ -89,7 +95,13 @@ def main():
 
     summary = []
     for model in args.models:
-        rows = [measure(client, model, prompt) for _ in range(args.repeat)]
+        try:
+            rows = [measure(client, model, prompt, args.thinking_level)
+                    for _ in range(args.repeat)]
+        except Exception as exc:
+            print(f"{model:<24} FAILED, {str(exc)[:160]}")
+            print()
+            continue
         for r in rows:
             print(f"{model:<24}{r['input']:>8}{r['visible']:>10}{r['thought']:>10}"
                   f"{r['billed_output']:>12}{r['cost']:>12.6f}")
@@ -108,6 +120,9 @@ def main():
         share = (s["thought"] / s["billed_output"] * 100) if s["billed_output"] else 0
         print(f"{s['model']}, thinking is {share:.0f} percent of billed output")
     print()
+
+    if not summary:
+        sys.exit("every model failed, nothing to compare")
 
     cheapest = min(summary, key=lambda s: s["cost"])
     print(f"cheapest, {cheapest['model']} at {cheapest['cost']:.6f} USD per call")

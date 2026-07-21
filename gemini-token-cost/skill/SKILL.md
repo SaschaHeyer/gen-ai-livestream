@@ -1,6 +1,6 @@
 ---
 name: gemini-token-cost
-description: Use this skill when measuring, comparing, or projecting the real cost of a Gemini API prompt, choosing between Gemini models on price, or working out why a Gemini bill is higher than the visible output suggests. Covers the Interactions API usage object, the separate total_thought_tokens field, why billed output equals visible output plus thinking, per model pricing, and the deprecated temperature, top_p and top_k sampling parameters. SDK used, google-genai.
+description: Use this skill when measuring, comparing, or projecting the real cost of a Gemini API prompt, reducing a Gemini bill, choosing between Gemini models on price, tuning thinking_level, or working out why a Gemini bill is higher than the visible output suggests. Covers the Interactions API usage object, the separate total_thought_tokens field, why billed output equals visible output plus thinking, thinking_level low and high and the two levels the API advertises but rejects, per model pricing for 3.6 Flash and 3.5 Flash-Lite, and the deprecated temperature, top_p and top_k sampling parameters. SDK used, google-genai.
 ---
 
 # Gemini Token Cost Skill
@@ -35,7 +35,8 @@ larger than the visible answer.
 > [!WARNING]
 > `temperature`, `top_p` and `top_k` were deprecated in the 2026-07-21 changelog. They are not
 > merely discouraged, they no longer do anything. See the sampling section below for the exact
-> observable symptoms, this one is silent and will not raise.
+> observable symptoms, this one is silent and will not raise. Note this deprecation is NOT in the
+> launch blog post, it is a separate line in the API changelog dated 2026-07-21.
 
 ---
 
@@ -87,6 +88,47 @@ print(f"{cost:.6f} USD")
 > Only the output price moved in the 3.6 Flash release. Input stayed at 1.50 per million. That
 > matters less than it sounds, see the measured results below, on long context short answer work
 > the input was only about sixteen percent of the bill.
+
+---
+
+## thinking_level, the biggest cost lever
+
+Thinking dominates the bill on short answer work, and it is configurable. This is usually a larger
+saving than choosing a different model.
+
+```python
+client.interactions.create(
+    model="gemini-3.6-flash",
+    input=prompt,
+    generation_config={"thinking_level": "low"},
+)
+```
+
+Measured 2026-07-21, `gemini-3.6-flash`, long context short answer, 3 samples per level.
+
+| thinking_level | thought tokens | cost USD | vs unset |
+| --- | --- | --- | --- |
+| unset | 876 | 0.008982 | |
+| `low` | 526 | 0.006342 | 29.4 percent cheaper |
+| `high` | 928 | 0.009309 | 3.6 percent more expensive |
+
+> [!IMPORTANT]
+> Stacking both levers beats either alone. `gemini-3.5-flash` unset costs 0.013534 on that
+> workload, `gemini-3.6-flash` with `thinking_level: "low"` costs 0.006342, a **53 percent**
+> reduction. Roughly half of that comes from the model and half from the knob.
+
+> [!WARNING]
+> **The API advertises four levels and accepts two.** Send an invalid value and the schema error
+> reads `Supported values: 'minimal', 'low', 'medium', 'high'`. Send `minimal` or `medium` to
+> `gemini-3.6-flash` or `gemini-3.5-flash-lite` and you get HTTP 400 with a different message,
+> `'minimal' is not a supported thinking level for this model. Allowed values are: low, high.`
+> Two validation layers disagree. Use `low` or `high` only, and do not trust the advertised list.
+> Reproduced on both models 2026-07-21.
+
+> [!WARNING]
+> `low` is not free. It buys fewer reasoning tokens, which on a task that genuinely needs reasoning
+> can buy a worse answer. Measure quality on your own task before adopting it, the cost number
+> alone is not the decision.
 
 ---
 
@@ -146,8 +188,11 @@ comparing `gemini-3.5-flash` against `gemini-3.6-flash`.
    get an actual prompt from them rather than inventing a representative one.
 2. Run `scripts/tokencost.py` against that prompt with `--repeat 3` or higher, adding
    `--monthly-calls` when the user has a volume in mind.
-3. Report the measured per call cost, the cheapest model, and what share of the bill is thinking.
-   State the sample count, and never present a single run as a result.
+3. If thinking is a large share of billed output, rerun with `--thinking-level low` and compare.
+   That knob is usually a bigger saving than switching model, and the two stack.
+4. Report the measured per call cost, the cheapest configuration, and what share of the bill is
+   thinking. State the sample count, and never present a single run as a result. When recommending
+   `low`, say plainly that it trades reasoning for cost and needs a quality check.
 
 ---
 
@@ -170,6 +215,7 @@ python scripts/tokencost.py "Explain why database indexes slow down writes."
 python scripts/tokencost.py --file prompt.txt --repeat 5
 python scripts/tokencost.py --file prompt.txt --models gemini-3.6-flash gemini-3.5-flash-lite
 python scripts/tokencost.py --file prompt.txt --repeat 3 --monthly-calls 200000
+python scripts/tokencost.py --file prompt.txt --thinking-level low
 ```
 
 > [!IMPORTANT]
