@@ -20,8 +20,8 @@ larger than the visible answer.
 > Billed output equals `usage.total_output_tokens` plus `usage.total_thought_tokens`. The pricing
 > page states the output price is "including thinking tokens". `usage.total_tokens` is input plus
 > output plus thought, so it is not a drop in replacement either. Measured 2026-07-21, a single
-> short answer call returned `total_input_tokens` 12, `total_output_tokens` 281,
-> `total_thought_tokens` 596, `total_tokens` 889.
+> short answer call returned `total_input_tokens` 12, `total_output_tokens` 323,
+> `total_thought_tokens` 647, `total_tokens` 982.
 
 > [!IMPORTANT]
 > Use `google-genai>=2.3.0`, verified on 2.12.1. The client surface is
