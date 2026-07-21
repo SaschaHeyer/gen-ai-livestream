@@ -104,7 +104,9 @@ client.interactions.create(
 )
 ```
 
-Measured 2026-07-21, `gemini-3.6-flash`, long context short answer, 3 samples per level.
+Measured 2026-07-21, `gemini-3.6-flash`, 3 samples per level.
+
+Long context, short answer.
 
 | thinking_level | thought tokens | cost USD | vs unset |
 | --- | --- | --- | --- |
@@ -112,10 +114,24 @@ Measured 2026-07-21, `gemini-3.6-flash`, long context short answer, 3 samples pe
 | `low` | 526 | 0.006342 | 29.4 percent cheaper |
 | `high` | 928 | 0.009309 | 3.6 percent more expensive |
 
+Long answer.
+
+| thinking_level | visible | thought tokens | cost USD | vs unset |
+| --- | --- | --- | --- | --- |
+| unset | 3563 | 1467 | 0.037810 | |
+| `low` | 2866 | 0 | 0.021583 | 42.9 percent cheaper |
+| `high` | 3484 | 1523 | 0.037638 | 0.5 percent cheaper |
+
 > [!IMPORTANT]
-> Stacking both levers beats either alone. `gemini-3.5-flash` unset costs 0.013534 on that
-> workload, `gemini-3.6-flash` with `thinking_level: "low"` costs 0.006342, a **53 percent**
-> reduction. Roughly half of that comes from the model and half from the knob.
+> `low` is adaptive, not a fixed token budget. It drove thinking to **zero** on the long answer
+> workload while still spending 526 thought tokens on the long context one. Do not assume a level
+> maps to a fixed cost, measure it per workload.
+
+> [!IMPORTANT]
+> Stacking both levers beats either alone, and both shapes land in the same place. Long context,
+> `gemini-3.5-flash` unset 0.013534 to `gemini-3.6-flash` at `low` 0.006342, a **53 percent**
+> reduction. Long answer, 0.049391 to 0.021583, a **56 percent** reduction. Roughly half of that
+> comes from the model and half from the knob.
 
 > [!WARNING]
 > **The API advertises four levels and accepts two.** Send an invalid value and the schema error
@@ -126,9 +142,11 @@ Measured 2026-07-21, `gemini-3.6-flash`, long context short answer, 3 samples pe
 > Reproduced on both models 2026-07-21.
 
 > [!WARNING]
-> `low` is not free. It buys fewer reasoning tokens, which on a task that genuinely needs reasoning
-> can buy a worse answer. Measure quality on your own task before adopting it, the cost number
-> alone is not the decision.
+> `low` is not free, and the measurements show what you are buying. On the long answer workload it
+> removed reasoning entirely AND shortened the visible answer by about a fifth, 3563 tokens down to
+> 2866. On a summarisation job that is likely fine. On a task that genuinely needs reasoning it is
+> a quality regression you will not see in the cost number. Measure output quality on your own
+> task before adopting it.
 
 ---
 
