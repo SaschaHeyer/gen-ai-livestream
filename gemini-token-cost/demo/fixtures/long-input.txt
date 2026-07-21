@@ -1,0 +1,120 @@
+STAGE STUDIO, PRODUCTION NOTES, SEPTEMBER BLOCK
+Internal working notes for the Friday technical livestream. Compiled in Hamburg.
+
+--- SHOW FORMAT ---
+
+The show airs Friday afternoon Central European Time and runs between forty five and
+sixty minutes. The format is fixed by now and the audience expects it. A cold open of
+about ninety seconds with no housekeeping, then a why it matters segment of three to
+five minutes, then the build which is the bulk of the show at twenty to thirty minutes
+across two to four beats, then a sharp edges segment of about five minutes, then the
+distill and ship segment where the week's skill gets merged live, then a short call to
+action and a tease for the following week.
+
+The build segment is where the host directs an agent and narrates the decisions while
+the agent types. This is the part viewers come for. It is also the part most likely to
+break on air, which is why every build beat carries a cached fallback artifact captured
+the day before.
+
+--- SCENE LAYOUT IN THE STREAMING SOFTWARE ---
+
+Scene one, standby. A static card with the episode headline, the wordmark, and a countdown
+timer. Music bed at low volume. This scene runs for five minutes before air while the
+audience assembles in chat.
+
+Scene two, camera full. Host on camera, no screen share. Used for the cold open, parts of
+why it matters, and the close. Lower third shows the host name and the episode subtitle.
+
+Scene three, screen with camera inset. The main working scene. Editor or terminal fills the
+frame, host camera sits bottom right at roughly one fifth width. This is where the build
+beats happen. The inset must never cover the terminal's last four lines, which is where
+command output lands.
+
+Scene four, slides. Full screen deck, no camera. Used for the pricing table, any diagram,
+and the takeaway card. Presenter mode runs on the second display so the speaker notes are
+visible to the host only.
+
+Scene five, browser. Full screen browser for documentation, the repository page, and the
+moment the skill gets pushed and the page is refreshed live.
+
+Scene six, be right back. Used only if something goes badly wrong and the host needs sixty
+seconds to recover. Has never been used on air but staged every week regardless.
+
+--- AUDIO CHAIN ---
+
+Microphone into the interface, interface into the machine over USB. Gain staged so normal
+speech peaks around minus twelve decibels with headroom for laughter and emphasis. A gate
+sits before the compressor to keep keyboard noise out of the quiet gaps, threshold tuned so
+typing is audible but not distracting, because viewers actually like hearing the typing
+during a build beat. Compressor at a gentle ratio, roughly three to one, just to even out
+the difference between the host leaning in and leaning back.
+
+Monitoring is closed back headphones, never speakers, because the stream audio would loop
+back into the microphone. The host checks monitoring in the first thirty seconds of standby
+every single week. This has caught a dead cable twice.
+
+Music beds only during standby and the closing card. Never under speech, never under a demo.
+
+--- REHEARSAL PASS ---
+
+The rehearsal happens the day before, not the morning of. It runs every demo beat end to
+end with the real environment, the real credentials, and the real network, and it captures
+the output of each beat as a fallback artifact. A demo that has not been run end to end in
+the last twenty four hours is not considered verified.
+
+The rehearsal also times each beat. The outline carries target times and the rehearsal is
+where those times get corrected. A build beat that overruns by four minutes eats the sharp
+edges segment, and sharp edges is the segment viewers trust most, so it is protected.
+
+Anything that fails rehearsal twice gets swapped so that the cached artifact becomes the
+primary and the live attempt becomes the bonus. Live retries are only for demos that have
+already been rehearsed clean.
+
+--- WHAT GETS CACHED AS A FALLBACK ---
+
+Every build beat has exactly one fallback artifact and it lives in the episode's assets
+folder under plan b, named by beat number. For a command line beat that is the terminal
+output saved as text. For a beat that produces an image or a video that is the generated
+file itself. For a beat that takes a long time to run that is a pre computed result so the
+host can show the answer without waiting on air.
+
+The rule about fallbacks is that the host says plainly when one is being used. Pretending a
+cached run is live is the fastest way to lose an audience that is mostly engineers. Saying
+this is from yesterday because the API is slow right now costs nothing and buys trust.
+
+--- CREDENTIALS AND ENVIRONMENT ---
+
+Keys come from the secret manager, never from a file in the repository and never from the
+system keychain. The read is scripted so it happens the same way every week. If the read
+fails, that failure is the thing to fix, it is not a reason to go hunting for a key
+somewhere else.
+
+The environment gets a version check before every episode. The interpreter version, the SDK
+version, and the model identifiers all get printed and pinned into the preparation notes. A
+package silently resolving to an older version because the interpreter is old has caused a
+false report that a vendor never shipped a feature, so the check is not optional.
+
+--- CLOSING THE SHOW ---
+
+The close is short. The skill is already merged and pushed by this point, so the call to
+action is simply to go and install it and report back. Then the article promise, then the
+social handle, then the tease for next week which stays deliberately vague. Then a warm
+sign off. The host does not read metrics on air and does not beg for subscriptions.
+
+After the stream the recording gets trimmed, chapters get generated from the run of show,
+the description gets filled with real timestamps, and the article gets updated with the
+video link and anything the stream surfaced that the preparation pass did not.
+
+--- KNOWN RISKS THIS BLOCK ---
+
+Network at the studio has been unstable on Friday afternoons, twice in the last two months,
+both times recovering within a minute. Mitigation is a phone hotspot on standby and the
+fallback artifacts.
+
+Model endpoints occasionally slow down under load, which matters for any beat that makes a
+long generation call on air. Mitigation is to keep the on air prompts modest and to have
+the pre computed run ready.
+
+The second display has dropped out of the streaming software's source list after a system
+update. Mitigation is to confirm the slides scene shows the deck during standby, not at the
+moment the deck is needed.
