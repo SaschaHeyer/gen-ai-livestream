@@ -122,7 +122,12 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+# .env alone does not match siblings like ".env copy" or ".env.local", which is
+# how a credentials file ends up sitting untracked in a PUBLIC repo waiting for
+# someone to `git add -A`. Glob the whole family, keep the example trackable.
+.env*
+!.env.example
+!.env.sample
 .venv
 env/
 venv/
