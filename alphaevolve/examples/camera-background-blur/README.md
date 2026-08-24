@@ -224,9 +224,11 @@ protocol, same machine.
 
 | session | AlphaEvolve | blind | agentic | seed control |
 |---|---|---|---|---|
-| A, speedup | **7.726x** | 7.437x | not run | 1.038x |
+| A, speedup | **7.726x** | 7.437x | n/a | 1.038x |
 | B, speedup | 3.910x | **5.958x** | 5.595x | 0.921x |
 | C, ms/frame | 3.955 | **3.090** | 3.375 | 20.249 |
+
+Session A ran before the agentic winner existed, hence the n/a.
 
 AlphaEvolve wins the first and loses the other two. Normalising each program
 against the seed measured in the *same round* does not rescue it either, it goes
