@@ -297,14 +297,14 @@ def run_blind(args, run_dir, baseline, seed_code):
     return history, best_code, best_score
 
 
-def run_agentic(args, run_dir, baseline, seed_code):
-    """One Claude Code session with the harness in a sandbox."""
-    history = []
-    record(history, "seed", seed_code, baseline, {}, run_dir)
+def make_sandbox(run_dir, budget):
+    """A working copy of the harness with nothing in it that leaks the answer.
+
+    No best_program.swift, no claude_best_program.swift, no README.md, no
+    evolve.py, no runs/. The agent can measure everything and look up nothing.
+    """
     sandbox = run_dir / "sandbox"
     sandbox.mkdir()
-    # Everything it needs to measure, and nothing that leaks the answer.
-    # No best_program.swift, no README.md, no evolve.py, no runs/.
     for name in ("bench.swift", "seed.swift", "clip.mov"):
         shutil.copy2(LAB / name, sandbox / name)
     shutil.copytree(LAB / "goldens", sandbox / "goldens")
@@ -312,7 +312,15 @@ def run_agentic(args, run_dir, baseline, seed_code):
     # The real evaluator, behind a shim that counts how many times it ran.
     shutil.copy2(LAB / "evaluate.py", sandbox / "blurlab_eval.py")
     (sandbox / "evaluate.py").write_text(EVAL_SHIM)
-    (sandbox / "TASK.md").write_text(agentic_task(args.budget))
+    (sandbox / "TASK.md").write_text(agentic_task(budget))
+    return sandbox
+
+
+def run_agentic(args, run_dir, baseline, seed_code):
+    """One Claude Code session with the harness in a sandbox."""
+    history = []
+    record(history, "seed", seed_code, baseline, {}, run_dir)
+    sandbox = make_sandbox(run_dir, args.budget)
 
     prompt = ("Read TASK.md in this directory and carry it out. When you are "
               "finished, report the best speedup you measured and what you "
@@ -342,6 +350,7 @@ def run_agentic(args, run_dir, baseline, seed_code):
 #
 #   python3 claude_evolve.py --mode external --step init
 #   python3 claude_evolve.py --mode external --step emit   --run-dir <dir>
+#   python3 claude_evolve.py --mode external --step sandbox --run-dir <dir>
 #   python3 claude_evolve.py --mode external --step submit --run-dir <dir> \
 #       --candidate reply.swift
 #
@@ -397,6 +406,12 @@ def external_step(args):
     budget = json.loads((run_dir / "config.json").read_text())["budget"]
     done = [e for e in history if e["label"] != "seed"]
 
+    if args.step == "sandbox":
+        # The agentic setting, driven from outside. Same sandbox the built-in
+        # agentic mode builds, for a generator this script does not launch.
+        print(make_sandbox(run_dir, budget))
+        return
+
     if args.step == "emit":
         iteration = len(done) + 1
         if iteration > budget:
@@ -433,7 +448,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("blind", "agentic", "external"),
                         default="blind")
-    parser.add_argument("--step", choices=("init", "emit", "submit"),
+    parser.add_argument("--step",
+                        choices=("init", "emit", "sandbox", "submit"),
                         help="external mode only")
     parser.add_argument("--run-dir", help="external mode, the run to continue")
     parser.add_argument("--candidate",
