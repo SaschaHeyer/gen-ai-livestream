@@ -1,0 +1,60 @@
+{
+  "baseline_ms_per_frame": 18.095,
+  "clip": {
+    "frames": 60,
+    "height": 1080,
+    "msPerFrame": 18.095,
+    "width": 1920
+  },
+  "rounds": 5,
+  "results": [
+    {
+      "program": "seed.swift",
+      "rejected_rounds": 0,
+      "speedup_median": 1.038,
+      "speedup_min": 0.941,
+      "speedup_max": 1.069,
+      "ms_per_frame_median": 17.44,
+      "ssim": 1,
+      "speedups": [
+        1.031,
+        1.069,
+        1.05,
+        0.941,
+        1.038
+      ]
+    },
+    {
+      "program": "best_program.swift",
+      "rejected_rounds": 0,
+      "speedup_median": 7.726,
+      "speedup_min": 5.772,
+      "speedup_max": 7.833,
+      "ms_per_frame_median": 2.342,
+      "ssim": 0.99803,
+      "speedups": [
+        7.833,
+        7.759,
+        7.726,
+        7.074,
+        5.772
+      ]
+    },
+    {
+      "program": "claude_best_program.swift",
+      "rejected_rounds": 0,
+      "speedup_median": 7.437,
+      "speedup_min": 7.096,
+      "speedup_max": 7.543,
+      "ms_per_frame_median": 2.433,
+      "ssim": 0.99911,
+      "speedups": [
+        7.543,
+        7.437,
+        7.102,
+        7.096,
+        7.511
+      ]
+    }
+  ]
+}

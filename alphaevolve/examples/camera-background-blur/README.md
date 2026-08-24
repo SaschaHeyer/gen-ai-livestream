@@ -174,6 +174,86 @@ The backend idle-stopped the experiment at 10 of the requested 40 candidates
 (it terminates after 120 seconds without traffic, and a Swift compile plus a
 60-frame GPU benchmark per candidate is on the slow side). Ten were enough.
 
+## Does it beat a coding agent in a loop
+
+The fair follow-up question. An evolutionary system is not the only thing that
+can write a candidate, read a score, and try again, so this folder also ships
+[claude_evolve.py](claude_evolve.py), which runs a frontier coding model
+against the identical seed, evaluator, gate, clip, goldens, problem statement
+(both runners import it from [problem.py](problem.py)) and candidate budget.
+The only variable is who writes the code.
+
+Its default `blind` mode hands the model exactly what AlphaEvolve gets, the
+problem statement, the source of the best program so far, and the scalar scores
+of every candidate to date. No tools, no repository access, no rendered frames.
+
+Both winners re-scored on the same clip with [compare.py](compare.py), five
+interleaved rounds, medians reported. Interleaving matters, the score is
+wall-clock and the machine drifts as it warms, so scoring all of A and then all
+of B measures the thermal state as much as the code.
+
+| program | median speedup | range over 5 rounds | ms per frame | SSIM |
+|---|---|---|---|---|
+| seed (production code) | 1.038x | 0.941x to 1.069x | 17.44 | 1.0, it is the reference |
+| AlphaEvolve winner | 7.726x | 5.772x to 7.833x | 2.342 | 0.99803 |
+| Claude winner | 7.437x | 7.096x to 7.543x | 2.433 | 0.99911 |
+
+Baseline 18.095 ms per frame. The seed re-scoring at 1.038x is the control, the
+harness reproduces its own baseline.
+
+**That is a tie.** AlphaEvolve's median is 3.9 percent ahead and it took 3 of
+the 5 paired rounds, but the gap is smaller than the spread of its own
+measurements across those same rounds. The coding agent's program was steadier
+(0.45x spread against 2.06x) and stayed closer to the reference (0.99911
+against 0.99803).
+
+The trajectories differ more than the destinations. AlphaEvolve cleared 2.57x
+on its first mutation. The coding agent spent three candidates at 1.03x, 1.13x
+and 1.27x before jumping to 6.90x on its fourth, then spent five more candidates
+failing to beat it and recovered to 7.16x only on the tenth by returning to the
+fourth's structure.
+
+| candidate | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| speedup | 1.03 | 1.13 | 1.27 | 6.90 | 6.68 | 6.62 | 6.42 | 6.10 | 5.96 | **7.16** |
+| SSIM | 0.980 | 0.985 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 |
+
+What caused its cliff is worth reading. Candidate 1 cut convolution work
+sixteen-fold and bought 1.026x, and it read that number correctly, concluding
+the blurs were never the bottleneck. What it found instead is a latent flaw in
+the seed, the background cut-out is composited against `CIImage.empty()`, which
+has infinite extent, and that silently disables the clamp so every frame
+materialises full-resolution intermediates. Cropping before clamping, and
+feathering the mask at the segmentation's native resolution instead of after
+the upscale, is the whole jump from 1.27x to 6.90x.
+
+Both agents independently arrived at the same three-part shape, cache the
+segmentation, blur at reduced resolution, keep the full-resolution mask for the
+composite only, which suggests the win was discoverable rather than exotic.
+AlphaEvolve additionally found `VNSequenceRequestHandler` and chose a
+conservative segmentation interval of 3. The coding agent chose an interval of
+8, up to 265 ms of mask staleness, which this fairly static clip
+under-punishes. On a high-motion take that is the setting most likely to break,
+and it is the honest reason to prefer the AlphaEvolve winner for shipping
+despite the tie.
+
+Two things to know before quoting these numbers.
+
+- The original clip was git-ignored and is gone, so this whole table was
+  re-measured on a new take. That is why the AlphaEvolve winner reads 7.7x here
+  and 3.4x in the run above. Same program, different footage and machine state.
+  Only programs scored on the same clip may be compared, which is exactly what
+  the table does.
+- The per-candidate numbers from the original AlphaEvolve run were measured on
+  the old clip, so the two trajectories are described side by side, not compared
+  as measurements.
+
+```bash
+python3 claude_evolve.py --budget 10                  # blind, the AlphaEvolve information channel
+python3 claude_evolve.py --mode agentic --budget 10   # the model may run the benchmark itself
+python3 compare.py --rounds 5 seed.swift best_program.swift claude_best_program.swift
+```
+
 ## How the result was verified
 
 Three layers, each catching what the previous one cannot.
@@ -287,10 +367,15 @@ re-scored on a harder one (more motion) before it ships.
 seed.swift           the production blur, wrapped in EVOLVE-BLOCK markers
 bench.swift          harness, runs a kernel over the clip, prints JSON metrics
 evaluate.py          objective function, compile + run + SSIM gate + speedup
+problem.py           the optimization brief, shared by both runners
 evolve.py            the AlphaEvolve controller loop (client API, not the docs sketch)
+claude_evolve.py     the same loop driven by a coding agent, for the head-to-head
+compare.py           interleaved re-scorer, medians over rounds
 best_program.swift   the evolved winner from this run
+claude_best_program.swift  the coding agent's winner
 clip.mov             your test take (git-ignored, bring your own)
 goldens/             reference frames + baseline timing (git-ignored, auto-generated)
+runs/                per-run logs from claude_evolve.py (git-ignored)
 ```
 
 One API note baked into evolve.py, `experiment.list_programs()` returns a

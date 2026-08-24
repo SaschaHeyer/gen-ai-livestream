@@ -4,3 +4,7 @@ goldens/
 .venv/
 best-frames/
 *.png
+
+# head-to-head run logs
+runs/
+compare-results.json
