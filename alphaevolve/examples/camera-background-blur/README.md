@@ -187,55 +187,131 @@ Its default `blind` mode hands the model exactly what AlphaEvolve gets, the
 problem statement, the source of the best program so far, and the scalar scores
 of every candidate to date. No tools, no repository access, no rendered frames.
 
-Both winners re-scored on the same clip with [compare.py](compare.py), five
-interleaved rounds, medians reported. Interleaving matters, the score is
-wall-clock and the machine drifts as it warms, so scoring all of A and then all
-of B measures the thermal state as much as the code.
+Blindness is enforced by construction, the generator runs in an empty directory
+with no path to this repo in its input, which matters because the AlphaEvolve
+winner sits right here in the same folder. It is also worth auditing afterwards.
+In the run recorded below, the ten sessions made 24 tool calls between them and
+every one touched either the staged prompt or the session's own answer file.
 
-| program | median speedup | range over 5 rounds | ms per frame | SSIM |
+### First, how much room is there actually
+
+A kernel that does **nothing at all**, it returns the input frame untouched,
+measures 2.195 ms per frame here, because the timed region includes rendering a
+full 1920x1080 frame and every kernel pays that no matter what it does. Against
+the 18.095 ms baseline that is a hard ceiling on the whole benchmark.
+
+> **The best score any correct program can reach on this harness is 8.24x.**
+
+[harness_floor.py](harness_floor.py) measures it and puts the winners next to
+it, five interleaved rounds.
+
+| program | median ms/frame | above the floor | share of measured time that is fixed cost |
+|---|---|---|---|
+| floor, does nothing | 2.195 | +0.000 | 100% |
+| seed, production code | 20.249 | +18.054 | 11% |
+| AlphaEvolve winner | 3.955 | +1.760 | 56% |
+| coding agent, blind | 3.090 | +0.895 | 71% |
+| coding agent, agentic | 3.375 | +1.180 | 65% |
+
+All three removed over 90 percent of the removable work. What separates them is
+0.9 to 1.8 ms of kernel time, measured by an instrument whose own floor wanders
+0.685 ms between rounds. That is a difference being rounded, not measured.
+
+### Which is why the ranking flips
+
+Three separate five-round interleaved runs. Same programs, same clip, same
+protocol, same machine.
+
+| session | AlphaEvolve | blind | agentic | seed control |
 |---|---|---|---|---|
-| seed (production code) | 1.038x | 0.941x to 1.069x | 17.44 | 1.0, it is the reference |
-| AlphaEvolve winner | 7.726x | 5.772x to 7.833x | 2.342 | 0.99803 |
-| Claude winner | 7.437x | 7.096x to 7.543x | 2.433 | 0.99911 |
+| A, speedup | **7.726x** | 7.437x | n/a | 1.038x |
+| B, speedup | 3.910x | **5.958x** | 5.595x | 0.921x |
+| C, ms/frame | 3.955 | **3.090** | 3.375 | 20.249 |
 
-Baseline 18.095 ms per frame. The seed re-scoring at 1.038x is the control, the
-harness reproduces its own baseline.
+Session A ran before the agentic winner existed, hence the n/a.
 
-**That is a tie.** AlphaEvolve's median is 3.9 percent ahead and it took 3 of
-the 5 paired rounds, but the gap is smaller than the spread of its own
-measurements across those same rounds. The coding agent's program was steadier
-(0.45x spread against 2.06x) and stayed closer to the reference (0.99911
-against 0.99803).
+AlphaEvolve wins the first and loses the other two. Normalising each program
+against the seed measured in the *same round* does not rescue it either, it goes
+from 7.36 to 4.17 across sessions while the blind winner goes from 7.24 to 6.58.
 
-The trajectories differ more than the destinations. AlphaEvolve cleared 2.57x
-on its first mutation. The coding agent spent three candidates at 1.03x, 1.13x
-and 1.27x before jumping to 6.90x on its fourth, then spent five more candidates
-failing to beat it and recovered to 7.16x only on the tenth by returning to the
-fourth's structure.
+So there is no ranking here, and that is the finding. **Both approaches got
+within roughly 90 percent of the theoretical maximum, and this benchmark cannot
+tell them apart.** Anyone reporting a few percent either way is reporting
+thermal state. Run `harness_floor.py` before believing any speedup out of this
+folder, the one at the top of this README included.
+
+### Where they genuinely differ, the trajectory
 
 | candidate | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| speedup | 1.03 | 1.13 | 1.27 | 6.90 | 6.68 | 6.62 | 6.42 | 6.10 | 5.96 | **7.16** |
-| SSIM | 0.980 | 0.985 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 |
+| blind coding agent | 1.03 | 1.13 | 1.27 | **6.90** | 6.68 | 6.62 | 6.42 | 6.10 | 5.96 | **7.16** |
 
-What caused its cliff is worth reading. Candidate 1 cut convolution work
-sixteen-fold and bought 1.026x, and it read that number correctly, concluding
-the blurs were never the bottleneck. What it found instead is a latent flaw in
-the seed, the background cut-out is composited against `CIImage.empty()`, which
-has infinite extent, and that silently disables the clamp so every frame
-materialises full-resolution intermediates. Cropping before clamping, and
-feathering the mask at the segmentation's native resolution instead of after
-the upscale, is the whole jump from 1.27x to 6.90x.
+The tempting story is that the coding agent plateaus and evolutionary search
+does not. It is false, and worth killing before someone else does. Both runs
+regress exactly as much.
 
-Both agents independently arrived at the same three-part shape, cache the
-segmentation, blur at reduced resolution, keep the full-resolution mask for the
-composite only, which suggests the win was discoverable rather than exotic.
-AlphaEvolve additionally found `VNSequenceRequestHandler` and chose a
-conservative segmentation interval of 3. The coding agent chose an interval of
-8, up to 265 ms of mask staleness, which this fairly static clip
-under-punishes. On a high-motion take that is the setting most likely to break,
-and it is the honest reason to prefer the AlphaEvolve winner for shipping
-despite the tie.
+| | AlphaEvolve | coding agent, blind |
+|---|---|---|
+| first candidate at or above 2x | **#1** | **#4** |
+| candidate 1 scored | 2.57x | 1.03x |
+| candidates below their own running best | 5 of 10 | 5 of 10 |
+| longest consecutive run below best | 3 | 5 |
+
+Identical regression counts, and the run log above is right that non-monotonic
+progress is normal and you should not stop a run early. Compare the candidate
+counts across those columns, not the speedups, the AlphaEvolve column was
+measured on the original clip.
+
+So the one clean difference is the start. AlphaEvolve was at 2.57x on its first
+mutation, the coding agent needed four candidates to clear 1.3x. That is a
+single run each, an observation rather than a trend, but it is the kind of gap
+that compounds when a run is thousands of candidates instead of ten. It is also
+the only difference here that timing noise cannot touch, because it counts
+candidates rather than milliseconds.
+
+What caused the coding agent's cliff is worth reading. Candidate 1 cut
+convolution work sixteen-fold and bought 1.026x, and it read that number
+correctly, concluding the blurs were never the bottleneck. What it found instead
+is a latent flaw in the seed, the background cut-out is composited against
+`CIImage.empty()`, which has infinite extent, and that silently disables the
+clamp so every frame materialises full-resolution intermediates.
+
+The agentic run, given the harness and allowed to profile, split the seed
+directly instead: Vision segmentation 11.0 ms of the 18.1, the full-res mask
+feather alone 2.4 ms. It spent 8 of its 10 evaluator calls and scored no better
+than the blind loop, which under the floor analysis means both hit the ceiling,
+not that tools hurt.
+
+### Subtract the hints before calling anything a discovery
+
+The shared problem statement is not neutral. It ends with a list of ideas worth
+exploring, and both agents read it, byte for byte the same text.
+
+> Run segmentation every Nth frame and reuse the mask. Blur a downscaled copy
+> and upscale (rescale sigma accordingly). Collapse the two Gaussian passes into
+> one. Cheaper mask feathering. Avoid clampedToExtent where a crop suffices.
+
+So both winners converging on caching plus reduced-resolution blurring is not
+evidence of independent discovery. **They were told to try both.** Likewise the
+coding agent's clamp fix sits under hint five, the prompt pointed at that door
+even though the diagnosis behind it (the infinite extent of `CIImage.empty()`)
+is its own.
+
+What survives the subtraction is short and worth more than the rest:
+
+- `VNSequenceRequestHandler`, Vision's video-stream API, appears nowhere in the
+  prompt or the seed. AlphaEvolve found it, the coding agent did not. Of every
+  claim in this folder, that is the one that holds up unaided.
+- Using the full-resolution mask for the final composite only is in neither the
+  hints nor the seed, and both agents found it.
+- Every parameter, interval 3 versus 8, quarter versus half resolution, was
+  found rather than given, and the two disagree, which is a better illustration
+  of what search buys than the convergence is.
+
+The coding agent's interval of 8 means up to 265 ms of mask staleness, which
+this fairly static clip under-punishes. On a high-motion take that is the
+setting most likely to break, and it is the honest reason to prefer the
+AlphaEvolve winner for shipping despite the tie.
 
 Two things to know before quoting these numbers.
 
@@ -252,6 +328,7 @@ Two things to know before quoting these numbers.
 python3 claude_evolve.py --budget 10                  # blind, the AlphaEvolve information channel
 python3 claude_evolve.py --mode agentic --budget 10   # the model may run the benchmark itself
 python3 compare.py --rounds 5 seed.swift best_program.swift claude_best_program.swift
+python3 harness_floor.py --rounds 5                   # run this before believing any of it
 ```
 
 ## How the result was verified
@@ -372,7 +449,9 @@ evolve.py            the AlphaEvolve controller loop (client API, not the docs s
 claude_evolve.py     the same loop driven by a coding agent, for the head-to-head
 compare.py           interleaved re-scorer, medians over rounds
 best_program.swift   the evolved winner from this run
-claude_best_program.swift  the coding agent's winner
+claude_best_program.swift  the coding agent's winner, blind mode
+claude_agentic_best_program.swift  the coding agent's winner, agentic mode
+harness_floor.py     what a do-nothing kernel scores, and what that implies
 clip.mov             your test take (git-ignored, bring your own)
 goldens/             reference frames + baseline timing (git-ignored, auto-generated)
 runs/                per-run logs from claude_evolve.py (git-ignored)

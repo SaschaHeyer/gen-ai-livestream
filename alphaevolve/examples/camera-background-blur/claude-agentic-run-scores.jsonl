@@ -1,0 +1,2 @@
+{"label": "seed", "scores": {"speedup": 1.0770192250461283, "ssim": 1}, "verdict": "ok", "insight": "", "meta": {"generator": "claude-opus-5-agentic"}, "source": "/Users/sascha/Desktop/development/gen-ai-livestream/alphaevolve/examples/camera-background-blur/seed.swift"}
+{"label": "1", "scores": {"speedup": 5.094313063063063, "ssim": 0.99797}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand01.swift"}

@@ -11,49 +11,65 @@
     {
       "program": "seed.swift",
       "rejected_rounds": 0,
-      "speedup_median": 1.038,
-      "speedup_min": 0.941,
-      "speedup_max": 1.069,
-      "ms_per_frame_median": 17.44,
+      "speedup_median": 0.921,
+      "speedup_min": 0.864,
+      "speedup_max": 1.201,
+      "ms_per_frame_median": 19.639,
       "ssim": 1,
       "speedups": [
-        1.031,
-        1.069,
-        1.05,
-        0.941,
-        1.038
+        0.864,
+        0.921,
+        1.201,
+        0.899,
+        0.938
       ]
     },
     {
       "program": "best_program.swift",
       "rejected_rounds": 0,
-      "speedup_median": 7.726,
-      "speedup_min": 5.772,
-      "speedup_max": 7.833,
-      "ms_per_frame_median": 2.342,
+      "speedup_median": 3.91,
+      "speedup_min": 3.71,
+      "speedup_max": 5.006,
+      "ms_per_frame_median": 4.628,
       "ssim": 0.99803,
       "speedups": [
-        7.833,
-        7.759,
-        7.726,
-        7.074,
-        5.772
+        4.676,
+        5.006,
+        3.841,
+        3.71,
+        3.91
       ]
     },
     {
       "program": "claude_best_program.swift",
       "rejected_rounds": 0,
-      "speedup_median": 7.437,
-      "speedup_min": 7.096,
-      "speedup_max": 7.543,
-      "ms_per_frame_median": 2.433,
+      "speedup_median": 5.958,
+      "speedup_min": 5.809,
+      "speedup_max": 6.578,
+      "ms_per_frame_median": 3.037,
       "ssim": 0.99911,
       "speedups": [
-        7.543,
-        7.437,
-        7.102,
-        7.096,
-        7.511
+        5.809,
+        5.956,
+        5.958,
+        6.578,
+        6.176
+      ]
+    },
+    {
+      "program": "claude_agentic_best_program.swift",
+      "rejected_rounds": 0,
+      "speedup_median": 5.595,
+      "speedup_min": 5.112,
+      "speedup_max": 6.176,
+      "ms_per_frame_median": 3.234,
+      "ssim": 0.99797,
+      "speedups": [
+        6.176,
+        5.62,
+        5.595,
+        5.427,
+        5.112
       ]
     }
   ]

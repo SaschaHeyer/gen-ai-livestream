@@ -1,0 +1,77 @@
+{
+  "baseline_ms_per_frame": 18.095,
+  "rounds": 5,
+  "floor_ms": 2.195,
+  "results": [
+    {
+      "program": "floor (does nothing)",
+      "median_ms": 2.195,
+      "min_ms": 1.612,
+      "max_ms": 2.297,
+      "ms_above_floor": 0.0,
+      "samples": [
+        2.195,
+        1.612,
+        2.297,
+        2.155,
+        2.226
+      ]
+    },
+    {
+      "program": "seed.swift",
+      "median_ms": 20.249,
+      "min_ms": 16.625,
+      "max_ms": 21.071,
+      "ms_above_floor": 18.054,
+      "samples": [
+        19.474,
+        20.687,
+        16.625,
+        20.249,
+        21.071
+      ]
+    },
+    {
+      "program": "best_program.swift",
+      "median_ms": 3.955,
+      "min_ms": 3.207,
+      "max_ms": 5.624,
+      "ms_above_floor": 1.76,
+      "samples": [
+        3.207,
+        5.624,
+        3.955,
+        3.385,
+        4.732
+      ]
+    },
+    {
+      "program": "claude_best_program.swift",
+      "median_ms": 3.09,
+      "min_ms": 2.211,
+      "max_ms": 4.06,
+      "ms_above_floor": 0.895,
+      "samples": [
+        2.211,
+        4.06,
+        3.619,
+        3.09,
+        2.519
+      ]
+    },
+    {
+      "program": "claude_agentic_best_program.swift",
+      "median_ms": 3.375,
+      "min_ms": 3.198,
+      "max_ms": 3.624,
+      "ms_above_floor": 1.18,
+      "samples": [
+        3.376,
+        3.375,
+        3.356,
+        3.624,
+        3.198
+      ]
+    }
+  ]
+}
