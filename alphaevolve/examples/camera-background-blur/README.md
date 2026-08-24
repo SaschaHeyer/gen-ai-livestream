@@ -193,45 +193,80 @@ winner sits right here in the same folder. It is also worth auditing afterwards.
 In the run recorded below, the ten sessions made 24 tool calls between them and
 every one touched either the staged prompt or the session's own answer file.
 
-Both winners re-scored on the same clip with [compare.py](compare.py), five
-interleaved rounds, medians reported. Interleaving matters, the score is
-wall-clock and the machine drifts as it warms, so scoring all of A and then all
-of B measures the thermal state as much as the code.
+### First, how much room is there actually
 
-| program | median speedup | range over 5 rounds | ms per frame | SSIM |
+A kernel that does **nothing at all**, it returns the input frame untouched,
+measures 2.195 ms per frame here, because the timed region includes rendering a
+full 1920x1080 frame and every kernel pays that no matter what it does. Against
+the 18.095 ms baseline that is a hard ceiling on the whole benchmark.
+
+> **The best score any correct program can reach on this harness is 8.24x.**
+
+[harness_floor.py](harness_floor.py) measures it and puts the winners next to
+it, five interleaved rounds.
+
+| program | median ms/frame | above the floor | share of measured time that is fixed cost |
+|---|---|---|---|
+| floor, does nothing | 2.195 | +0.000 | 100% |
+| seed, production code | 20.249 | +18.054 | 11% |
+| AlphaEvolve winner | 3.955 | +1.760 | 56% |
+| coding agent, blind | 3.090 | +0.895 | 71% |
+| coding agent, agentic | 3.375 | +1.180 | 65% |
+
+All three removed over 90 percent of the removable work. What separates them is
+0.9 to 1.8 ms of kernel time, measured by an instrument whose own floor wanders
+0.685 ms between rounds. That is a difference being rounded, not measured.
+
+### Which is why the ranking flips
+
+Three separate five-round interleaved runs. Same programs, same clip, same
+protocol, same machine.
+
+| session | AlphaEvolve | blind | agentic | seed control |
 |---|---|---|---|---|
-| seed (production code) | 1.038x | 0.941x to 1.069x | 17.44 | 1.0, it is the reference |
-| AlphaEvolve winner | 7.726x | 5.772x to 7.833x | 2.342 | 0.99803 |
-| Claude winner | 7.437x | 7.096x to 7.543x | 2.433 | 0.99911 |
+| A, speedup | **7.726x** | 7.437x | not run | 1.038x |
+| B, speedup | 3.910x | **5.958x** | 5.595x | 0.921x |
+| C, ms/frame | 3.955 | **3.090** | 3.375 | 20.249 |
 
-Baseline 18.095 ms per frame. The seed re-scoring at 1.038x is the control, the
-harness reproduces its own baseline.
+AlphaEvolve wins the first and loses the other two. Normalising each program
+against the seed measured in the *same round* does not rescue it either, it goes
+from 7.36 to 4.17 across sessions while the blind winner goes from 7.24 to 6.58.
 
-**That is a tie.** AlphaEvolve's median is 3.9 percent ahead and it took 3 of
-the 5 paired rounds, but the gap is smaller than the spread of its own
-measurements across those same rounds. The coding agent's program was steadier
-(0.45x spread against 2.06x) and stayed closer to the reference (0.99911
-against 0.99803).
+So there is no ranking here, and that is the finding. **Both approaches got
+within roughly 90 percent of the theoretical maximum, and this benchmark cannot
+tell them apart.** Anyone reporting a few percent either way is reporting
+thermal state. Run `harness_floor.py` before believing any speedup out of this
+folder, the one at the top of this README included.
 
-The trajectories differ more than the destinations. AlphaEvolve cleared 2.57x
-on its first mutation. The coding agent spent three candidates at 1.03x, 1.13x
-and 1.27x before jumping to 6.90x on its fourth, then spent five more candidates
-failing to beat it and recovered to 7.16x only on the tenth by returning to the
-fourth's structure.
+### Where they genuinely differ, the trajectory
 
 | candidate | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| speedup | 1.03 | 1.13 | 1.27 | 6.90 | 6.68 | 6.62 | 6.42 | 6.10 | 5.96 | **7.16** |
-| SSIM | 0.980 | 0.985 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 | 0.999 |
+| blind coding agent | 1.03 | 1.13 | 1.27 | **6.90** | 6.68 | 6.62 | 6.42 | 6.10 | 5.96 | **7.16** |
 
-What caused its cliff is worth reading. Candidate 1 cut convolution work
-sixteen-fold and bought 1.026x, and it read that number correctly, concluding
-the blurs were never the bottleneck. What it found instead is a latent flaw in
-the seed, the background cut-out is composited against `CIImage.empty()`, which
-has infinite extent, and that silently disables the clamp so every frame
-materialises full-resolution intermediates. Cropping before clamping, and
-feathering the mask at the segmentation's native resolution instead of after
-the upscale, is the whole jump from 1.27x to 6.90x.
+Three flat candidates, a cliff, then a plateau it never escaped, candidates 5
+through 9 all below candidate 4, and candidate 10 recovering only by returning
+to candidate 4's structure. AlphaEvolve cleared 2.57x on its first mutation and
+4.17x on its second.
+
+That difference is not a measurement artifact, because it is about how many
+candidates it takes to find the productive region rather than about
+milliseconds. It is the real argument for evolutionary search, and it is an
+argument about scale. At ten candidates a plateau costs nothing. At thousands it
+is everything.
+
+What caused the coding agent's cliff is worth reading. Candidate 1 cut
+convolution work sixteen-fold and bought 1.026x, and it read that number
+correctly, concluding the blurs were never the bottleneck. What it found instead
+is a latent flaw in the seed, the background cut-out is composited against
+`CIImage.empty()`, which has infinite extent, and that silently disables the
+clamp so every frame materialises full-resolution intermediates.
+
+The agentic run, given the harness and allowed to profile, split the seed
+directly instead: Vision segmentation 11.0 ms of the 18.1, the full-res mask
+feather alone 2.4 ms. It spent 8 of its 10 evaluator calls and scored no better
+than the blind loop, which under the floor analysis means both hit the ceiling,
+not that tools hurt.
 
 ### Subtract the hints before calling anything a discovery
 
@@ -279,6 +314,7 @@ Two things to know before quoting these numbers.
 python3 claude_evolve.py --budget 10                  # blind, the AlphaEvolve information channel
 python3 claude_evolve.py --mode agentic --budget 10   # the model may run the benchmark itself
 python3 compare.py --rounds 5 seed.swift best_program.swift claude_best_program.swift
+python3 harness_floor.py --rounds 5                   # run this before believing any of it
 ```
 
 ## How the result was verified
@@ -399,7 +435,9 @@ evolve.py            the AlphaEvolve controller loop (client API, not the docs s
 claude_evolve.py     the same loop driven by a coding agent, for the head-to-head
 compare.py           interleaved re-scorer, medians over rounds
 best_program.swift   the evolved winner from this run
-claude_best_program.swift  the coding agent's winner
+claude_best_program.swift  the coding agent's winner, blind mode
+claude_agentic_best_program.swift  the coding agent's winner, agentic mode
+harness_floor.py     what a do-nothing kernel scores, and what that implies
 clip.mov             your test take (git-ignored, bring your own)
 goldens/             reference frames + baseline timing (git-ignored, auto-generated)
 runs/                per-run logs from claude_evolve.py (git-ignored)

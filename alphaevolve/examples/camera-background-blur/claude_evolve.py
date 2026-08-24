@@ -395,7 +395,8 @@ def external_step(args):
                run_dir, source=str(SEED))
         (run_dir / "config.json").write_text(json.dumps(
             {"mode": "external", "generator": args.model,
-             "budget": args.budget}, indent=2))
+             "budget": args.budget,
+             "out_name": args.out_name}, indent=2))
         print(run_dir)
         return
 
@@ -439,7 +440,10 @@ def external_step(args):
     best_code, best_label = best_of(run_dir, load_history(run_dir))
     print(f"best so far, {best_label}")
     if best_label != "seed":
-        (LAB / "claude_best_program.swift").write_text(best_code)
+        config = json.loads((run_dir / "config.json").read_text())
+        out = LAB / config.get("out_name", "claude_best_program.swift")
+        out.write_text(best_code)
+        print(f"winner written to {out.name}")
 
 
 # --- main ------------------------------------------------------------------
@@ -454,6 +458,10 @@ def main():
     parser.add_argument("--run-dir", help="external mode, the run to continue")
     parser.add_argument("--candidate",
                         help="external mode, the file holding the reply")
+    parser.add_argument("--out-name", default="claude_best_program.swift",
+                        help="external mode, filename for this run's winner. "
+                             "Give separate runs separate names or the second "
+                             "overwrites the first")
     parser.add_argument("--budget", type=int, default=10,
                         help="candidates (blind) or evaluator calls (agentic)")
     parser.add_argument("--model", default="opus",
