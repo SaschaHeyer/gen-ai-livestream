@@ -187,6 +187,12 @@ Its default `blind` mode hands the model exactly what AlphaEvolve gets, the
 problem statement, the source of the best program so far, and the scalar scores
 of every candidate to date. No tools, no repository access, no rendered frames.
 
+Blindness is enforced by construction, the generator runs in an empty directory
+with no path to this repo in its input, which matters because the AlphaEvolve
+winner sits right here in the same folder. It is also worth auditing afterwards.
+In the run recorded below, the ten sessions made 24 tool calls between them and
+every one touched either the staged prompt or the session's own answer file.
+
 Both winners re-scored on the same clip with [compare.py](compare.py), five
 interleaved rounds, medians reported. Interleaving matters, the score is
 wall-clock and the machine drifts as it warms, so scoring all of A and then all
@@ -227,15 +233,36 @@ materialises full-resolution intermediates. Cropping before clamping, and
 feathering the mask at the segmentation's native resolution instead of after
 the upscale, is the whole jump from 1.27x to 6.90x.
 
-Both agents independently arrived at the same three-part shape, cache the
-segmentation, blur at reduced resolution, keep the full-resolution mask for the
-composite only, which suggests the win was discoverable rather than exotic.
-AlphaEvolve additionally found `VNSequenceRequestHandler` and chose a
-conservative segmentation interval of 3. The coding agent chose an interval of
-8, up to 265 ms of mask staleness, which this fairly static clip
-under-punishes. On a high-motion take that is the setting most likely to break,
-and it is the honest reason to prefer the AlphaEvolve winner for shipping
-despite the tie.
+### Subtract the hints before calling anything a discovery
+
+The shared problem statement is not neutral. It ends with a list of ideas worth
+exploring, and both agents read it, byte for byte the same text.
+
+> Run segmentation every Nth frame and reuse the mask. Blur a downscaled copy
+> and upscale (rescale sigma accordingly). Collapse the two Gaussian passes into
+> one. Cheaper mask feathering. Avoid clampedToExtent where a crop suffices.
+
+So both winners converging on caching plus reduced-resolution blurring is not
+evidence of independent discovery. **They were told to try both.** Likewise the
+coding agent's clamp fix sits under hint five, the prompt pointed at that door
+even though the diagnosis behind it (the infinite extent of `CIImage.empty()`)
+is its own.
+
+What survives the subtraction is short and worth more than the rest:
+
+- `VNSequenceRequestHandler`, Vision's video-stream API, appears nowhere in the
+  prompt or the seed. AlphaEvolve found it, the coding agent did not. Of every
+  claim in this folder, that is the one that holds up unaided.
+- Using the full-resolution mask for the final composite only is in neither the
+  hints nor the seed, and both agents found it.
+- Every parameter, interval 3 versus 8, quarter versus half resolution, was
+  found rather than given, and the two disagree, which is a better illustration
+  of what search buys than the convergence is.
+
+The coding agent's interval of 8 means up to 265 ms of mask staleness, which
+this fairly static clip under-punishes. On a high-motion take that is the
+setting most likely to break, and it is the honest reason to prefer the
+AlphaEvolve winner for shipping despite the tie.
 
 Two things to know before quoting these numbers.
 
