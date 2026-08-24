@@ -244,16 +244,28 @@ folder, the one at the top of this README included.
 |---|---|---|---|---|---|---|---|---|---|---|
 | blind coding agent | 1.03 | 1.13 | 1.27 | **6.90** | 6.68 | 6.62 | 6.42 | 6.10 | 5.96 | **7.16** |
 
-Three flat candidates, a cliff, then a plateau it never escaped, candidates 5
-through 9 all below candidate 4, and candidate 10 recovering only by returning
-to candidate 4's structure. AlphaEvolve cleared 2.57x on its first mutation and
-4.17x on its second.
+The tempting story is that the coding agent plateaus and evolutionary search
+does not. It is false, and worth killing before someone else does. Both runs
+regress exactly as much.
 
-That difference is not a measurement artifact, because it is about how many
-candidates it takes to find the productive region rather than about
-milliseconds. It is the real argument for evolutionary search, and it is an
-argument about scale. At ten candidates a plateau costs nothing. At thousands it
-is everything.
+| | AlphaEvolve | coding agent, blind |
+|---|---|---|
+| first candidate at or above 2x | **#1** | **#4** |
+| candidate 1 scored | 2.57x | 1.03x |
+| candidates below their own running best | 5 of 10 | 5 of 10 |
+| longest consecutive run below best | 3 | 5 |
+
+Identical regression counts, and the run log above is right that non-monotonic
+progress is normal and you should not stop a run early. Compare the candidate
+counts across those columns, not the speedups, the AlphaEvolve column was
+measured on the original clip.
+
+So the one clean difference is the start. AlphaEvolve was at 2.57x on its first
+mutation, the coding agent needed four candidates to clear 1.3x. That is a
+single run each, an observation rather than a trend, but it is the kind of gap
+that compounds when a run is thousands of candidates instead of ten. It is also
+the only difference here that timing noise cannot touch, because it counts
+candidates rather than milliseconds.
 
 What caused the coding agent's cliff is worth reading. Candidate 1 cut
 convolution work sixteen-fold and bought 1.026x, and it read that number
