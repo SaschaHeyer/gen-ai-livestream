@@ -193,25 +193,31 @@ winner sits right here in the same folder. It is also worth auditing afterwards.
 In the run recorded below, the ten sessions made 24 tool calls between them and
 every one touched either the staged prompt or the session's own answer file.
 
-### First, how much room is there actually
+### First, how much room was there actually
 
 A kernel that does **nothing at all**, it returns the input frame untouched,
 measures 2.195 ms per frame here, because the timed region includes rendering a
-full 1920x1080 frame and every kernel pays that no matter what it does. Against
-the 18.095 ms baseline that is a hard ceiling on the whole benchmark.
+full 1920x1080 frame and every kernel pays that no matter what it does. So of
+the seed's 18.095 ms, only **15.90 ms was ever removable**, and the best score
+any correct program can reach on this harness is **8.24x**.
 
-> **The best score any correct program can reach on this harness is 8.24x.**
+That reframes the headline result into something much harder than "3.4x
+faster":
+
+> **AlphaEvolve captured 89 percent of the entire possible saving**, unattended,
+> in ten candidates, against a gate it could never trade away. Claude captured
+> 94 percent blind and 93 percent with tools.
 
 [harness_floor.py](harness_floor.py) measures it and puts the winners next to
 it, five interleaved rounds.
 
-| program | median ms/frame | above the floor | share of measured time that is fixed cost |
+| program | median ms/frame | above the floor | share of the possible saving captured |
 |---|---|---|---|
-| floor, does nothing | 2.195 | +0.000 | 100% |
-| seed, production code | 20.249 | +18.054 | 11% |
-| AlphaEvolve winner | 3.955 | +1.760 | 56% |
-| coding agent, blind | 3.090 | +0.895 | 71% |
-| coding agent, agentic | 3.375 | +1.180 | 65% |
+| seed, production code | 20.249 | +18.054 | 0%, this is the starting point |
+| AlphaEvolve winner | 3.955 | +1.760 | **89%** |
+| coding agent, blind | 3.090 | +0.895 | **94%** |
+| coding agent, agentic | 3.375 | +1.180 | **93%** |
+| floor, does nothing | 2.195 | +0.000 | the limit, nothing below it |
 
 All three removed over 90 percent of the removable work. What separates them is
 0.9 to 1.8 ms of kernel time, measured by an instrument whose own floor wanders
