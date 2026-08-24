@@ -1,0 +1,11 @@
+{"label": "seed", "scores": {"speedup": 0.9848691013987916, "ssim": 1}, "verdict": "ok", "insight": "", "meta": {"generator": "claude-opus-5"}, "source": "/Users/sascha/Desktop/development/gen-ai-livestream/alphaevolve/examples/camera-background-blur/seed.swift"}
+{"label": "1", "scores": {"speedup": 1.026026309820821, "ssim": 0.98048}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand01.swift"}
+{"label": "2", "scores": {"speedup": 1.1323529411764706, "ssim": 0.98491}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand02.swift"}
+{"label": "3", "scores": {"speedup": 1.2736679101851198, "ssim": 0.9994}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand03.swift"}
+{"label": "4", "scores": {"speedup": 6.903853491033956, "ssim": 0.99927}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand04.swift"}
+{"label": "5", "scores": {"speedup": 6.682053175775479, "ssim": 0.99904}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand05.swift"}
+{"label": "6", "scores": {"speedup": 6.620929381631906, "ssim": 0.99918}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand06.swift"}
+{"label": "7", "scores": {"speedup": 6.418942887548776, "ssim": 0.99888}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand07.swift"}
+{"label": "8", "scores": {"speedup": 6.096698113207547, "ssim": 0.99888}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand08.swift"}
+{"label": "9", "scores": {"speedup": 5.9601449275362315, "ssim": 0.99911}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand09.swift"}
+{"label": "10", "scores": {"speedup": 7.160664819944597, "ssim": 0.99911}, "verdict": "ok", "insight": "", "meta": {"generator": "opus"}, "source": "cand10.swift"}
