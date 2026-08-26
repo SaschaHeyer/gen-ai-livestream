@@ -1,5 +1,7 @@
 # Gemini Managed Agents, the verification scripts
 
+Start with `00_hello_cat.py` if you just want to see one call work.
+
 Every claim and every number in the article
 [Gemini Managed Agents, Explained](https://medium.com/google-cloud) came from one of these five
 scripts. They are here so you can re-run them and check, or point them at your own project.
@@ -22,6 +24,7 @@ Billing must be enabled on the project. A valid key alone is not enough, request
 
 | Script | What it shows |
 | --- | --- |
+| `00_hello_cat.py` | The smallest thing that works. One call, the agent invents an ASCII cat, writes the program, runs it, and reports its own stdout. Prints where the tokens went. |
 | `01_the_three_tiers.py` | The base agent, a custom agent inline, and the same config saved as a managed agent. Plus reserved-prefix enforcement. |
 | `02_cost_and_traces.py` | The token floor for a one-word answer, a full step trace with real stdout, and the sandbox network default. |
 | `03_network_allowlist.py` | Four domains under three network configs. The result that surprised me most. |
